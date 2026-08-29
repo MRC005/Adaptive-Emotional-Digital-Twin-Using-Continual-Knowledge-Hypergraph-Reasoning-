@@ -1,0 +1,27 @@
+# PMData (Simula) -- CONDITIONAL SECONDARY.
+# Conditional because one wellness report per day over ~5 months gives roughly
+# 75 reports per epoch against a frozen minimum of 60. Whether it clears the
+# screen is an empirical question the audit answers.
+dataset:
+  name: pmdata
+  role: CONDITIONAL_SECONDARY
+  data_status: REAL
+  root: null
+  sensor: resting_hr
+  n_categories: 5
+  report_variable: PMSys daily wellness `stress`
+
+labels:
+  # PMSys stores a bare integer with NO label text, so the label-text remap
+  # cannot be applied. The scale direction must be confirmed against the PMData
+  # documentation before any primary analysis; this file does not assume it.
+  source: numeric_only
+  direction_confirmed: false
+
+alignment:
+  rule: same_local_day
+  lookback_hours: 24
+  lag_hours: 0
+
+context:
+  features: [resting_hr]

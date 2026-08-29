@@ -1,0 +1,90 @@
+# ============================================================================
+# BASE CONFIGURATION -- values shared by every dataset.
+#
+# These restate the FROZEN constants in aedt/constants.py. Changing one here
+# makes the run deviate from the frozen specification; the deviation is
+# detected, logged as a warning, and written to
+# <run>/config_deviations_from_frozen.json. Do that ONLY for a pre-specified
+# sensitivity analysis declared in docs/frozen_scientific_specification.md.
+# ============================================================================
+
+project:
+  title: "Adaptive Emotional Digital Twin Using Continual Knowledge Hypergraph Reasoning"
+  estimand: rho_star
+  estimand_description: >-
+    The identified attenuated recalibration ratio
+    rho* = rho * sqrt((v + sigma_r^2) / (rho^2 v + sigma_r^2)).
+    rho itself is NOT point-identified; 1 - rho* is a LOWER BOUND on the true
+    multiplicative recalibration. The additive component is NOT identified and
+    is never estimated.
+
+run:
+  seed: 20260828
+  results_dir: results
+  figures_dir: figures
+  tables_dir: tables
+  log_level: INFO
+
+epochs:
+  # FROZEN: halves of each participant's OWN enrolment span.
+  rule: own_span_halves
+
+model:
+  # FROZEN: P(R <= k | x) = Phi(c_k - beta_e x), fitted per person per epoch.
+  link: probit
+  standardisation: within_epoch      # required, not optional
+  independent_epoch_fits: true       # no constant crosses the epoch boundary
+
+eligibility:
+  min_reports_per_epoch: 60
+  min_categories_used: 2
+  min_sensor_sd: 0.10
+  var_ratio_lo: 0.25
+  var_ratio_hi: 4.0
+  min_abs_beta: 0.02                 # EITHER SIGN (self-correction 26)
+  require_matching_sign: true
+
+inference:
+  method: participant_cluster_bootstrap
+  resampling_unit: participant       # resampling observations is a BUG
+  bootstrap_resamples: 2000
+  ci_alpha: 0.05
+
+placebo:
+  # Runs BEFORE the primary analysis and GATES it.
+  enabled: true
+  method: contiguous_epoch1_split_half
+  gates_primary: true
+
+diagnostics:
+  weak_association_beta: 0.15        # diagnostic [9b] -- read this FIRST
+  report_curvature_check: true
+
+context:
+  # (a) continuous [FROZEN DEFAULT]  (b) feature-vector bins  (c) n-ary hyperedge
+  representation: continuous
+  n_bins: 3
+  max_factors: 3
+  min_obs_per_edge: 4
+  vector_prototypes: 6
+  vector_radius: 1.6
+
+hypergraph:
+  enabled: true
+  role: >-
+    Contextual knowledge representation and ablation component. NOT the
+    identification mechanism.
+  min_epoch_occupancy_overlap: 0.20  # below this the twin flags the update
+
+envelope:
+  n_replications: 6      # raise to 20+ for the reported envelope (scripts/run_experiments.py)
+  n_participants: 48
+  n_per_epoch: 200
+
+ablation:
+  run_context_ablation: true
+  arms: [continuous, feature_vector, nary_hyperedge]
+
+baselines:
+  run: [ordinal_no_ratio, raw_epoch_means, epoch_normalised, koren_drift,
+        sensor_only, linear_anchor]

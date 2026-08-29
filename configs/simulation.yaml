@@ -1,0 +1,21 @@
+# SYNTHETIC cohort from the frozen data-generating process (ROUND-17 §G).
+# Every result produced from this config is stamped SYNTHETIC.
+dataset:
+  name: synthetic
+  role: SIMULATION
+  data_status: SYNTHETIC
+  sensor: conversation_minutes
+  n_categories: 5
+
+simulation:
+  true_rho: 0.85          # the known answer the estimator must recover
+  n_participants: 48
+  n_per_epoch: 350        # StudentLife's documented realistic density is ~367/epoch
+  threshold_placement: skewed   # balanced | skewed | extreme_floor
+  sensor_ar1_phi: 0.4
+  sigma_report: 0.5
+  sigma_sensor: 0.8
+  link: identity          # identity | tanh (saturating -- an A1 violation)
+
+context:
+  features: [conversation_minutes, activity_level, recent_sensor_trend]

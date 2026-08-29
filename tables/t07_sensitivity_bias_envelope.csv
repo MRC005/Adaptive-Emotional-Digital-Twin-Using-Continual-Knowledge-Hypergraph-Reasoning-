@@ -1,0 +1,11 @@
+scenario,rho_star_under_null,inside_envelope,data_status
+balanced,1.0249040342245441,True,SYNTHETIC
+skewed,0.977749515706878,True,SYNTHETIC
+extreme_floor,0.9879561029569508,True,SYNTHETIC
+skewed_ar1,1.0119145068722901,True,SYNTHETIC
+skewed_saturating,0.9894449986247608,True,SYNTHETIC
+extreme_floor_ar1,0.97328657978432,True,SYNTHETIC
+extreme_floor_saturating,1.0459845496253415,True,SYNTHETIC
+noisy_sensor,1.0394103061259532,True,SYNTHETIC
+noisy_report,1.0055718808274328,True,SYNTHETIC
+"ENVELOPE [5th, 95th percentile]",,,SYNTHETIC

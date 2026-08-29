@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+.DS_Store
+.review2_staging/
+
+# Run outputs are regenerable and are not committed, EXCEPT the
+# presentation-ready set in figures/ and tables/, which is.
+results/
+data/raw/*
+data/interim/*
+data/processed/*
+data/synthetic/*
+!data/**/.gitkeep
+*.jsonl

@@ -1,0 +1,32 @@
+# RELAX -- LONGITUDINAL ALTERNATIVE / ADDITIONAL VALIDATION TARGET.
+# NO RELAX FILE HAS BEEN OPENED. The column names below are a DECLARED
+# EXPECTATION. If the adapter halts with DECISION REQUIRED, record the ACTUAL
+# names here -- do not edit the adapter to guess.
+dataset:
+  name: relax
+  role: LONGITUDINAL_ALTERNATIVE
+  data_status: REAL
+  root: null
+  sensor: physio_window_mean
+  n_categories: null            # null => taken from the observed range
+  report_variable: repeated subjective stress rating
+
+adapter:
+  report_glob: "*report*.csv"
+  physio_glob: "*physio*.csv"
+  pid_col: participant_id
+  ts_col: timestamp
+  report_col: stress
+  signal_col: hr
+
+alignment:
+  rule: causal_window
+  lookback_hours: 2.0
+  lag_hours: 0.0
+  aggregation: mean
+
+labels:
+  direction_confirmed: false    # confirm against the RELAX documentation
+
+context:
+  features: [physio_window_mean]

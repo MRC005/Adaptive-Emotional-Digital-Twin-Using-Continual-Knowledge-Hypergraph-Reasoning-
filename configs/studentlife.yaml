@@ -1,0 +1,38 @@
+# StudentLife (Dartmouth) -- PRIMARY LONGITUDINAL TARGET.
+# NO STUDENTLIFE FILE HAS BEEN OPENED BY THIS PROJECT. Everything below is a
+# specification to be verified on first contact with the archive, not a
+# statement about data we have seen.
+dataset:
+  name: studentlife
+  role: PRIMARY_LONGITUDINAL
+  data_status: REAL           # only reached when real files are actually found
+  root: null                  # set with --root
+  sensor: conversation_minutes
+  fallback_sensor: pc1_fallback   # used only if [9b] shows a weak association
+  n_categories: 5
+  report_variable: single-item stress EMA
+
+labels:
+  # Remapped BY LABEL TEXT. An unrecognised label halts with DECISION REQUIRED.
+  # Never by stored code, never by position in the option list.
+  source: EMA_definition.json
+  map:
+    "feeling great": 1
+    "feeling good": 2
+    "a little stressed": 3
+    "definitely stressed": 4
+    "stressed out": 5
+
+alignment:
+  rule: same_local_day
+  lookback_hours: 24
+  lag_hours: 0
+
+context:
+  features: [conversation_minutes, activity_level, location_entropy, unlock_count]
+
+expected:
+  # From the published descriptor (Wang et al. 2014), NOT from opened files.
+  participants: 48
+  weeks: 10
+  reports_per_participant_approx: 735

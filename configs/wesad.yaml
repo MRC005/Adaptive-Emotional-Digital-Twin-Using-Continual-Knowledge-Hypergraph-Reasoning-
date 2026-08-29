@@ -1,0 +1,30 @@
+# WESAD -- PHYSIOLOGICAL BENCHMARK ONLY.
+#
+# WESAD CANNOT VALIDATE rho*. It is a single laboratory session per subject
+# with protocol condition blocks and no repeated self-report across separated
+# longitudinal epochs. The pipeline REFUSES to run the primary analysis on it;
+# this is enforced in code (aedt/io/wesad.py) and cannot be overridden here.
+dataset:
+  name: wesad
+  role: BENCHMARK_PHYSIOLOGICAL
+  data_status: REAL
+  root: null
+  sensor: chest_ecg_window_mean
+  n_categories: 4
+  report_variable: protocol condition label (NOT a self-report time series)
+
+analysis:
+  primary_rho_star: false       # NOT PERMITTED -- property of the data
+  benchmark_only: true
+  purpose: >-
+    Validate feature extraction and ordinal-model behaviour on real
+    physiological signals with real condition labels.
+
+wesad:
+  sampling_rate_hz: 700
+  window_seconds: 60
+  analysed_conditions: [1, 2, 3, 4]   # baseline, stress, amusement, meditation
+  condition_purity_threshold: 0.9
+
+context:
+  features: [chest_ecg_window_mean, chest_ecg_window_sd]

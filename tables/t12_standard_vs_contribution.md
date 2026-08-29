@@ -1,0 +1,22 @@
+# Standard technology vs our research contribution
+
+**DATA STATUS: SYNTHETIC**
+
+| component                                          | STANDARD                | OUR_CONTRIBUTION | evidence                                                                                                                        | data_status |
+| -------------------------------------------------- | ----------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Data ingestion, cleaning, temporal alignment       | YES                     | no               | aedt/io/, aedt/preprocess/, aedt/alignment/ - standard parsing and causal windowing                                             | SYNTHETIC   |
+| Sensor feature extraction                          | YES                     | no               | aedt/features/ - conversation minutes, resting HR, activity, entropy                                                            | SYNTHETIC   |
+| Self-report label remap                            | YES                     | no               | aedt/preprocess/reports.py - engineering integration, but SAFETY-CRITICAL: mapping by position would invert the scale           | SYNTHETIC   |
+| Context formation - continuous                     | YES                     | no               | aedt/contexts/continuous.py                                                                                                     | SYNTHETIC   |
+| Context formation - hypergraph / n-ary             | YES                     | no               | aedt/hypergraph/structure.py - the REPRESENTATION is standard; its integration here is engineering                              | SYNTHETIC   |
+| Personal Digital Twin (persistent state)           | engineering integration | no               | aedt/twin/state.py - ENGINEERING INTEGRATION, not claimed novel                                                                 | SYNTHETIC   |
+| Continual knowledge (rolling re-estimation)        | engineering integration | no               | aedt/knowledge/store.py - ENGINEERING INTEGRATION, not claimed novel                                                            | SYNTHETIC   |
+| Ordinal probit model                               | YES                     | no               | aedt/models/ordinal.py - McCullagh 1980                                                                                         | SYNTHETIC   |
+| Slope-ratio estimator and its calibration argument | -                       | YES              | aedt/estimators/slope_ratio.py - exactly 1 under the null, attenuated otherwise; validated across 13 misspecification scenarios | SYNTHETIC   |
+| Identifiability analysis                           | -                       | YES              | docs/frozen_scientific_specification.md T1-T4: rho* identified, additive component provably NOT identified                      | SYNTHETIC   |
+| Failure analysis of the affine approach            | -                       | YES              | aedt/estimators/affine_did.py - reproduces the -0.107 null bias; asserted by tests/regression/test_known_failures.py            | SYNTHETIC   |
+| Eligibility screen                                 | engineering integration | no               | aedt/audit/eligibility.py - ENGINEERING INTEGRATION                                                                             | SYNTHETIC   |
+| Placebo validation design                          | -                       | YES              | aedt/inference/placebo.py - the DESIGN is ours; the technique is standard. Validated: does not fire even with a real 30% shift  | SYNTHETIC   |
+| Bias envelope                                      | -                       | YES              | aedt/audit/envelope.py - rho* range under the enumerated assumption violations, under the true null                             | SYNTHETIC   |
+| Bootstrap inference                                | YES                     | no               | aedt/inference/bootstrap.py - standard, clustered on participants                                                               | SYNTHETIC   |
+| Visualisation                                      | engineering integration | no               | aedt/viz/ - ENGINEERING INTEGRATION                                                                                             | SYNTHETIC   |

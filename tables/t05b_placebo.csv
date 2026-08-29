@@ -1,0 +1,2 @@
+test,runs_before_primary,gates_primary,n_participants,rho_star,ci_low,ci_high,rejected,verdict,data_status
+contiguous epoch-1 split-half placebo,True,False,48,0.984127886855685,0.9268552734240504,1.0413503248538658,False,does not reject -- the primary analysis may proceed,SYNTHETIC
