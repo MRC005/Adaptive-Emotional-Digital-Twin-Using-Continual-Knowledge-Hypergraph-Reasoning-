@@ -118,33 +118,99 @@ def make_pmdata_fixture(out_root: str | Path, *, n_participants: int = 12,
     return root
 
 
-def make_relax_fixture(out_root: str | Path, *, n_participants: int = 16,
-                       days: int = 60, reports_per_day: int = 3,
-                       seed: int = SEED) -> Path:
-    """A RELAX-shaped directory under the DECLARED expected layout."""
+def make_relax_fixture(out_root: str | Path, *, n_participants: int = 14,
+                       reports_per_participant: int = 130,
+                       seed: int = SEED, item: str = "ifb-2") -> Path:
+    """A RELAX-shaped directory matching the VERIFIED release layout.
+
+    Mirrors the real archive exactly: an ``ifb`` response sheet keyed on
+    ``user`` / ``manual_date`` (epoch ms) / ``readable_date``, a questionnaire
+    definition sheet carrying the ANSWER-LABEL ANCHORS, and per-participant
+    ``ibi_data.parquet`` files with ``ibi_ppi`` / ``ibi_blocker`` /
+    ``ibi_errorEstimate`` / tz-aware UTC ``timestamp``.
+
+    Deliberately denser than the real release (default 130 reports/participant
+    vs a real median of 71) so the adapter can be exercised through the
+    eligibility screen and the placebo. The real density failure is a property
+    of RELAX, not of this adapter, and is asserted separately against the real
+    audit.
+    """
     root = Path(out_root)
-    root.mkdir(parents=True, exist_ok=True)
+    (root / "metadata").mkdir(parents=True, exist_ok=True)
     rng = np.random.default_rng(seed + 2)
-    t0 = pd.Timestamp("2022-05-01")
-    rep_rows, phys_rows = [], []
-    for i in range(1, n_participants + 1):
-        pid = f"P{i:02d}"
-        n = days * reports_per_day
-        ts = t0 + pd.to_timedelta(np.sort(rng.uniform(0, days * 24, n)), unit="h")
+    t0 = pd.Timestamp("2024-02-26 06:00:00")
+
+    # ---- item definitions, with the anchors the adapter verifies against ---
+    defs = pd.DataFrame([
+        {"question_id": "ifb-1", "question_text": "Meine Stimmung ist:",
+         "answer_type": "likert-7", "answer_labels": "['negativ', 'positiv']",
+         "answer_text_en": "My current mood is:",
+         "answer_labels_en": "['negative', 'positive']"},
+        {"question_id": "ifb-2", "question_text": "Ich fühle mich:",
+         "answer_type": "likert-7", "answer_labels": "['aufgeregt', 'ruhig']",
+         "answer_text_en": "I feel:",
+         "answer_labels_en": "['excited', 'calm']"},
+        {"question_id": "ifb-7", "question_text": "Meine geistige Anstrengung ist:",
+         "answer_type": "likert-7", "answer_labels": "['niedrig', 'hoch']",
+         "answer_text_en": "My mental effort is:",
+         "answer_labels_en": "['low', 'high']"},
+    ])
+
+    rows, ibi_by_pid = [], {}
+    for i in range(n_participants):
+        pid = 12 + i
+        n = reports_per_participant
+        # reports every ~8h across the study span
+        ts = t0 + pd.to_timedelta(np.sort(rng.uniform(0, n * 8, n)), unit="h")
         theta = rng.normal(0, 1, n)
+        # heart rate rises with stress; the stored Likert DESCENDS with stress
+        # (7 = 'calm'), so the fixture exercises the reversal too.
         latent = theta + rng.normal(0, 0.5, n)
-        cuts = np.quantile(latent, [.30, .55, .78, .92])
-        rep_rows.append(pd.DataFrame({
-            "participant_id": pid, "timestamp": ts,
-            "stress": np.searchsorted(cuts, latent) + 1}))
-        # physiology sampled 30 min before each report, inside the causal window
-        phys_rows.append(pd.DataFrame({
-            "participant_id": pid,
-            "timestamp": ts - pd.Timedelta(minutes=30),
-            "hr": 62 + 7 * theta + rng.normal(0, 2.5, n)}))
-    pd.concat(rep_rows, ignore_index=True).to_csv(root / "stress_report.csv",
-                                                  index=False)
-    pd.concat(phys_rows, ignore_index=True).to_csv(root / "wearable_physio.csv",
-                                                   index=False)
-    _mark(root, f"RELAX-shaped, {n_participants} participants, {days} days")
+        cuts = np.quantile(latent, [.15, .32, .5, .68, .85])
+        severity = np.searchsorted(cuts, latent) + 1       # 1..6 -> pad to 7
+        severity = np.clip(severity, 1, 7)
+        raw = 8 - severity                                  # reverse for ifb-2
+        for k, c in enumerate(("ifb-1", "ifb-2", "ifb-7")):
+            pass
+        rows.append(pd.DataFrame({
+            "user": pid,
+            "manual_date": (ts.astype("int64") // 10 ** 6),
+            "readable_date": ts,
+            "answers/ifb-1-1": rng.integers(1, 8, n),
+            "answers/ifb-2-1": raw,
+            "answers/ifb-7-1": np.clip(severity + rng.integers(-1, 2, n), 1, 7),
+        }))
+        # IBI: one sample every ~1s for 40 min before each report
+        parts = []
+        for j in range(n):
+            m = 200
+            hr = 62 + 7 * theta[j] + rng.normal(0, 2.0, m)
+            ppi = (60000.0 / hr).round().astype("int32")
+            stamps = ts[j] - pd.to_timedelta(rng.uniform(60, 2400, m), unit="s")
+            parts.append(pd.DataFrame({
+                "ibi_ppi": ppi,
+                "ibi_blocker": rng.random(m) < 0.15,
+                "ibi_errorEstimate": np.full(m, 30, dtype="int32"),
+                "timestamp": stamps.tz_localize("UTC")}))
+        ibi_by_pid[pid] = pd.concat(parts).sort_values("timestamp")
+
+    with pd.ExcelWriter(root / "questionnaire_responses.xlsx") as w:
+        pd.concat(rows, ignore_index=True).to_excel(w, sheet_name="ifb",
+                                                    index=False)
+        pd.DataFrame({"id": sorted(ibi_by_pid),
+                      "username": [f"U{p}" for p in sorted(ibi_by_pid)]}
+                     ).to_excel(w, sheet_name="users", index=False)
+    with pd.ExcelWriter(root / "metadata" / "questionnaires.xlsx") as w:
+        defs.to_excel(w, sheet_name="ifb", index=False)
+    (root / "metadata" / "README.md").write_text(
+        "SYNTHETIC RELAX-shaped fixture. Mirrors the released data dictionary: "
+        "timestamps are tz-aware UTC; ibi_ppi is in milliseconds; ibi_blocker "
+        "flags unreliable detections. No imputation is performed.\n")
+    for pid, d in ibi_by_pid.items():
+        out = root / "data" / str(pid)
+        out.mkdir(parents=True, exist_ok=True)
+        d.to_parquet(out / "ibi_data.parquet", index=False)
+
+    _mark(root, f"RELAX-shaped, {n_participants} participants, "
+                f"{reports_per_participant} reports each")
     return root

@@ -3,7 +3,7 @@
 This file records every point where the implementation found a genuinely
 unspecified scientific decision, **and did not guess**.
 
-## Status: no blocking DECISION REQUIRED items
+## Status: ONE BLOCKING ITEM (D7) — RELAX cannot meet the frozen eligibility threshold
 
 The frozen specification was complete enough to implement without guessing.
 Specifically:
@@ -51,22 +51,79 @@ The audit records the observed code range verbatim and makes no assumption. A
 primary PMData analysis must not run until this is confirmed against the PMData
 documentation and the answer recorded here.
 
-### D3 — RELAX file layout and column names
+### D3 — RELAX file layout ✅ RESOLVED (files opened and verified)
 
-No RELAX file has been opened. The expected layout in `configs/relax.yaml` is a
-**declared expectation**. If it differs:
+The RELAX archive has been acquired and inspected
+(Zenodo `10.5281/zenodo.20701999`, CC-BY-4.0). The layout in
+`configs/relax.yaml` is now a **verified fact**, not an expectation:
+`questionnaire_responses.xlsx`, `metadata/questionnaires.xlsx`,
+`metadata/README.md`, `data/<pid>/ibi_data.parquet`.
 
-```
-DECISION REQUIRED: RELAX: cannot identify the 'stress' column in <file>.
-Columns present: [...]. Record the actual name in configs/relax.yaml rather
-than guessing.
-```
+### D4 — RELAX stress-rating direction ✅ RESOLVED (verified from anchor text)
 
-**Resolve by editing the config, never the adapter.**
+`configs/relax.yaml` now carries `direction_verified: true`.
 
-### D4 — RELAX stress-rating direction
+RELAX Likert items are anchored in **both directions** — some ascend in stress
+severity and some descend — so mapping by position would silently invert the
+scale for half of them. `aedt.io.relax.ITEM_SPECS` records the exact English
+anchor pair for every supported item, and the adapter **halts with
+`DecisionRequired`** if the anchors in the release differ.
 
-As D2, for RELAX. `configs/relax.yaml` carries `direction_confirmed: false`.
+Verified directions:
+
+| item | anchors (as released) | severity |
+|---|---|---|
+| `ifb-2` "I feel:" | `excited` → `calm` | **REVERSED** (7 = calm = least stressed) |
+| `ifb-7` "My mental effort is:" | `low` → `high` | ascending |
+| `mfb-3` "I expect for today:" | `no stress at all` → `a lot of stress` | ascending |
+| `afb-9` "…I felt overwhelmed today" | `strongly agree` → `strongly disagree` | **REVERSED** |
+
+### D6 — ⚠ OPEN: which RELAX item is the self-report for ρ\*
+
+**This is a genuine scientific decision the frozen specification does not
+cover.** The frozen spec names the primary report variable for StudentLife
+(single-item stress EMA) and PMData (PMSys `stress`), but RELAX did not exist
+in the specification as an opened dataset.
+
+**RELAX has no single-item "stress" scale of that kind.** The candidates, with
+their measured densities:
+
+| item | what it measures | median obs/participant |
+|---|---|---|
+| `ifb-2` excited↔calm | momentary tension/arousal — a stress **proxy** | ~71 |
+| `ifb-7` mental effort | momentary **demand**, not stress response | ~71 |
+| `mfb-3` expected stress | explicitly "stress" but **anticipatory** | ~38 |
+| `afb-9` felt overwhelmed | PSS-like, but **once per day** | ~34 |
+
+**Current choice: `ifb-2`,** because it is the densest repeated ordinal item
+and the closest momentary analogue of the StudentLife stress EMA. It is
+configurable (`relax.item`) and the choice is stamped into every audit.
+
+**It is a proxy, not a stress scale, and the reports say so.** Confirm the item
+choice before any RELAX result is treated as a stress finding.
+
+### D7 — ⚠ BLOCKING: RELAX cannot meet the frozen eligibility threshold
+
+**Measured, not assumed.** On the densest item (`ifb-2`):
+
+- median **71** self-reports per participant, maximum **106**
+- the frozen screen needs **≥120** (60 per epoch)
+- **0 of 31 participants qualify**; only 10 of 31 reach even 80 (40 per epoch)
+
+`mfb` (max 43) and `afb` (max 41) are far worse.
+
+**No primary ρ\* result may be reported from RELAX under the frozen
+specification.** The alternatives, and why they were rejected:
+
+1. **Lower `MIN_REPORTS_PER_EPOCH` to 40.** Legitimate *only* as the
+   pre-specified sensitivity analysis **S1**, never as the primary. It leaves
+   ~10 eligible participants — exactly the bootstrap minimum, so any interval
+   would be extremely wide.
+2. **Pool `ifb` + `mfb` + `afb`.** **Rejected.** They are different questions
+   with different wordings and different anchors; pooling them would violate
+   A2 (fixed person-specific thresholds) outright.
+3. **Lower the threshold to fit the data.** **Rejected** — that is changing the
+   frozen method to fit a dataset.
 
 ### D5 — Which covariate, if [9b] shows a weak association
 

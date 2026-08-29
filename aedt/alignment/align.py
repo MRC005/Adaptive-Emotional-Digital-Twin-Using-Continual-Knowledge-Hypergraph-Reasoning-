@@ -88,32 +88,52 @@ def align_sensor_to_reports(reports: pd.DataFrame, samples: pd.DataFrame,
     out = reports.sort_values(["pid", "ts"]).reset_index(drop=True).copy()
     vals = np.full(len(out), np.nan)
     counts = np.zeros(len(out), dtype=int)
-    wstart = np.empty(len(out), dtype="datetime64[ns]")
-    wend = np.empty(len(out), dtype="datetime64[ns]")
 
-    by_pid = {str(p): g.sort_values("ts") for p, g in samples.groupby("pid")}
-    for i, row in enumerate(out.itertuples(index=False)):
-        start, end = window.bounds(row.ts)
-        wstart[i], wend[i] = np.datetime64(start), np.datetime64(end)
-        g = by_pid.get(str(row.pid))
-        if g is None or g.empty:
+    # Work in int64 nanoseconds since the epoch. Comparing pandas Timestamps or
+    # np.datetime64 directly breaks as soon as one side is timezone-aware and
+    # the other is not -- and real datasets (RELAX ships tz-aware UTC) mix both.
+    # Epoch nanoseconds are unambiguous for either kind.
+    def as_ns(series: pd.Series) -> np.ndarray:
+        t = pd.to_datetime(series, errors="coerce")
+        if isinstance(t.dtype, pd.DatetimeTZDtype):
+            t = t.dt.tz_convert("UTC").dt.tz_localize(None)
+        return t.to_numpy(dtype="datetime64[ns]").astype("int64")
+
+    rep_ns = as_ns(out["ts"])
+    lookback_ns = int(window.lookback_hours * 3_600_000_000_000)
+    lag_ns = int(window.lag_hours * 3_600_000_000_000)
+    end_ns = rep_ns - lag_ns
+    start_ns = end_ns - lookback_ns
+
+    by_pid: dict[str, tuple[np.ndarray, np.ndarray]] = {}
+    for pid, g in samples.groupby("pid"):
+        g = g.sort_values("ts")
+        by_pid[str(pid)] = (as_ns(g["ts"]),
+                            g[value_col].to_numpy(dtype=float))
+
+    for i, pid in enumerate(out["pid"].astype(str).to_numpy()):
+        entry = by_pid.get(pid)
+        if entry is None:
             continue
-        t = g["ts"].to_numpy()
+        t, v = entry
         # strictly causal: (start, end], and end <= ts by construction
-        m = (t > np.datetime64(start)) & (t <= np.datetime64(end))
-        if m.sum() < window.min_samples:
+        lo = np.searchsorted(t, start_ns[i], side="right")
+        hi = np.searchsorted(t, end_ns[i], side="right")
+        if hi - lo < window.min_samples:
             continue
-        v = g.loc[m, value_col].to_numpy(dtype=float)
-        v = v[np.isfinite(v)]
-        if len(v) < window.min_samples:
+        w = v[lo:hi]
+        w = w[np.isfinite(w)]
+        if len(w) < window.min_samples:
             continue
-        counts[i] = len(v)
-        vals[i] = float(agg(v))
+        counts[i] = len(w)
+        vals[i] = float(agg(w))
 
     out[col] = vals
     out[f"{col}_n_samples"] = counts
-    out[f"{col}_window_start"] = wstart
-    out[f"{col}_window_end"] = wend
+    # window bounds are returned on the SAME clock as the reports came in on
+    out[f"{col}_window_start"] = out["ts"] - pd.Timedelta(
+        hours=window.lookback_hours + window.lag_hours)
+    out[f"{col}_window_end"] = out["ts"] - pd.Timedelta(hours=window.lag_hours)
     n_missing = int(np.isnan(vals).sum())
     if n_missing:
         log.info("alignment: %d/%d reports have no sensor coverage in the "
@@ -134,8 +154,15 @@ def assert_no_leakage(df: pd.DataFrame, col: str) -> None:
         raise DecisionRequired(
             f"Cannot verify causality for {col!r}: no {end_col} column. "
             "Alignment metadata must be retained.")
-    end = pd.to_datetime(df[end_col])
-    bad = df[end > df["ts"]]
+
+    # Compare on a single unambiguous clock, so a tz-aware dataset cannot slip
+    # past this assertion on a dtype technicality.
+    def as_utc(s: pd.Series) -> pd.Series:
+        t = pd.to_datetime(s, errors="coerce")
+        return (t.dt.tz_convert("UTC").dt.tz_localize(None)
+                if isinstance(t.dtype, pd.DatetimeTZDtype) else t)
+
+    bad = df[as_utc(df[end_col]) > as_utc(df["ts"])]
     if len(bad):
         raise DecisionRequired(
             f"FUTURE LEAKAGE: {len(bad)} aligned windows for {col!r} end after "

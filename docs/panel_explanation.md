@@ -178,8 +178,29 @@ It says so, loudly, and stops.
   its calibration state unchanged.
 
 ### What results are real?
-**None yet.** Everything is simulation, labelled as such on every figure and
-every table. No dataset file has been opened in any round of this project.
+**None.** Every result is simulation, labelled as such on every figure and
+table.
+
+**But we did open real data, and this is the interesting part.** We acquired
+RELAX — 31 working adults, six weeks, wearable heart rate plus repeated
+7-point Likert self-reports, published in *Scientific Data*, CC-BY-4.0. We
+verified its schema, verified the answer-label anchors, cross-checked its
+timestamps, and ran our strict audit.
+
+**It failed our own eligibility screen.** The method needs 60 repeated ordinal
+self-reports per person per epoch; RELAX's densest item gives a median of about
+50 after causal alignment and a maximum of 93. **Zero of 31 participants
+qualified.** Our pipeline exited with code 3 and produced no estimate.
+
+We did not lower the threshold to get a number.
+
+### Why is that a result rather than a failure?
+Because it quantifies a real constraint on the method: **it needs a report
+density that most current open longitudinal datasets do not provide.**
+StudentLife has it (~735 per participant) and is currently unreachable; the
+newer, better-documented open datasets deliberately sample less to reduce
+participant burden. That tension is worth stating in the paper, and now we have
+a measured number behind it instead of a hunch.
 
 ### Why is this research and not just software?
 Because the central output is a **proof about what is knowable**, and a

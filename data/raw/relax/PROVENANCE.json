@@ -1,0 +1,219 @@
+{
+  "dataset": "RELAX",
+  "title": "A six-week longitudinal dataset of wearable and self-reported stress measurements in working adults",
+  "doi": "10.5281/zenodo.20701999",
+  "zenodo_record": "20701999",
+  "licence": "CC-BY-4.0",
+  "citation": "Halmich, C., Jung, O., Schmoigl-Tonis, M., Schranz, C., Kremser, W., Kunas, B., & Laireiter, A.-R. (2026). Scientific Data. https://doi.org/10.1038/s41597-026-07711-4",
+  "archive_bytes": 16488314067,
+  "acquired_at_utc": "2026-08-29T22:12:06+00:00",
+  "acquisition_method": "partial extraction from the remote zip via HTTP range requests; accelerometer excluded",
+  "n_members_fetched": 34,
+  "failed_members": [],
+  "files": [
+    {
+      "member": "RELAXDataset/questionnaire_responses.xlsx",
+      "path": "questionnaire_responses.xlsx",
+      "bytes": 446091,
+      "sha256": "c30048f07848c33b4befebb81e88b643964b8b6ab5efd6d9b29605e44ed5847e"
+    },
+    {
+      "member": "RELAXDataset/data/57/ibi_data.parquet",
+      "path": "data/57/ibi_data.parquet",
+      "bytes": 13822593,
+      "sha256": "0247f26871ed690b869e602cdb81658415438ff9172fe217e6e0a1711fc12081"
+    },
+    {
+      "member": "RELAXDataset/data/56/ibi_data.parquet",
+      "path": "data/56/ibi_data.parquet",
+      "bytes": 17188909,
+      "sha256": "c69f2f5d5006de7c7f23454e53ccdff341893ee4c0362c5862d7363a752591c0"
+    },
+    {
+      "member": "RELAXDataset/data/51/ibi_data.parquet",
+      "path": "data/51/ibi_data.parquet",
+      "bytes": 9582973,
+      "sha256": "80d804a7a79e4b360f66400b43dcc2e1e1f1055d8862a22e38c5245a6a168dfc"
+    },
+    {
+      "member": "RELAXDataset/data/58/ibi_data.parquet",
+      "path": "data/58/ibi_data.parquet",
+      "bytes": 3755003,
+      "sha256": "cf9b55930cb195056691a58e167198ee181745b1e2f3794f176d6a2840c8ef90"
+    },
+    {
+      "member": "RELAXDataset/data/60/ibi_data.parquet",
+      "path": "data/60/ibi_data.parquet",
+      "bytes": 14834963,
+      "sha256": "8266ba0e41743dc6285c158a94de5d550ebf5a9be9bcb55ddff8f68e7e117dad"
+    },
+    {
+      "member": "RELAXDataset/data/34/ibi_data.parquet",
+      "path": "data/34/ibi_data.parquet",
+      "bytes": 25350696,
+      "sha256": "6964798b883568daf7d35b7a5bed81d13c0d8ba5910b19a746c6548cc2978ff3"
+    },
+    {
+      "member": "RELAXDataset/data/18/ibi_data.parquet",
+      "path": "data/18/ibi_data.parquet",
+      "bytes": 23091545,
+      "sha256": "1b950638d3994efdcc7c932f7b7479f33d3184d1af244f27f9dd9cecec76341f"
+    },
+    {
+      "member": "RELAXDataset/data/27/ibi_data.parquet",
+      "path": "data/27/ibi_data.parquet",
+      "bytes": 16628550,
+      "sha256": "da03dc2d325241b32a89a796b6ab324073724ccea1adb292d3770bfb9a02c463"
+    },
+    {
+      "member": "RELAXDataset/data/16/ibi_data.parquet",
+      "path": "data/16/ibi_data.parquet",
+      "bytes": 16352965,
+      "sha256": "eb7a5a3a38ce009b2d6aa4fc3df55066fbc1593e50006c31a1fb33da9d3d9cad"
+    },
+    {
+      "member": "RELAXDataset/data/45/ibi_data.parquet",
+      "path": "data/45/ibi_data.parquet",
+      "bytes": 18691220,
+      "sha256": "ed5e74ed1f16f04800f2c992451d198c8ecfa477c3d0c8f84e5a404677c58217"
+    },
+    {
+      "member": "RELAXDataset/data/28/ibi_data.parquet",
+      "path": "data/28/ibi_data.parquet",
+      "bytes": 11131790,
+      "sha256": "b857b55b4f0eef6d9bb459cd9aca7f0ed450a733b5e5998b900e4873747d4213"
+    },
+    {
+      "member": "RELAXDataset/data/17/ibi_data.parquet",
+      "path": "data/17/ibi_data.parquet",
+      "bytes": 29597733,
+      "sha256": "41a295dbd15883009db499b5a6b950de1abe151a46e43624af468aa1b24de9f2"
+    },
+    {
+      "member": "RELAXDataset/data/21/ibi_data.parquet",
+      "path": "data/21/ibi_data.parquet",
+      "bytes": 20268281,
+      "sha256": "14fd28ebb1d768cffc99bdd179a26c630b5e1214fe218094c180cc6dd30dc361"
+    },
+    {
+      "member": "RELAXDataset/data/44/ibi_data.parquet",
+      "path": "data/44/ibi_data.parquet",
+      "bytes": 8751595,
+      "sha256": "8d7598545d362e411544a33c4a79bd498ce3264cc170fe601e6eff515d667f9a"
+    },
+    {
+      "member": "RELAXDataset/data/43/ibi_data.parquet",
+      "path": "data/43/ibi_data.parquet",
+      "bytes": 19899000,
+      "sha256": "dcf94f5cd6ef751de28b72cbc2b070a11e6fb737ff135dd285a199072a9dd216"
+    },
+    {
+      "member": "RELAXDataset/data/38/ibi_data.parquet",
+      "path": "data/38/ibi_data.parquet",
+      "bytes": 13644799,
+      "sha256": "8b91ef0454c43b0f36f05c5e486a29ad4e8b455baf0d7c2c5c64f6418208b509"
+    },
+    {
+      "member": "RELAXDataset/data/31/ibi_data.parquet",
+      "path": "data/31/ibi_data.parquet",
+      "bytes": 16975811,
+      "sha256": "fdfc9c26d27663d71a9e31136a4d6eb4e19aeb102c70101cedfca3cb52bb73d4"
+    },
+    {
+      "member": "RELAXDataset/data/63/ibi_data.parquet",
+      "path": "data/63/ibi_data.parquet",
+      "bytes": 6701805,
+      "sha256": "af515ca1d4b8621cb7801cbddb8181a000f8a9c97efe420fa3055523b6543b31"
+    },
+    {
+      "member": "RELAXDataset/data/46/ibi_data.parquet",
+      "path": "data/46/ibi_data.parquet",
+      "bytes": 8534284,
+      "sha256": "bdda6bf07211d0ed999879ee2a307f3b3b255c596bde928c56026ff6c2d03abc"
+    },
+    {
+      "member": "RELAXDataset/data/41/ibi_data.parquet",
+      "path": "data/41/ibi_data.parquet",
+      "bytes": 10235496,
+      "sha256": "8440e6a1875228a966eecebb8fc71000df47b998256372a084ecca2934abbe9b"
+    },
+    {
+      "member": "RELAXDataset/data/48/ibi_data.parquet",
+      "path": "data/48/ibi_data.parquet",
+      "bytes": 19645342,
+      "sha256": "a8a11ceffebebeadb6b09f091367a184453870552f10617e20f6de4557826373"
+    },
+    {
+      "member": "RELAXDataset/data/24/ibi_data.parquet",
+      "path": "data/24/ibi_data.parquet",
+      "bytes": 13104798,
+      "sha256": "267bcd4281d23934f97d962d633009fc229cfee36e27efc3ceaec20701b11e0c"
+    },
+    {
+      "member": "RELAXDataset/data/23/ibi_data.parquet",
+      "path": "data/23/ibi_data.parquet",
+      "bytes": 21847883,
+      "sha256": "ec510640ef455b250a6d71a158ca8735f97de0479f8f43fbf253c7dd0cbd2817"
+    },
+    {
+      "member": "RELAXDataset/data/15/ibi_data.parquet",
+      "path": "data/15/ibi_data.parquet",
+      "bytes": 14279403,
+      "sha256": "02c2485c667bdcf3397cc87e48ee953966ced43138a12daa6fc2216b8dbf2433"
+    },
+    {
+      "member": "RELAXDataset/data/12/ibi_data.parquet",
+      "path": "data/12/ibi_data.parquet",
+      "bytes": 16736737,
+      "sha256": "8a1cac639b72bd24f2287e4bc8daef40b41628f4ae436d0902985bd2026d44b4"
+    },
+    {
+      "member": "RELAXDataset/data/49/ibi_data.parquet",
+      "path": "data/49/ibi_data.parquet",
+      "bytes": 15948704,
+      "sha256": "0e6f5fae5168b6085329b32db23979ba856cfff80deb54989a5fbba9f1cc6dbe"
+    },
+    {
+      "member": "RELAXDataset/data/40/ibi_data.parquet",
+      "path": "data/40/ibi_data.parquet",
+      "bytes": 13524176,
+      "sha256": "5554669b873c9631fb712b93e6cd3659a76c7e79d5f729a1f046e7823215d4c5"
+    },
+    {
+      "member": "RELAXDataset/data/13/ibi_data.parquet",
+      "path": "data/13/ibi_data.parquet",
+      "bytes": 15100487,
+      "sha256": "2124d48a14816357bfed389ea364fd2af8cda8755d11a25c4c1e1cd0c7ee6e7e"
+    },
+    {
+      "member": "RELAXDataset/data/14/ibi_data.parquet",
+      "path": "data/14/ibi_data.parquet",
+      "bytes": 10029743,
+      "sha256": "ca1bd9d0447129285f665cc48118af9cd680889a16033584d7f4d2c7eb26f78b"
+    },
+    {
+      "member": "RELAXDataset/data/22/ibi_data.parquet",
+      "path": "data/22/ibi_data.parquet",
+      "bytes": 15666459,
+      "sha256": "4d74ee2a7673a159f428b787b9b05dc3fb493a5e69ca7189e4e6693db6402315"
+    },
+    {
+      "member": "RELAXDataset/data/25/ibi_data.parquet",
+      "path": "data/25/ibi_data.parquet",
+      "bytes": 13587956,
+      "sha256": "6179bea2c82735d0ccb333fef361686f8722aff9dacf61ab02f985e6440bfc94"
+    },
+    {
+      "member": "RELAXDataset/metadata/questionnaires.xlsx",
+      "path": "metadata/questionnaires.xlsx",
+      "bytes": 75817,
+      "sha256": "6629151198ea6cf3f74145915afd68515bcc931b5d77ddc5d3b638c759536fc1"
+    },
+    {
+      "member": "RELAXDataset/metadata/README.md",
+      "path": "metadata/README.md",
+      "bytes": 4042,
+      "sha256": "08220429a7d8ac8669ed649131e582d5e7ba2218b1f6095204e06867869241ec"
+    }
+  ]
+}

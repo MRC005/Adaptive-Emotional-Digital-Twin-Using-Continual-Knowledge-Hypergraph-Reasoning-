@@ -35,7 +35,7 @@ Regenerate as a table with `python scripts/generate_review2_outputs.py`
 | Dataset audit framework | ✅ | | | `aedt/io/base.py` + per-adapter `audit()`; every mandated field |
 | **StudentLife adapter** | ⚠️ | | | Implemented; **fixture-tested only. NEVER RUN ON THE REAL ARCHIVE.** |
 | **PMData adapter** | ⚠️ | | | Implemented; **fixture-tested only. NEVER RUN ON THE REAL ARCHIVE.** |
-| **RELAX adapter** | ⚠️ | | | Implemented; layout is a **DECLARED EXPECTATION, unverified** |
+| **RELAX adapter** | ✅ | | | **REAL FILES OPENED AND AUDITED.** Schema verified; anchors verified; 31 participants; **fails the eligibility screen** |
 | **WESAD adapter** | ⚠️ | | | Implemented; **benchmark only**, refuses the primary by construction |
 | Epoch 1 vs Epoch 2 visualisation | ✅ | | | `aedt/viz/curves.py` — the two-curve plot |
 | Figure / table generation pipeline | ✅ | | | 10 figures, 13 tables, all stamped |
@@ -71,9 +71,9 @@ Regenerate as a table with `python scripts/generate_review2_outputs.py`
 | Baselines (6) | ✅ | ✅ | ✅ | ✅ | partial |
 | Visualisation | ✅ | ✅ | ✅ | ✅ | n/a |
 | Demo script | ✅ | — | ✅ | ✅ | n/a |
-| StudentLife loader | ✅ | ✅ fixture | ✅ fixture | ✅ | ❌ **never run on real files** |
+| StudentLife loader | ✅ | ✅ fixture | ✅ fixture | ✅ | ❌ **never run on real files** (host unreachable) |
 | PMData loader | ✅ | ✅ fixture | ✅ fixture | ✅ | ❌ **never run on real files** |
-| RELAX loader | ✅ | ✅ fixture | ✅ fixture | ✅ | ❌ **never run on real files** |
+| **RELAX loader** | ✅ | ✅ | ✅ | ✅ | ✅ **RUN ON REAL FILES; dataset fails eligibility** |
 | WESAD loader | ✅ | ✅ | ✅ | ✅ | ❌ **never run on real files** |
 
 ## Verified behaviour, reproduced from the historical record
@@ -95,10 +95,34 @@ All **SYNTHETIC**.
 | Withdrawn per-anchor artefact | −0.186 | same |
 | Continuous reference bias | −0.008 | same |
 
+## The real-data result, stated plainly
+
+**RELAX was acquired, audited, and rejected by the project's own screen.**
+
+| | measured on the real files |
+|---|---|
+| participants | 31 |
+| aligned reports | 1 519 |
+| median reports/participant | **50** (item `ifb-2`, after causal alignment) |
+| maximum reports/participant | **93** |
+| frozen requirement | **≥120** (60 per epoch) |
+| **eligible at the frozen threshold** | **0 / 31** |
+| eligible at the pre-specified S1 relaxation (40/epoch) | **2 / 31** |
+| S1 placebo | **NOT RUNNABLE** (needs ≥10 participants) |
+| reports with no sensor coverage | 28.0% (left missing, never imputed) |
+| IBI samples discarded (device-flagged or implausible) | 36.3% |
+
+**No ρ\* estimate was produced, and none should have been.** Both the primary
+and the pre-specified sensitivity analysis terminate with exit code 3.
+
 ## What is honestly weak
 
-1. **No real data, ever.** The empirical claim rests on nothing. This is the
-   single largest gap and it is a download, not a research problem.
+1. **No real-data empirical result exists.** One real dataset has now been
+   opened and audited, which is progress over "no file has been opened" — but
+   it *failed*, so the empirical claim still rests on nothing. The obstacle is
+   no longer a download; it is that the method needs ~120 repeated ordinal
+   self-reports per person and current open longitudinal datasets do not
+   provide that density.
 2. **The hypergraph-native estimator form FAILS on synthetic data, and we
    report it.** Ablation 1 disqualifies the n-ary spread-ratio arm for two
    independent reasons: it does not hold its size when the truth is ρ = 1

@@ -15,8 +15,18 @@ venv/
 # presentation-ready set in figures/ and tables/, which is.
 results/
 data/raw/*
+!data/raw/*/
 data/interim/*
 data/processed/*
 data/synthetic/*
 !data/**/.gitkeep
+# Raw participant data is NEVER committed (size, and no redistribution right).
+# The provenance record IS committed so a run is reproducible and citable.
+!data/raw/*/PROVENANCE.json
+# Third-party dataset content (even small docs) is not redistributed here;
+# scripts/fetch_relax.py re-acquires it from the original DOI.
+data/raw/*/metadata/
+data/raw/*/data/
+*.parquet
+*.xlsx
 *.jsonl

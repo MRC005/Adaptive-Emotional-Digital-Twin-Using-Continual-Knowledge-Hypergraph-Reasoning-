@@ -1,13 +1,18 @@
 # Dataset Audit
 
-> **NO DATASET FILE HAS BEEN OPENED BY THIS PROJECT.**
+> **ONE REAL DATASET HAS NOW BEEN ACQUIRED AND AUDITED: RELAX.**
 >
-> Every real dataset below is at status **PLANNED**. The adapters, the audit
-> framework and the acquisition instructions are implemented and tested against
-> synthetic dataset-shaped fixtures. What is missing is one person-hour of
-> downloading — nothing more, and nothing less.
+> RELAX (Zenodo `10.5281/zenodo.20701999`, CC-BY-4.0) was downloaded, its
+> schema inspected, and the strict audit run against the real files. **It fails
+> the frozen eligibility screen on self-report density** — see below. That is a
+> measured result, not an assumption, and **no primary ρ\* result is reported
+> from it.**
 >
-> Run `python scripts/audit_dataset.py --all` to reproduce this state.
+> StudentLife, PMData and WESAD remain at status **PLANNED** — no file opened.
+> StudentLife is currently **unreachable** from this environment.
+>
+> Run `python scripts/audit_dataset.py --all` to reproduce this state, and
+> `python scripts/fetch_relax.py --root data/raw/relax` to re-acquire RELAX.
 
 ## Dataset hierarchy and scientific roles
 
@@ -18,7 +23,7 @@ primary longitudinal validation by passing a flag.
 |---|---|---|---|---|
 | **synthetic** | SIMULATION | ✅ implemented, runs | conversation minutes (simulated) | simulated 5-point ordinal |
 | **StudentLife** | **PRIMARY_LONGITUDINAL** | ⛔ PLANNED — files absent | daily conversation minutes | single-item stress EMA (5 ordered levels) |
-| **RELAX** | LONGITUDINAL_ALTERNATIVE | ⛔ PLANNED — files absent | windowed wearable physiology | repeated subjective stress rating |
+| **RELAX** | LONGITUDINAL_ALTERNATIVE | ✅ **REAL — acquired & audited; FAILS eligibility** | heart rate from Polar IBI | `ifb-2` 7-point Likert (excited↔calm) |
 | **WESAD** | **BENCHMARK_PHYSIOLOGICAL** | ⛔ PLANNED — files absent | chest ECG window statistics | protocol condition label |
 | **PMData** | CONDITIONAL_SECONDARY | ⛔ PLANNED — files absent | Fitbit resting heart rate | PMSys daily wellness `stress` |
 | SWELL-KW, AffectiveROAD | ROBUSTNESS_OPTIONAL | not implemented | — | — |
@@ -161,21 +166,87 @@ DECISION REQUIRED: PMData required variables unavailable.
 
 ---
 
-## RELAX audit
+## RELAX audit — ✅ RUN ON REAL FILES
 
-Verifies: repeated subjective stress observations · participant identifiers ·
-timestamps · wearable physiology · longitudinal span · repeated measures
-sufficient for epoch analysis · alignment between physiology and reports.
+**Source.** Halmich, Jung, Schmoigl-Tonis, Schranz, Kremser, Kunas & Laireiter
+(2026), *Scientific Data*. Zenodo `10.5281/zenodo.20701999`, **CC-BY-4.0**,
+open access. Device: Polar Verity Sense.
 
-Physiology is aggregated into a **causal window ending at each report**
-(2 hours by default, configurable), and the alignment metadata is retained so
-the leakage assertion can check it.
+**Acquisition.** `scripts/fetch_relax.py` reads the remote zip's central
+directory over HTTP range requests and pulls **only** the ~0.5 GB that is
+scientifically needed, leaving ~15.9 GB of unused accelerometer data on the
+server. Provenance (DOI, licence, per-file sizes and SHA-256) is written to
+`data/raw/relax/PROVENANCE.json`.
 
-⚠️ **The expected file layout is a DECLARED EXPECTATION, not a verified fact.**
-No RELAX file has been opened. Column names live in `configs/relax.yaml` so
-adapting to the actual release is a **config change, not a code change**. If
-the adapter halts with `DECISION REQUIRED`, record the actual column names in
-the config — do not edit the adapter to guess.
+**Verified structure** (read from the archive itself, not from a description):
+
+```
+questionnaire_responses.xlsx   sheets: users, interv, mfb, ifb, afb, profile1..7
+metadata/questionnaires.xlsx   item + ANSWER-LABEL definitions
+metadata/README.md             data dictionary
+data/<pid>/ibi_data.parquet    ibi_ppi (ms), ibi_blocker, ibi_errorEstimate,
+                               timestamp (tz-aware UTC)
+data/<pid>/acc_data.parquet    52 Hz triaxial accelerometer  [NOT USED]
+```
+
+31 participants (ids 12–63); four phases, 2024-02-25 → 2024-04-28 UTC.
+
+### The label trap, again — and RELAX is worse than StudentLife
+
+RELAX Likert items are anchored **in both directions**. Some ascend in stress
+severity and some descend:
+
+| item | anchors as released | severity |
+|---|---|---|
+| `ifb-2` "I feel:" | `excited` → `calm` | **REVERSED** (7 = calm = least stressed) |
+| `ifb-7` "My mental effort is:" | `low` → `high` | ascending |
+| `mfb-3` "I expect for today:" | `no stress at all` → `a lot of stress` | ascending |
+| `afb-9` "…I felt overwhelmed today" | `strongly agree` → `strongly disagree` | **REVERSED** |
+
+Mapping by stored value would silently invert the scale for **half** of them.
+`aedt.io.relax.ITEM_SPECS` records the exact anchor pair for each supported
+item and the adapter **halts with `DECISION REQUIRED`** if the release differs.
+
+### Timestamps
+
+`manual_date` is unix epoch **milliseconds**; `readable_date` is the same
+instant expressed tz-naive. The adapter **cross-checks them** and refuses to
+proceed if they disagree by more than one second. Measured agreement on the
+real files: **0.0 s**.
+
+### Sensor
+
+Heart rate = `60000 / ibi_ppi`. Samples flagged by the device (`ibi_blocker`)
+and physiologically implausible intervals (outside 300–2000 ms, i.e. 30–200
+bpm) are **DROPPED, never repaired or imputed**. Roughly **36%** of raw IBI
+samples are discarded this way on the real data. Heart rate is then averaged
+over a strictly causal 2-hour window ending at each report, requiring ≥30 valid
+samples or the value is left **missing**.
+
+### ⛔ THE RESULT: RELAX FAILS THE FROZEN ELIGIBILITY SCREEN
+
+Measured on the real files, densest item (`ifb-2`):
+
+| | value |
+|---|---|
+| participants | 31 |
+| aligned reports | ~1.5 k |
+| **median reports per participant** | **~71** |
+| **maximum reports per participant** | **~106** |
+| **frozen requirement** | **≥120 (60 per epoch)** |
+| **participants qualifying** | **0 of 31** |
+| participants at a relaxed 40/epoch | ~10 of 31 |
+
+`mfb` (max 43) and `afb` (max 41) are far worse.
+
+**No primary ρ\* result is reported from RELAX.** The eligibility screen
+refuses, the pipeline exits with code 3, and the screen is **not** relaxed to
+make the data fit. A pre-specified sensitivity analysis (S1, 40/epoch) can be
+run with `--sensitivity` and is reported alongside — never in place of — the
+primary.
+
+This is a genuine, citable finding: **the method needs a self-report density
+that most current open longitudinal datasets do not provide.**
 
 ---
 

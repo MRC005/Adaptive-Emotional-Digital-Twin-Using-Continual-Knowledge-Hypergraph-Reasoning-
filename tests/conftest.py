@@ -59,4 +59,5 @@ def pmdata_fixture(tmp_path_factory):
 def relax_fixture(tmp_path_factory):
     from aedt.io.fixtures import make_relax_fixture
     return make_relax_fixture(tmp_path_factory.mktemp("rx"),
-                              n_participants=14, days=60)
+                              n_participants=14,
+                              reports_per_participant=130)

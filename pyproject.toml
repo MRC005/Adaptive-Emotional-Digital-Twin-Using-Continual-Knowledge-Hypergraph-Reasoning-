@@ -32,6 +32,11 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=7.4"]
+# The RELAX release ships its questionnaires as .xlsx, which pandas can only
+# read with openpyxl. Kept OUT of the core dependency list so the frozen
+# software specification (numpy/scipy/pandas/matplotlib/pyyaml) is unchanged
+# for every other dataset and for the synthetic pipeline.
+relax = ["openpyxl>=3.1"]
 
 [project.scripts]
 aedt-demo = "aedt.demo:main"

@@ -37,7 +37,7 @@ import pandas as pd
 
 from .config import load_config
 from .constants import DataStatus
-from .errors import ScientificError
+from .errors import NoEligibleParticipants, ScientificError
 from .logging_setup import setup_logging
 from .pipeline import run_pipeline
 from .reporting.metadata import make_run_metadata, new_run_dir, write_metadata
@@ -58,9 +58,56 @@ def head(n: int, title: str, say: str) -> None:
     rule("=")
 
 
+def _run_s1_sensitivity(dataset, root, cfg, n_resamples) -> int:
+    """PRE-SPECIFIED sensitivity analysis S1 (frozen spec §15).
+
+    Relaxes MIN_REPORTS_PER_EPOCH from 60 to 40. This is declared IN ADVANCE in
+    docs/frozen_scientific_specification.md, the deviation is detected by
+    Config.deviations_from_frozen() and written into the run folder, and the
+    result is reported ALONGSIDE the primary -- never as the primary.
+    """
+    from .config import load_config as _load
+
+    rule("=")
+    print("  PRE-SPECIFIED SENSITIVITY ANALYSIS S1")
+    print("  MIN_REPORTS_PER_EPOCH: 60 (frozen) -> 40")
+    print("  This is NOT the primary endpoint and must never be reported as one.")
+    rule("=")
+    scfg = _load("simulation" if dataset == "synthetic" else dataset,
+                 overrides={"eligibility.min_reports_per_epoch": 40})
+    print(f"  declared deviations: {scfg.deviations_from_frozen()}")
+    try:
+        r = run_pipeline(dataset, root=root, config=scfg,
+                         n_resamples=n_resamples, build_twins=False,
+                         halt_on_placebo_failure=False)
+    except ScientificError as exc:
+        print(f"\n  S1 ALSO FAILS: {exc}")
+        rule("=")
+        return exc.exit_code
+    print(f"\n  eligible at 40/epoch: {r.n_eligible}/{len(r.eligibility)}")
+    if r.placebo is not None:
+        print(f"  placebo: rho*={r.placebo.rho_star:.3f} "
+              f"[{r.placebo.ci_low:.3f}, {r.placebo.ci_high:.3f}] "
+              f"-> {r.placebo.verdict[:60]}")
+    if r.primary is not None and r.primary.uncertainty is not None:
+        u = r.primary.uncertainty
+        print(f"  S1 rho* = {r.primary.rho_star:.4f}  "
+              f"95% CI [{u.ci_low:.4f}, {u.ci_high:.4f}]  "
+              f"n={r.primary.n_participants_used}")
+        print("  ^ SENSITIVITY ONLY. Underpowered and below the frozen "
+              "eligibility floor.")
+    else:
+        print("  S1 produced no estimate either.")
+    for b in r.blocking_reasons:
+        print(f"  BLOCKING: {b}")
+    rule("=")
+    return 3
+
+
 def run_demo(dataset: str = "synthetic", *, root: str | None = None,
              participant: str | None = None, out_base: str = "results",
-             n_resamples: int | None = 999, quiet: bool = False) -> int:
+             n_resamples: int | None = 999, quiet: bool = False,
+             sensitivity: bool = False) -> int:
     t0 = time.time()
     cfg = load_config("simulation" if dataset == "synthetic" else dataset)
     setup_logging("WARNING" if quiet else "INFO")
@@ -78,6 +125,24 @@ def run_demo(dataset: str = "synthetic", *, root: str | None = None,
                            n_resamples=n_resamples,
                            twin_pids=[participant] if participant else None,
                            halt_on_placebo_failure=False)
+    except NoEligibleParticipants as exc:
+        rule("!")
+        print(f"  {exc}")
+        rule("!")
+        print()
+        print("  NO PRIMARY RESULT IS PRODUCED. The frozen eligibility screen")
+        print("  excluded every participant, and the screen is not relaxed to")
+        print("  make a dataset fit.")
+        if sensitivity:
+            print()
+            code = _run_s1_sensitivity(dataset, root, cfg, n_resamples)
+            return code
+        print()
+        print("  Re-run with --sensitivity to execute the PRE-SPECIFIED S1")
+        print("  sensitivity analysis (MIN_REPORTS_PER_EPOCH = 40), which is")
+        print("  reported ALONGSIDE the primary and never in place of it.")
+        rule("!")
+        return exc.exit_code
     except ScientificError as exc:
         rule("!")
         print(f"  {exc}")
@@ -363,6 +428,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--dataset", default="synthetic",
                     choices=["synthetic", "studentlife", "relax", "wesad",
                              "pmdata"])
+    ap.add_argument("--sensitivity", action="store_true",
+                    help="also run the PRE-SPECIFIED S1 sensitivity analysis "
+                         "(MIN_REPORTS_PER_EPOCH=40) when the frozen screen "
+                         "leaves nobody eligible")
     ap.add_argument("--root", default=None,
                     help="path to the real dataset archive (real datasets only)")
     ap.add_argument("--participant", default=None,
@@ -373,7 +442,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--quiet", action="store_true")
     a = ap.parse_args(argv)
     return run_demo(a.dataset, root=a.root, participant=a.participant,
-                    out_base=a.out, n_resamples=a.bootstrap, quiet=a.quiet)
+                    out_base=a.out, n_resamples=a.bootstrap, quiet=a.quiet,
+                    sensitivity=a.sensitivity)
 
 
 if __name__ == "__main__":

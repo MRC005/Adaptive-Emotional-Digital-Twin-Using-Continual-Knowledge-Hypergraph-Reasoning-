@@ -66,9 +66,21 @@ def main(argv=None) -> int:
             shutil.copy2(f, dst / f.name)
             n += 1
 
-    # the audit table for EVERY dataset, including the ones with no files
-    audits = [get_adapter(name).audit(a.root if name == a.dataset else None)
-              for name in sorted(ADAPTERS)]
+    # The audit table for EVERY dataset, including the ones with no files.
+    # A dataset whose real archive is present under data/raw/<name> is audited
+    # against it, so the table shows the REAL status where one exists.
+    def root_for(name: str):
+        if name == a.dataset:
+            return a.root
+        local = Path("data/raw") / name
+        return str(local) if local.exists() else None
+
+    audits = []
+    for name in sorted(ADAPTERS):
+        try:
+            audits.append(get_adapter(name).audit(root_for(name)))
+        except Exception as exc:            # a halting audit is itself a result
+            print(f"  audit({name}) halted: {exc}")
     write_table(dataset_audit_table(audits), tabs / "t00_all_dataset_audits",
                 title="Dataset audit across every registered dataset")
 

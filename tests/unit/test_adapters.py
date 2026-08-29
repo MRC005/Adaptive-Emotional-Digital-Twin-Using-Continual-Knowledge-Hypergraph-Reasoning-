@@ -106,24 +106,68 @@ def test_pmdata_reports_missing_variables_rather_than_guessing(tmp_path):
 def test_relax_fixture_loads_through_the_causal_window(relax_fixture):
     res = get_adapter("relax").load(relax_fixture)
     validate_long_frame(res.frame, res.sensor, n_categories=res.n_categories)
-    assert res.sensor == "physio_window_mean"
+    assert res.sensor == "heart_rate_bpm"
+    assert res.n_categories == 7
     assert res.frame["pid"].nunique() == 14
-    # alignment metadata proves causality was checked
+    # alignment metadata proves causality was checked, on a tz-aware clock
     assert f"{res.sensor}_window_end" in res.frame.columns
     assert (res.frame[f"{res.sensor}_window_end"] <= res.frame["ts"]).all()
+    # heart rate derived from IBI must be physiologically plausible
+    assert 30 < res.frame[res.sensor].min() < res.frame[res.sensor].max() < 200
 
 
-def test_relax_names_the_column_it_cannot_find(tmp_path):
+def test_relax_severity_is_reversed_from_the_anchor_text(relax_fixture):
+    """ifb-2 is anchored 'excited'..'calm', so 7 = calm = LEAST stressed.
+    Mapping by stored value would invert the scale."""
+    res = get_adapter("relax").load(relax_fixture)
+    df = res.frame
+    assert (df.loc[df["raw_response"] == 7, "report"] == 1).all()
+    assert (df.loc[df["raw_response"] == 1, "report"] == 7).all()
+    assert res.provenance["severity_reversed"] is True
+
+
+def test_relax_halts_when_the_released_anchors_differ(tmp_path):
+    """If the release is re-anchored, the DIRECTION of severity can no longer
+    be trusted, so the adapter must stop rather than guess."""
     import pandas as pd
     from aedt.io.fixtures import make_relax_fixture
-    root = make_relax_fixture(tmp_path / "rx2", n_participants=3, days=30)
-    f = root / "stress_report.csv"
-    d = pd.read_csv(f).rename(columns={"stress": "how_tense_zzz"})
-    d.to_csv(f, index=False)
+    root = make_relax_fixture(tmp_path / "rx2", n_participants=3,
+                              reports_per_participant=40)
+    f = root / "metadata" / "questionnaires.xlsx"
+    d = pd.read_excel(f, sheet_name="ifb")
+    d.loc[d["question_id"] == "ifb-2", "answer_labels_en"] = "['calm', 'excited']"
+    with pd.ExcelWriter(f) as w:
+        d.to_excel(w, sheet_name="ifb", index=False)
     with pytest.raises(DecisionRequired) as e:
         get_adapter("relax").load(root)
-    assert "cannot identify" in str(e.value)
-    assert "configs/relax.yaml" in str(e.value)
+    msg = str(e.value)
+    assert "differ from expected mapping" in msg
+    assert "cannot be trusted" in msg
+    assert "Do NOT guess" in msg
+
+
+def test_relax_timestamp_crosscheck_is_performed(relax_fixture):
+    """manual_date (epoch ms) and readable_date must describe the same instant;
+    otherwise the timezone of readable_date is unknown."""
+    res = get_adapter("relax").load(relax_fixture)
+    assert res.provenance["timestamp_crosscheck_max_delta_s"] < 1.0
+    assert "epoch ms" in res.provenance["timestamp_source"]
+
+
+def test_relax_drops_flagged_and_implausible_ibi_never_repairs(relax_fixture):
+    res = get_adapter("relax").load(relax_fixture)
+    q = res.provenance["sensor_quality"]
+    assert q, "no per-participant sensor quality was recorded"
+    one = next(iter(q.values()))
+    assert one["n_dropped_device_flagged"] > 0, (
+        "the fixture plants device-flagged samples; they must be dropped")
+    assert one["n_kept"] < one["n_raw"]
+
+
+def test_relax_rejects_an_unknown_item():
+    from aedt.io.relax import RelaxAdapter
+    with pytest.raises(DecisionRequired, match="Unknown RELAX item"):
+        RelaxAdapter(item="not-an-item")
 
 
 # ------------------------------------------------------------------- WESAD

@@ -6,24 +6,36 @@
 
 ---
 
-## ⚠️ Data status — read this first
+## ⚠️ Scientific status — read this first
 
-**No dataset file has been opened by this project.**
+| | Status |
+|---|---|
+| **Implemented & verified** | Full pipeline, 16 modules, 230+ tests passing |
+| **Validated on SYNTHETIC data** | Estimator calibration, placebo, bias envelope, ablation |
+| **Validated on REAL data** | ❌ **NONE.** No primary ρ\* result exists from any real dataset |
+| **Real data acquired & audited** | ✅ **RELAX** (31 participants) — **fails the eligibility screen** |
+| **Pending** | A dataset with sufficient self-report density |
 
-Every result in this repository is **SYNTHETIC**, generated from the frozen
-model in `docs/frozen_scientific_specification.md` §5, and is labelled as such
-on every figure, every table and every result object. Nothing here is evidence
-about humans.
+**There is no real-data empirical result in this repository, and the software
+refuses to manufacture one.**
 
-Real-dataset adapters, a strict audit framework and acquisition instructions
-are implemented and tested against synthetic dataset-shaped fixtures. When the
-files are absent the system reports
+One real dataset — **RELAX** (Halmich et al. 2026, *Scientific Data*; Zenodo
+[10.5281/zenodo.20701999](https://doi.org/10.5281/zenodo.20701999), CC-BY-4.0)
+— has been downloaded, schema-verified and put through the strict audit. It
+**fails the frozen eligibility screen**: the densest repeated item gives a
+median of **~71** self-reports per participant against the **120** (60 per
+epoch) the method requires, so **0 of 31 participants qualify**. The pipeline
+exits with code 3 and reports the failure. The threshold was **not** relaxed to
+make the data fit. See [`docs/dataset_audit.md`](docs/dataset_audit.md) and
+[`docs/dataset_compatibility.md`](docs/dataset_compatibility.md).
 
-```
-REAL DATA UNAVAILABLE - <DATASET> AUDIT NOT RUN
-```
+Every other result here is **SYNTHETIC**, generated from the frozen model in
+`docs/frozen_scientific_specification.md` §5, and labelled as such on every
+figure, table and result object. Nothing here is evidence about humans.
 
-and **never** substitutes synthetic data.
+When real files are absent the system reports
+`REAL DATA UNAVAILABLE - <DATASET> AUDIT NOT RUN` and **never** substitutes
+synthetic data.
 
 | Label | Meaning |
 |---|---|
@@ -102,6 +114,25 @@ python -m pytest tests -q
 python scripts/generate_review2_outputs.py
 ```
 
+### Acquire and audit the one real dataset that is obtainable
+
+```bash
+pip install -e ".[relax]"
+python scripts/fetch_relax.py --root data/raw/relax
+```
+
+Pulls **~0.5 GB** of a **16.5 GB** archive using HTTP range requests — the
+self-reports, the item definitions and the interbeat intervals — and skips
+15.9 GB of accelerometer data the analysis does not use. Writes
+`data/raw/relax/PROVENANCE.json` (DOI, licence, per-file SHA-256).
+
+```bash
+python scripts/audit_dataset.py --dataset relax --root data/raw/relax
+python scripts/run_demo.py --dataset relax --root data/raw/relax --sensitivity
+```
+
+The demo **exits 3 and produces no ρ\* estimate** — that is the correct result.
+
 ### Audit the datasets
 
 ```bash
@@ -175,6 +206,25 @@ Distinct codes exist so a wrapper cannot accidentally proceed past a failed gate
 ```
 
 ---
+
+## Review-2 evidence table
+
+What a reviewer can check, and how.
+
+| Claim | Evidence | Verify with |
+|---|---|---|
+| Estimator is calibrated under the null | ρ\* = 1.00 ± 0.03 across 3 threshold placements and AR(1) noise | `pytest tests/synthetic -q` |
+| Estimator is conservative, never inflated | at true ρ = 0.85 it returns ρ\* ∈ (0.85, 1.00) | `tests/synthetic/test_known_answer.py` |
+| The obvious affine method fails | reproduces its **−0.107** fabricated null bias on 5- and 7-point scales | `tests/regression/test_known_failures.py` |
+| A withdrawn earlier claim stays falsifiable | the −0.19 harness artefact is still reproducible beside the corrected −0.107 | same file |
+| Placebo does not fire on real recalibration | does not reject at true ρ = 1.00, 0.85 **and 0.70** | `tests/unit/test_placebo.py` |
+| No future leakage | planted future samples are rejected; twin clock only moves forward | `tests/unit/test_leakage.py` |
+| Labels are never guessed | scrambled option order still maps correctly; unknown label halts | `tests/unit/test_remap.py` |
+| Bootstrap clusters on participants | schema refuses any other resampling unit | `tests/unit/test_bootstrap.py` |
+| Hypergraph is **not** load-bearing | deleting every context column leaves ρ\* bit-identical | `tests/unit/test_hypergraph.py` |
+| Hypergraph-native estimator **fails** | disqualified: not null-calibrated, wrong direction | `figures/fig07_hypergraph_ablation.png` |
+| Real data is not faked | missing archive → `REAL DATA UNAVAILABLE`, exit 6 | `tests/integration/test_missing_real_data.py` |
+| **RELAX really was audited, and really failed** | 0/31 eligible; pipeline exits 3 | `tests/regression/test_relax_real_audit.py` |
 
 ## The four contributions
 
@@ -261,6 +311,15 @@ is implemented directly. Runs on any laptop, no GPU, no network at run time.
 
 ## Status
 
-The **science is frozen**. The **software is built and tested**. The **real-data
-validation is pending** and is the single largest gap — it is a download, not a
-research problem.
+The **science is frozen**. The **software is built and tested**. **Real-data
+validation is still pending — and it is now a harder problem than a download.**
+
+The one obtainable, format-compatible longitudinal dataset (RELAX) was
+acquired and audited, and it **fails on self-report density**. That is a real
+finding rather than an excuse: the method needs roughly 120 repeated ordinal
+self-reports per person, and most current open longitudinal datasets sample
+less aggressively than that to limit participant burden. StudentLife, which
+does have the density (~735/participant), is currently unreachable.
+
+**This project is not publication-ready.** The theory and the simulation
+evidence are sound; the empirical section has no evidence at all.

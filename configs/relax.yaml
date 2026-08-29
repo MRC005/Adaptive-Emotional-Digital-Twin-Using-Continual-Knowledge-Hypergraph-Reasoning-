@@ -1,23 +1,37 @@
 # RELAX -- LONGITUDINAL ALTERNATIVE / ADDITIONAL VALIDATION TARGET.
-# NO RELAX FILE HAS BEEN OPENED. The column names below are a DECLARED
-# EXPECTATION. If the adapter halts with DECISION REQUIRED, record the ACTUAL
-# names here -- do not edit the adapter to guess.
+#
+# Halmich et al. (2026), Scientific Data. Zenodo 10.5281/zenodo.20701999,
+# CC-BY-4.0. 31 working adults, four study phases, 2024-02-25 .. 2024-04-28 UTC.
+# Polar Verity Sense: interbeat intervals (IBI) + 52 Hz accelerometer.
+#
+# THE FILES HAVE BEEN OPENED AND THE SCHEMA VERIFIED. Everything below reflects
+# the actual release, not an expectation.
+#
+# KNOWN LIMITATION, MEASURED NOT ASSUMED: the densest repeated item (ifb-2)
+# yields a median of ~71 observations per participant, and NO participant
+# reaches the 120 (60 per epoch) the frozen eligibility screen requires.
+# RELAX therefore cannot support the frozen PRIMARY endpoint. See
+# docs/dataset_audit.md.
 dataset:
   name: relax
   role: LONGITUDINAL_ALTERNATIVE
   data_status: REAL
-  root: null
-  sensor: physio_window_mean
-  n_categories: null            # null => taken from the observed range
-  report_variable: repeated subjective stress rating
+  root: null                  # set with --root, e.g. data/raw/relax
+  sensor: heart_rate_bpm
+  n_categories: 7
+  report_variable: "ifb-2 (I feel: excited <-> calm), 7-point Likert"
 
-adapter:
-  report_glob: "*report*.csv"
-  physio_glob: "*physio*.csv"
-  pid_col: participant_id
-  ts_col: timestamp
-  report_col: stress
-  signal_col: hr
+relax:
+  # Supported items, all verified against metadata/questionnaires.xlsx:
+  #   ifb-2  'excited' <-> 'calm'                     REVERSED severity, ~71/pp
+  #   ifb-7  'low' <-> 'high' mental effort           ascending,        ~71/pp
+  #   mfb-3  'no stress at all' <-> 'a lot of stress' ascending,        ~38/pp
+  #   afb-9  'strongly agree' <-> 'strongly disagree' REVERSED,         ~34/pp
+  #          ("Overall I felt overwhelmed today")
+  # The adapter HALTS if the anchors in the file differ from those recorded.
+  item: ifb-2
+  min_ibi_samples: 30         # per causal window; below this the value is MISSING
+  drop_blocked_ibi: true      # device-flagged artefacts are dropped, not repaired
 
 alignment:
   rule: causal_window
@@ -26,7 +40,15 @@ alignment:
   aggregation: mean
 
 labels:
-  direction_confirmed: false    # confirm against the RELAX documentation
+  # Direction is read from the ANSWER-LABEL TEXT in the released definition
+  # file, never from the stored integer or its position.
+  source: metadata/questionnaires.xlsx
+  direction_verified: true
 
 context:
-  features: [physio_window_mean]
+  features: [heart_rate_bpm]
+
+provenance:
+  doi: 10.5281/zenodo.20701999
+  licence: CC-BY-4.0
+  acquisition: scripts/fetch_relax.py

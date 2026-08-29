@@ -384,8 +384,10 @@ def status_board(rows: list[dict] | None = None) -> pd.DataFrame:
         ("PMData adapter", "COMPLETED (fixture-tested only)",
          "aedt/io/pmdata.py - passes on a PMData-shaped fixture; "
          "NEVER RUN ON THE REAL ARCHIVE"),
-        ("RELAX adapter", "COMPLETED (fixture-tested only)",
-         "aedt/io/relax.py - layout is a DECLARED EXPECTATION, unverified"),
+        ("RELAX adapter", "COMPLETED (run on REAL files)",
+         "aedt/io/relax.py - real archive acquired and audited "
+         "(Zenodo 10.5281/zenodo.20701999, CC-BY-4.0); schema, anchors and "
+         "timestamps verified against the release"),
         ("WESAD adapter", "COMPLETED (benchmark only)",
          "aedt/io/wesad.py - refuses the primary analysis by construction; "
          "NEVER RUN ON THE REAL ARCHIVE"),
@@ -406,15 +408,20 @@ def status_board(rows: list[dict] | None = None) -> pd.DataFrame:
          "Historical: 13 misspecification scenarios (Rounds 14-15)"),
         ("Realistic synthetic simulation gate", "COMPLETED",
          "Historical: G1/G2/G3, power and placebo at realistic density"),
-        ("REAL-DATA ACQUISITION", "PLANNED",
-         "No dataset file has been opened by this project. Adapters and "
-         "acquisition instructions are ready; the download is one person-hour"),
-        ("REAL-DATA AUDIT (T4 on real files)", "PLANNED",
-         "scripts/audit_dataset.py is written and fixture-tested; blocked "
-         "only on the files"),
+        ("REAL-DATA ACQUISITION (RELAX)", "COMPLETED",
+         "31 participants acquired from Zenodo 10.5281/zenodo.20701999 "
+         "(CC-BY-4.0); 453 MB of a 16.5 GB archive via range requests; "
+         "provenance with per-file SHA-256 recorded"),
+        ("REAL-DATA AUDIT (T4 on real RELAX files)", "COMPLETED",
+         "Strict audit run on the real files: schema, answer-label anchors, "
+         "timestamp cross-check, participant IDs, missingness"),
         ("REAL-DATA primary rho* estimate", "PLANNED",
-         "Gated behind the audit, [9b] association check, eligibility and "
-         "the placebo, in that order"),
+         "BLOCKED and correctly so: RELAX fails the frozen eligibility screen "
+         "(0/31 participants reach 60 reports per epoch; densest has 93). "
+         "Pipeline exits 3. NO estimate exists from any real dataset"),
+        ("REAL-DATA ACQUISITION (StudentLife / PMData / WESAD)", "PLANNED",
+         "No file opened. StudentLife is currently unreachable from this "
+         "environment (connection timeout on every URL tried)"),
         ("Cross-dataset pooling", "PLANNED",
          "Requires two audited real cohorts"),
         ("Ablations 2-7", "PLANNED",
