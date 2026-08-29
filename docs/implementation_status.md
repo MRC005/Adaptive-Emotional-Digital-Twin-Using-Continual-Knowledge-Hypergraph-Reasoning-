@@ -45,7 +45,7 @@ Regenerate as a table with `python scripts/generate_review2_outputs.py`
 | Test suite | ✅ | | | 225 tests: unit, integration, synthetic, regression |
 | Controlled synthetic simulations | ✅ | | | Historical: 13 misspecification scenarios (Rounds 14–15) |
 | Realistic synthetic simulation gate | ✅ | | | Historical: power, coverage, placebo at realistic density |
-| **REAL-DATA ACQUISITION** | | | ⛔ | **No dataset file has been opened.** Adapters ready; ~1 person-hour |
+| **REAL-DATA ACQUISITION (RELAX)** | ✅ | | | Acquired from Zenodo 10.5281/zenodo.20701999 (CC-BY-4.0); 453 MB of 16.5 GB; provenance with SHA-256 recorded |
 | **REAL-DATA AUDIT (T4)** | | | ⛔ | `scripts/audit_dataset.py` written and fixture-tested; blocked only on files |
 | **REAL-DATA primary ρ\*** | | | ⛔ | Gated behind audit → [9b] → eligibility → placebo |
 | Cross-dataset pooling | | | ⛔ | Requires two audited real cohorts |

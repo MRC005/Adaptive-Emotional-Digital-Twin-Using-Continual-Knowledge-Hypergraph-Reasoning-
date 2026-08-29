@@ -413,8 +413,13 @@ def run_demo(dataset: str = "synthetic", *, root: str | None = None,
     rule("=")
     print(f"  EVERY FIGURE AND TABLE ABOVE IS STAMPED {status.value}.")
     if status is DataStatus.SYNTHETIC:
-        print("  NO REAL DATASET FILE HAS BEEN OPENED. Nothing here is "
-              "evidence about humans.")
+        print("  THIS RUN IS SIMULATION. Nothing here is evidence about "
+              "humans.")
+        print("  NO REAL-DATA rho* RESULT EXISTS IN THIS PROJECT. One real")
+        print("  dataset (RELAX, Zenodo 10.5281/zenodo.20701999) has been")
+        print("  acquired and audited; it FAILS the frozen eligibility screen")
+        print("  (0 of 31 participants), so no estimate was produced from it.")
+        print("  See docs/dataset_audit.md.")
     rule("=")
     print()
     return 0

@@ -66,7 +66,7 @@ intersection. **"Not found" is not "novel", and this document says so.**
 | **H4** | Participant-cluster inference gives approximately nominal type-I error at realistic study density. | Supported (8.3% against a nominal 5%), SYNTHETIC |
 | **H5** | The natural affine approach fabricates apparent scale compression on ordinal responses. | Supported (−0.107 null bias), SYNTHETIC |
 | **H6** | Residual latent curvature beyond the threshold structure biases the null by no more than ≈0.07. | Supported, SYNTHETIC |
-| **H7** | Real mobile-sensing data can support the inference at usable precision. | **UNTESTED — no dataset file has been opened.** |
+| **H7** | Real mobile-sensing data can support the inference at usable precision. | **NOT SUPPORTED SO FAR.** One real dataset (RELAX, 31 participants) has been acquired and audited; its self-report density is about half what the method requires, so 0/31 participants qualify and no estimate was produced. |
 
 ## 5. Mathematical model — FROZEN
 
@@ -209,8 +209,12 @@ variance ratio) are untouched.
 
 ## 13. Limitations — stated, not buried
 
-1. **No real-data validation.** No dataset file has been opened in any round of
-   this project. Everything downstream is contingent.
+1. **No real-data validation.** One real dataset (RELAX) has now been opened
+   and audited, and it **failed** the eligibility screen — so there is still no
+   real-data estimate, and everything downstream remains contingent. The
+   binding constraint is now known and measured: the method needs ≈120
+   repeated ordinal self-reports per person, and RELAX provides a median of
+   ~50 after causal alignment.
 2. **ρ is not directly identified.** A CI for ρ\* is not a CI for ρ.
 3. **Scale-change vs relation-change confound.** The method cannot distinguish
    "the person's reporting scale changed" from "the behaviour–construct
