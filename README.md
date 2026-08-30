@@ -13,21 +13,23 @@
 | **Implemented & verified** | Full pipeline, 16 modules, 230+ tests passing |
 | **Validated on SYNTHETIC data** | Estimator calibration, placebo, bias envelope, ablation |
 | **Validated on REAL data** | ❌ **NONE.** No primary ρ\* result exists from any real dataset |
-| **Real data acquired & audited** | ✅ **RELAX** (31 participants) — **fails the eligibility screen** |
-| **Pending** | A dataset with sufficient self-report density |
+| **Real data acquired & audited** | ✅ **RELAX** (31 pp) and ✅ **PMData** (16 pp) — **both fail the eligibility screen** |
+| **Pending** | A dataset with sufficient self-report density *and* a documented scale |
 
 **There is no real-data empirical result in this repository, and the software
 refuses to manufacture one.**
 
-One real dataset — **RELAX** (Halmich et al. 2026, *Scientific Data*; Zenodo
-[10.5281/zenodo.20701999](https://doi.org/10.5281/zenodo.20701999), CC-BY-4.0)
-— has been downloaded, schema-verified and put through the strict audit. It
-**fails the frozen eligibility screen**: the densest repeated item gives a
-median of **~71** self-reports per participant against the **120** (60 per
-epoch) the method requires, so **0 of 31 participants qualify**. The pipeline
-exits with code 3 and reports the failure. The threshold was **not** relaxed to
-make the data fit. See [`docs/dataset_audit.md`](docs/dataset_audit.md) and
-[`docs/dataset_compatibility.md`](docs/dataset_compatibility.md).
+**Two** real datasets have been downloaded, schema-verified and put through
+the strict audit. **Both fail it**, for different reasons:
+
+| dataset | participants | eligible | why it fails |
+|---|---|---|---|
+| **RELAX** (Halmich et al. 2026, Zenodo [10.5281/zenodo.20701999](https://doi.org/10.5281/zenodo.20701999), CC-BY-4.0) | 31 | **0 / 31** | self-report density — median ~50 aligned reports vs the 120 required |
+| **PMData** (Thambawita et al. 2020, [Simula](https://datasets.simula.no/pmdata/), CC BY 4.0) | 16 (14 usable) | **0 / 14** | density **+** assumption **A3** (Var(s) epoch ratios to 13.6) **+** an undocumented scale direction |
+
+The pipeline exits with code 3 on each and reports the failure. **No threshold
+was relaxed to make either fit.** See [`docs/dataset_audit.md`](docs/dataset_audit.md)
+and [`docs/dataset_compatibility.md`](docs/dataset_compatibility.md).
 
 Every other result here is **SYNTHETIC**, generated from the frozen model in
 `docs/frozen_scientific_specification.md` §5, and labelled as such on every
@@ -80,6 +82,19 @@ true multiplicative recalibration, and the additive component is never
 estimated. `EstimatorResult` refuses to carry one.
 
 ---
+
+## Interactive demo
+
+**<https://claude.ai/code/artifact/2d693337-529c-4470-90b2-674a261c161c>**
+
+A self-contained walkthrough: the problem, the pipeline, the two-curve
+epoch-1-vs-epoch-2 plot, the context hypergraph, the audit gate (switchable
+between the synthetic cohort, RELAX and PMData), and the results. Every panel
+carries a **REAL / SYNTHETIC** stamp, and the real-data panels show the audit
+failures rather than hiding them.
+
+Source: [`demo/index.html`](demo/index.html) — single file, no build step, no
+network calls at run time beyond the webfont.
 
 ## Quick start
 
@@ -225,6 +240,7 @@ What a reviewer can check, and how.
 | Hypergraph-native estimator **fails** | disqualified: not null-calibrated, wrong direction | `figures/fig07_hypergraph_ablation.png` |
 | Real data is not faked | missing archive → `REAL DATA UNAVAILABLE`, exit 6 | `tests/integration/test_missing_real_data.py` |
 | **RELAX really was audited, and really failed** | 0/31 eligible; pipeline exits 3 | `tests/regression/test_relax_real_audit.py` |
+| **PMData really was audited, and really failed** | 0/14 eligible; A3 violated; direction undocumented | `tests/regression/test_pmdata_real_audit.py` |
 
 ## The four contributions
 
@@ -314,12 +330,14 @@ is implemented directly. Runs on any laptop, no GPU, no network at run time.
 The **science is frozen**. The **software is built and tested**. **Real-data
 validation is still pending — and it is now a harder problem than a download.**
 
-The one obtainable, format-compatible longitudinal dataset (RELAX) was
-acquired and audited, and it **fails on self-report density**. That is a real
+Two obtainable longitudinal datasets (RELAX, PMData) were acquired and
+audited, and **both fail** — RELAX on self-report density, PMData on density,
+on assumption A3, and on an undocumented scale direction. That is a real
 finding rather than an excuse: the method needs roughly 120 repeated ordinal
-self-reports per person, and most current open longitudinal datasets sample
-less aggressively than that to limit participant burden. StudentLife, which
-does have the density (~735/participant), is currently unreachable.
+self-reports per person **plus** a documented scale **plus** a sensor whose
+variance is stable across epochs, and current open longitudinal datasets rarely
+provide all three. StudentLife, which does have the density (~735/participant),
+is currently unreachable.
 
 **This project is not publication-ready.** The theory and the simulation
 evidence are sound; the empirical section has no evidence at all.

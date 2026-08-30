@@ -1,27 +1,60 @@
 # PMData (Simula) -- CONDITIONAL SECONDARY.
-# Conditional because one wellness report per day over ~5 months gives roughly
-# 75 reports per epoch against a frozen minimum of 60. Whether it clears the
-# screen is an empirical question the audit answers.
+#
+# Thambawita et al. (2020), ACM MMSys. https://datasets.simula.no/pmdata/
+# 16 participants, ~105-150 day spans, Fitbit + PMSys daily wellness.
+#
+# THE FILES HAVE BEEN OPENED AND THE SCHEMA VERIFIED. Everything below reflects
+# the actual release.
+#
+# MEASURED, NOT ASSUMED:
+#   1747 wellness rows; stress values {0:4, 1:39, 2:389, 3:1016, 4:283, 5:16}
+#   resting_heart_rate.json present for 14 of 16 (p12, p13 have none)
+#   1348 wellness rows join a same-day resting HR
+#   only 4 of 14 participants reach 120 matched reports (60 per epoch)
+#   0 of 14 pass the frozen eligibility screen
+# PMData therefore CANNOT support the frozen PRIMARY endpoint.
 dataset:
   name: pmdata
   role: CONDITIONAL_SECONDARY
   data_status: REAL
-  root: null
+  root: null                  # set with --root, e.g. data/raw/pmdata
   sensor: resting_hr
   n_categories: 5
   report_variable: PMSys daily wellness `stress`
 
-labels:
-  # PMSys stores a bare integer with NO label text, so the label-text remap
-  # cannot be applied. The scale direction must be confirmed against the PMData
-  # documentation before any primary analysis; this file does not assume it.
-  source: numeric_only
+pmdata:
+  # ---- BLOCKING SCIENTIFIC DECISION (docs/decision_required.md, D2) --------
+  # PMSys `stress` is a bare integer. The released archive contains NO README,
+  # NO codebook and NO questionnaire definition, so nothing in the data states
+  # whether 5 means "most stressed" or "least stressed". Unlike StudentLife
+  # (label text) and RELAX (answer anchors), there is no text to key a remap
+  # on. While this is false the adapter carries the RAW value through, marks it
+  # as not-a-severity-scale, and the audit refuses primary eligibility.
+  # Set to true ONLY after confirming against the PMSys instrument, and record
+  # the source in docs/decision_required.md.
   direction_confirmed: false
+  severity_ascending: true    # ONLY consulted when direction_confirmed is true
+
+  # 4 of 1747 rows carry stress == 0, outside the documented 1-5 range.
+  # Two have EVERY wellness item at 0 (blank submissions) and are always
+  # dropped -- unambiguous cleaning, not imputation. The other two have valid
+  # answers elsewhere and are genuinely ambiguous:
+  #   halt              -> stop with DECISION REQUIRED (most conservative)
+  #   treat_as_missing  -> drop them, counted and reported, never imputed
+  zero_stress_handling: treat_as_missing
 
 alignment:
   rule: same_local_day
   lookback_hours: 24
   lag_hours: 0
 
+labels:
+  source: numeric_only        # no label text exists anywhere in the release
+  direction_confirmed: false
+
 context:
   features: [resting_hr]
+
+provenance:
+  dataset_page: https://datasets.simula.no/pmdata/
+  licence: CC BY 4.0 (publisher page; no licence file inside the archive)

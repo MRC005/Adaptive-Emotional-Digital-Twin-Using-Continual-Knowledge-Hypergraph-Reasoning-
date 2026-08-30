@@ -25,7 +25,7 @@ primary longitudinal validation by passing a flag.
 | **StudentLife** | **PRIMARY_LONGITUDINAL** | ⛔ PLANNED — files absent | daily conversation minutes | single-item stress EMA (5 ordered levels) |
 | **RELAX** | LONGITUDINAL_ALTERNATIVE | ✅ **REAL — acquired & audited; FAILS eligibility** | heart rate from Polar IBI | `ifb-2` 7-point Likert (excited↔calm) |
 | **WESAD** | **BENCHMARK_PHYSIOLOGICAL** | ⛔ PLANNED — files absent | chest ECG window statistics | protocol condition label |
-| **PMData** | CONDITIONAL_SECONDARY | ⛔ PLANNED — files absent | Fitbit resting heart rate | PMSys daily wellness `stress` |
+| **PMData** | CONDITIONAL_SECONDARY | ✅ **REAL — acquired & audited; FAILS eligibility** | Fitbit resting heart rate | PMSys daily wellness `stress` |
 | SWELL-KW, AffectiveROAD | ROBUSTNESS_OPTIONAL | not implemented | — | — |
 
 ## What each role may and may not establish
@@ -141,28 +141,91 @@ Pinned by
 
 ---
 
-## PMData audit
+## PMData audit — ✅ RUN ON REAL FILES
 
-Verifies: PMSys stress scale · the exact stress variable · raw codes and labels
-· timestamps · participant IDs · resting-HR availability · longitudinal
-structure · missingness · participant count · longitudinal span.
+**Source.** Thambawita et al. (2020), *PMData: A Sports Logging Dataset*, ACM
+MMSys. <https://datasets.simula.no/pmdata/>. Licence CC BY 4.0 **per the
+publisher's page — the released archive itself contains no licence file.**
 
-**Conditional** because 16 participants × ~5 months × one report per day gives
-roughly 75 reports per epoch against a frozen minimum of 60. Whether it clears
-the bar is an empirical question the audit answers; it is not assumed either
-way.
-
-**PMSys `stress` is stored as a bare integer with no label text**, so the
-label-text remap cannot be applied. The audit records the observed code range
-verbatim and `configs/pmdata.yaml` carries `direction_confirmed: false`. **The
-scale direction must be confirmed against the PMData documentation before any
-primary analysis.**
-
-If a required variable is unavailable:
+**Verified structure** (read from the archive, 1.4 GB zip, 912 members):
 
 ```
-DECISION REQUIRED: PMData required variables unavailable.
+participant-overview.xlsx          demographics ONLY (age, height, sex, max HR)
+p01..p16/pmsys/wellness.csv        effective_time_frame (ISO-8601 Z), fatigue,
+                                   mood, readiness, sleep_duration_h,
+                                   sleep_quality, soreness, soreness_area, stress
+p01..p16/pmsys/srpe.csv            session RPE (not used)
+p01..p16/fitbit/resting_heart_rate.json
+                                   dateTime (NAIVE), value={date,value,error}
+p01..p16/fitbit/heart_rate.json    intraday HR (~1.6 GB, not used)
+p01..p16/food-images/              photographs (not used)
 ```
+
+Only **0.32 MB** of the 1.4 GB archive is scientifically needed.
+
+### ⛔ THREE INDEPENDENT BLOCKERS
+
+**1. Two participants have no primary sensor at all.**
+`resting_heart_rate.json` exists for **14 of 16** — p12 and p13 have none.
+Reporting "PMData, 16 participants" would misstate the sample.
+
+**2. The scale direction is undocumented.**
+PMSys `stress` is a **bare integer**. The archive contains **no README, no
+codebook, no questionnaire definition** — `participant-overview.xlsx` is
+demographics only. Unlike StudentLife (label text) and RELAX (answer anchors),
+**there is no text to key a remap on.** Nothing in the data states whether 5
+means most or least stressed.
+
+`configs/pmdata.yaml` therefore carries `direction_confirmed: false`, the
+adapter passes the **raw** value through marked as *not a severity scale*, and
+both the audit and the pipeline refuse a primary result. Confirming this
+requires the PMSys instrument documentation, not inference from the data.
+
+**3. Eligibility fails — 0 of 14.**
+
+| | measured |
+|---|---|
+| participants with wellness + resting HR | 14 of 16 |
+| wellness rows | 1 747 |
+| rows joined to a same-day resting HR | 1 348 (22.8% unmatched) |
+| median matched reports/participant | 95.5 (max 147) |
+| participants ≥120 matched (60/epoch) | **4 of 14** |
+| **eligible under the frozen screen** | **0 of 14** |
+
+Exclusion reasons across the 14:
+
+| reason | n |
+|---|---|
+| too few reports per epoch (<60) | 9 |
+| **Var(s) epoch ratio outside [0.25, 4.0] — A3 violated** | 3 |
+| sensor–report slope **flips sign** between epochs | 2 |
+| \|β\| below the 0.02 floor | 1 |
+
+**The A3 failures matter most.** p06 and p09 show Var(s) ratios of **13.06**
+and **13.60** — the resting-HR variance changes by more than an order of
+magnitude between epochs. Fitbit resting heart rate is an **algorithmic daily
+estimate**, not a raw measurement, so its variance can shift for device reasons
+rather than physiological ones. Assumption A3 is exactly what that breaks.
+
+**Even the four densest participants fail** — on A3 or on a sign flip, not on
+count. Adding data would not fix this.
+
+### The `stress == 0` values
+
+4 of 1747 rows carry `stress = 0`, outside the documented 1–5 range:
+
+- **2 rows have EVERY wellness item at 0** — blank submissions. Always dropped;
+  unambiguous cleaning, not imputation.
+- **2 rows have valid answers elsewhere** — genuinely ambiguous. Controlled by
+  `pmdata.zero_stress_handling`: `halt` stops with `DECISION REQUIRED`;
+  `treat_as_missing` drops them, counted and reported, never imputed.
+
+### Mixed clocks
+
+Wellness timestamps are ISO-8601 with `Z` (tz-aware UTC); Fitbit `dateTime` is
+naive. Merging them directly **raises** — a real bug the original adapter had,
+exposed only by the real files. Both sides are now pinned to a UTC calendar day
+so the join is well defined rather than accidentally working.
 
 ---
 

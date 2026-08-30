@@ -85,10 +85,17 @@ def test_pmdata_fixture_loads(pmdata_fixture):
 
 
 def test_pmdata_audit_records_that_labels_are_numeric_only(pmdata_fixture):
+    """PMSys `stress` is a bare integer with no label text anywhere in the
+    release, so severity direction cannot be verified the way StudentLife
+    (option text) and RELAX (answer anchors) allow."""
     a = get_adapter("pmdata").audit(pmdata_fixture)
     assert a.stress_labels == ()
-    assert any("no label text" in n for n in a.notes)
-    assert any("confirm the scale direction" in n.lower() for n in a.notes)
+    assert "NOT DOCUMENTED AND NOT CONFIRMED" in (a.self_report_scale or "")
+    # with the direction unconfirmed there is no severity map at all
+    assert dict(a.code_to_severity_mapping) == {}
+    assert any("no label text" in v for v in a.code_to_label_mapping.values())
+    assert any("DIRECTION is not documented" in r for r in a.exclusion_reasons)
+    assert a.eligible_for_primary_analysis is False
 
 
 def test_pmdata_reports_missing_variables_rather_than_guessing(tmp_path):

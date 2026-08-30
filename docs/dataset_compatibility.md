@@ -40,12 +40,12 @@ Not negotiable, because these are what identify ρ\*:
 | **Timestamps** | ✅ **tz-aware UTC**, cross-checked | ✅ unix epoch | ✅ submission timestamps | ✅ date | ✅ sample index | ✅ |
 | **Participant IDs** | ✅ 12–63 | ✅ u00… | ✅ par_1–21 | ✅ p01… | ✅ S2–S17 | ✅ |
 | **R1 ordinal** | ✅ | ✅ | ❌ | ⚠ | ❌ | ⚠ |
-| **R2 ≥120 reports/pp** | ❌ **max 106, median 71** | ✅ ~735 | ⚠ plausible, not verified | ⚠ ~150 nominal | ❌ | ❌ ~56 max |
+| **R2 ≥120 reports/pp** | ❌ **max 106, median 71** | ✅ ~735 | ⚠ plausible, not verified | ❌ **4/14 only; median 95.5** | ❌ | ❌ ~56 max |
 | **R3 multi-week** | ✅ | ✅ | ✅ | ✅ | ❌ | ⚠ |
 | **R5 causal sensor** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Acquisition** | ✅ **open, obtained** (partial, 0.5 of 16.5 GB) | ❌ **host unreachable** (timeout on all URLs) | ⚠ 8.59 GB, not obtained | ⚠ not obtained | ⚠ not obtained | ⚠ 1.5 GB, not obtained |
+| **Acquisition** | ✅ **open, obtained** (partial, 0.5 of 16.5 GB) | ❌ **host unreachable** (timeout on all URLs) | ⚠ 8.59 GB, not obtained | ✅ **obtained & audited** (0.3 MB of 1.4 GB) | ⚠ not obtained | ⚠ 1.5 GB, not obtained |
 | **Frozen-method risk** | **LOW** — correct format, fails only on density | **LOW** — the specified target | **HIGH** — would require inventing a discretisation | **MEDIUM** — scale direction undocumented | **FATAL** — cannot identify ρ\* | **HIGH** — too short |
-| **Verdict** | ⚠ **audited; fails R2** | ⛔ **inaccessible** | ❌ wrong response format | ⚠ untested, conditional | ✅ benchmark only | ❌ too short |
+| **Verdict** | ⚠ **audited; fails R2** | ⛔ **inaccessible** | ❌ wrong response format | ⚠ **audited; fails R2 + A3 + direction** | ✅ benchmark only | ❌ too short |
 
 ---
 
@@ -70,9 +70,14 @@ mean inventing a discretisation the participant never used — which is precisel
 the method were extended to continuous responses, which is a new research
 round, not an implementation choice.
 
-**4. PMData** — conditional, adapter already implemented, not obtained. Its
-`stress` variable ships as a bare integer with **no label text**, so the
-severity direction cannot be verified the way the specification demands.
+**4. PMData — ACQUIRED AND AUDITED; fails on three independent grounds.**
+(a) only 4 of 14 participants reach 120 matched reports and **0 pass the
+screen**; (b) three fail assumption **A3** with Var(s) epoch ratios up to
+**13.6**, because Fitbit resting HR is an algorithmic daily estimate whose
+variance moves for device reasons; (c) `stress` ships as a bare integer with
+**no label text and no codebook in the archive**, so the severity direction
+cannot be verified at all. Even the densest participants fail on A3 rather than
+on count, so more data would not help.
 
 **5. WESAD** — **benchmark only.** Enforced in code
 (`can_support_longitudinal_estimand = False`). A single lab session has no
@@ -86,7 +91,7 @@ than half of R2, in a clinical AUD population.
 ## The finding, stated plainly
 
 **No public dataset examined satisfies every requirement of the frozen
-specification.**
+specification. Two were obtained and audited; both failed.**
 
 RELAX comes closest and fails on one axis: **self-report density**. It has the
 right instrument type, the right modality, the right span and the right

@@ -164,6 +164,15 @@ def run_pipeline(dataset: str, *, root: str | Path | None = None,
              df["pid"].nunique(), len(df), status.value)
 
     blocking: list[str] = []
+    # A self-report whose scale DIRECTION is unverified is not a severity
+    # scale. rho* would still be computable from it -- and would be
+    # uninterpretable, with its sign meaning the opposite of what is reported.
+    if loaded.provenance.get("severity_direction_confirmed") is False:
+        blocking.append(
+            f"{dataset}: the self-report scale DIRECTION is NOT CONFIRMED. "
+            "The stored integer is not a verified severity scale, so no "
+            "primary rho* result may be derived from it. Confirm the "
+            "instrument and set the dataset's direction flag in its config.")
     if adapter.role is DatasetRole.BENCHMARK_PHYSIOLOGICAL:
         blocking.append(
             f"{dataset} is a PHYSIOLOGICAL BENCHMARK. It cannot support the "

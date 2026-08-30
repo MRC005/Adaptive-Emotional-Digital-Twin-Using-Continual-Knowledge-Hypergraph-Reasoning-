@@ -3,7 +3,10 @@
 This file records every point where the implementation found a genuinely
 unspecified scientific decision, **and did not guess**.
 
-## Status: ONE BLOCKING ITEM (D7) — RELAX cannot meet the frozen eligibility threshold
+## Status: TWO DATASETS AUDITED, BOTH BLOCKED (D2, D7, D9)
+
+Neither obtainable real dataset can support the frozen primary endpoint. Both
+failures are measured, not assumed, and neither was worked around.
 
 The frozen specification was complete enough to implement without guessing.
 Specifically:
@@ -39,17 +42,45 @@ documentation, then update the constant with the change recorded here.
 
 *Raised by:* `aedt/preprocess/reports.py::build_code_to_severity`
 
-### D2 — PMData stress scale direction
+### D2 — ⚠ BLOCKING: PMData stress scale direction is undocumented
 
-PMSys stores `stress` as a bare integer with **no label text**, so the
-label-text remap cannot be applied. `configs/pmdata.yaml` carries
-`direction_confirmed: false`.
+**Files opened; the question is now confirmed as unanswerable from the data.**
 
-**Question:** does a higher PMSys `stress` value mean more stress or less?
+The released archive (1.4 GB, 912 members) contains **no README, no codebook
+and no questionnaire definition**. `participant-overview.xlsx` holds
+demographics only (age, height, sex, max HR, stride). PMSys `stress` is a
+**bare integer**, observed range 1–5, mode 3.
 
-The audit records the observed code range verbatim and makes no assumption. A
-primary PMData analysis must not run until this is confirmed against the PMData
-documentation and the answer recorded here.
+Unlike StudentLife (option label text) and RELAX (answer-label anchors),
+**there is no text anywhere in the release to key a remap on.**
+
+**Question:** does a higher PMSys `stress` value mean MORE stress or LESS?
+
+**Current handling:** `configs/pmdata.yaml` carries
+`direction_confirmed: false`. The adapter carries the **raw** stored value
+through, explicitly marked as *not a verified severity scale*; the audit sets
+`eligible_for_primary_analysis = False`; and `aedt/pipeline.py` adds a hard
+blocking reason. **No primary ρ\* result can be derived from PMData while this
+is unresolved** — and if the direction were guessed wrong, the sign of the
+result would mean the opposite of what was reported.
+
+**To resolve:** consult the PMSys instrument documentation (not the dataset),
+record the source here, then set `pmdata.direction_confirmed` and
+`pmdata.severity_ascending`.
+
+### D8 — PMData `stress == 0` (outside the documented 1–5 range)
+
+4 of 1747 wellness rows carry `stress = 0`.
+
+- **2 rows have EVERY wellness item at 0** → blank submissions. Always dropped.
+  This is unambiguous cleaning, not a scientific decision and not imputation.
+- **2 rows carry valid answers on the other items** → genuinely ambiguous. The
+  release does not define whether 0 encodes "not answered" or a real response.
+
+**Handling:** `pmdata.zero_stress_handling` — `halt` raises
+`DECISION REQUIRED`; `treat_as_missing` (current default) drops them, counted
+and reported in the audit's missingness, never imputed. Affects 0.11% of rows
+and does not change any conclusion.
 
 ### D3 — RELAX file layout ✅ RESOLVED (files opened and verified)
 
@@ -182,3 +213,31 @@ decision:
    evidence would settle it.
 4. Only then change the specification — and record the change in
    `docs/frozen_scientific_specification.md`.
+
+
+### D9 — ⚠ BLOCKING: PMData fails the frozen eligibility screen
+
+**Measured on the real files** (14 participants with both wellness and resting
+HR; p12 and p13 have no `resting_heart_rate.json` at all):
+
+| | measured |
+|---|---|
+| matched reports | 1 348 of 1 747 wellness rows (22.8% unmatched) |
+| median matched/participant | 95.5 (max 147) |
+| participants ≥120 (60/epoch) | 4 of 14 |
+| **eligible under the frozen screen** | **0 of 14** |
+
+Exclusions: 9 too few reports · **3 Var(s) epoch ratio outside [0.25, 4.0]
+(A3)** · 2 sign flips · 1 \|β\| below floor.
+
+**The A3 failures are the scientifically interesting part.** p06 and p09 show
+Var(s) ratios of 13.06 and 13.60 — resting-HR variance changing by more than an
+order of magnitude between epochs. Fitbit resting heart rate is an
+**algorithmic daily estimate**, not a raw measurement, so its variance can move
+for device reasons rather than physiological ones. **Even the four densest
+participants fail**, on A3 or a sign flip rather than on count — so more data
+would not rescue PMData.
+
+Rejected alternatives: lowering the screen (changes the frozen method);
+switching to intraday `heart_rate.json` (a different, undeclared sensor and a
+new specification decision, not an implementation choice).

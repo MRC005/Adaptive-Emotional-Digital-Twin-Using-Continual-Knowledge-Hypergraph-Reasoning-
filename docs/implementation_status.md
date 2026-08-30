@@ -34,7 +34,7 @@ Regenerate as a table with `python scripts/generate_review2_outputs.py`
 | Bias envelope | ✅ | | | `aedt/audit/envelope.py`; 9 pre-enumerated scenarios |
 | Dataset audit framework | ✅ | | | `aedt/io/base.py` + per-adapter `audit()`; every mandated field |
 | **StudentLife adapter** | ⚠️ | | | Implemented; **fixture-tested only. NEVER RUN ON THE REAL ARCHIVE.** |
-| **PMData adapter** | ⚠️ | | | Implemented; **fixture-tested only. NEVER RUN ON THE REAL ARCHIVE.** |
+| **PMData adapter** | ✅ | | | **REAL FILES OPENED AND AUDITED.** 16 participants; **0 of 14 eligible**; two real bugs fixed |
 | **RELAX adapter** | ✅ | | | **REAL FILES OPENED AND AUDITED.** Schema verified; anchors verified; 31 participants; **fails the eligibility screen** |
 | **WESAD adapter** | ⚠️ | | | Implemented; **benchmark only**, refuses the primary by construction |
 | Epoch 1 vs Epoch 2 visualisation | ✅ | | | `aedt/viz/curves.py` — the two-curve plot |
@@ -72,7 +72,7 @@ Regenerate as a table with `python scripts/generate_review2_outputs.py`
 | Visualisation | ✅ | ✅ | ✅ | ✅ | n/a |
 | Demo script | ✅ | — | ✅ | ✅ | n/a |
 | StudentLife loader | ✅ | ✅ fixture | ✅ fixture | ✅ | ❌ **never run on real files** (host unreachable) |
-| PMData loader | ✅ | ✅ fixture | ✅ fixture | ✅ | ❌ **never run on real files** |
+| **PMData loader** | ✅ | ✅ | ✅ | ✅ | ✅ **RUN ON REAL FILES; dataset fails eligibility** |
 | **RELAX loader** | ✅ | ✅ | ✅ | ✅ | ✅ **RUN ON REAL FILES; dataset fails eligibility** |
 | WESAD loader | ✅ | ✅ | ✅ | ✅ | ❌ **never run on real files** |
 
@@ -97,7 +97,29 @@ All **SYNTHETIC**.
 
 ## The real-data result, stated plainly
 
-**RELAX was acquired, audited, and rejected by the project's own screen.**
+**TWO datasets were acquired, audited, and rejected by the project's own
+screen. No ρ\* estimate exists from either.**
+
+### PMData (Thambawita et al. 2020) — 0 of 14 eligible
+
+| | measured |
+|---|---|
+| participants with wellness **and** resting HR | **14 of 16** (p12, p13 have no HR file) |
+| matched reports | 1 348 of 1 747 wellness rows |
+| median matched/participant | 95.5 (max 147) |
+| participants ≥120 (60/epoch) | 4 of 14 |
+| **eligible** | **0 of 14** |
+
+Exclusions: 9 too few reports · **3 A3 violations** (Var(s) ratios to **13.6**)
+· 2 sign flips · 1 \|β\| below floor. **Even the four densest fail** — on A3 or
+a sign flip, not on count, so more data would not help. Fitbit resting HR is an
+*algorithmic daily estimate*, and its variance moves for device reasons.
+
+Separately blocking: the PMSys `stress` **scale direction is undocumented** in
+the release (no README, no codebook), so it is not a verified severity scale at
+all.
+
+### RELAX (Halmich et al. 2026) — 0 of 31 eligible
 
 | | measured on the real files |
 |---|---|

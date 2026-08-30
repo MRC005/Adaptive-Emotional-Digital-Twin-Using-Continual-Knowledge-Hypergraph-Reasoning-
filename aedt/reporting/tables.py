@@ -381,9 +381,10 @@ def status_board(rows: list[dict] | None = None) -> pd.DataFrame:
         ("StudentLife adapter", "COMPLETED (fixture-tested only)",
          "aedt/io/studentlife.py - passes on a StudentLife-shaped fixture; "
          "NEVER RUN ON THE REAL ARCHIVE"),
-        ("PMData adapter", "COMPLETED (fixture-tested only)",
-         "aedt/io/pmdata.py - passes on a PMData-shaped fixture; "
-         "NEVER RUN ON THE REAL ARCHIVE"),
+        ("PMData adapter", "COMPLETED (run on REAL files)",
+         "aedt/io/pmdata.py - real archive opened and audited "
+         "(Thambawita et al. 2020); two real bugs fixed that only the real "
+         "files exposed (mixed tz join, stress==0 sentinel)"),
         ("RELAX adapter", "COMPLETED (run on REAL files)",
          "aedt/io/relax.py - real archive acquired and audited "
          "(Zenodo 10.5281/zenodo.20701999, CC-BY-4.0); schema, anchors and "
@@ -416,10 +417,18 @@ def status_board(rows: list[dict] | None = None) -> pd.DataFrame:
          "Strict audit run on the real files: schema, answer-label anchors, "
          "timestamp cross-check, participant IDs, missingness"),
         ("REAL-DATA primary rho* estimate", "PLANNED",
-         "BLOCKED and correctly so: RELAX fails the frozen eligibility screen "
-         "(0/31 participants reach 60 reports per epoch; densest has 93). "
-         "Pipeline exits 3. NO estimate exists from any real dataset"),
-        ("REAL-DATA ACQUISITION (StudentLife / PMData / WESAD)", "PLANNED",
+         "BLOCKED and correctly so on BOTH audited datasets. RELAX: 0/31 "
+         "eligible (density). PMData: 0/14 eligible (density + A3 + "
+         "undocumented scale direction). Pipeline exits 3 on each. NO "
+         "estimate exists from any real dataset"),
+        ("REAL-DATA ACQUISITION (PMData)", "COMPLETED",
+         "1.4 GB archive present locally; 0.32 MB extracted (wellness + "
+         "resting HR + overview). 16 participants, ~105-150 day spans"),
+        ("REAL-DATA AUDIT (T4 on real PMData files)", "COMPLETED",
+         "Strict audit run: 0 of 14 eligible. Fails on report density, on "
+         "assumption A3 (Var(s) ratios to 13.6), and on an undocumented "
+         "scale direction"),
+        ("REAL-DATA ACQUISITION (StudentLife / WESAD)", "PLANNED",
          "No file opened. StudentLife is currently unreachable from this "
          "environment (connection timeout on every URL tried)"),
         ("Cross-dataset pooling", "PLANNED",
