@@ -211,10 +211,10 @@ canvas{display:block; width:100%; height:auto}
   <div class="kpis">
     <div class="kpi"><span class="l">Estimand</span><span class="v">&rho;*</span>
       <span class="s">identified recalibration ratio</span></div>
-    <div class="kpi"><span class="l">Datasets audited</span><span class="v">2</span>
-      <span class="s">RELAX · PMData</span></div>
+    <div class="kpi"><span class="l">Datasets audited</span><span class="v">3</span>
+      <span class="s">RELAX · PMData · StudentLife</span></div>
     <div class="kpi bad"><span class="l">Real-data results</span><span class="v">0</span>
-      <span class="s">both datasets failed the screen</span></div>
+      <span class="s">all three blocked</span></div>
     <div class="kpi good"><span class="l">Tests passing</span><span class="v">247</span>
       <span class="s">unit · integration · regression</span></div>
   </div>
@@ -224,9 +224,9 @@ canvas{display:block; width:100%; height:auto}
     <h3>Read this before anything else</h3>
     <p style="font-size:.92rem">Every result on this page is <strong>SYNTHETIC</strong>
       &mdash; simulated from the frozen generative model, and labelled as such on every
-      panel. <strong>No real-data estimate exists.</strong> Two real datasets were
-      downloaded and audited; both were rejected by this project's own eligibility
-      screen. Nothing here is evidence about humans.</p>
+      panel. <strong>No real-data estimate exists.</strong> Three real archives were
+      downloaded and audited; all three were blocked — two by this project's own
+      eligibility screen, one by a defective conversion in the archive itself. Nothing here is evidence about humans.</p>
   </div>
 </section>
 
@@ -398,6 +398,7 @@ canvas{display:block; width:100%; height:auto}
     <button class="btn on" data-ds="synthetic">Synthetic cohort</button>
     <button class="btn" data-ds="relax">RELAX (real)</button>
     <button class="btn" data-ds="pmdata">PMData (real)</button>
+    <button class="btn" data-ds="studentlife">StudentLife (real)</button>
   </div>
 
   <div class="panel">
@@ -553,13 +554,46 @@ canvas{display:block; width:100%; height:auto}
 
   <div style="height:16px"></div>
   <div class="panel">
+    <div class="panel-hd"><h3>StudentLife &mdash; Wang et al. 2014 (RDS repackaging)</h3><span class="chip c-real">Real files audited</span></div>
+    <div class="panel-bd">
+      <div class="kpis" style="margin-bottom:14px">
+        <div class="kpi good"><span class="l">Conversation episodes</span><span class="v">79,023</span><span class="s">49 participants, 0% invalid</span></div>
+        <div class="kpi bad"><span class="l">Usable stress reports</span><span class="v">122</span><span class="s">of ~35,000 expected</span></div>
+        <div class="kpi bad"><span class="l">Max / participant</span><span class="v">6</span><span class="s">~735 in the descriptor</span></div>
+        <div class="kpi bad"><span class="l">Eligible</span><span class="v">0 / 46</span><span class="s">exit code 2</span></div>
+      </div>
+      <p style="font-size:.92rem"><strong>This one is different, and it is the most
+        useful finding of the three.</strong> The archive is a third-party
+        R-serialised repackaging. Its <em>sensor</em> side is perfect. Its stress
+        EMA is not: the response arrived in a column literally named
+        <span class="mono">null</span>, 88.1% empty, additionally holding 109 GPS
+        coordinate strings. All 122 survivors fall on 2013-03-24/25 &mdash; before
+        conversation sensing begins on 03-27 &mdash; so not one aligned observation
+        can be formed.</p>
+      <div class="callout warn" style="margin-top:14px">
+        <h3>Why this is a conversion defect, not a StudentLife limitation</h3>
+        <p style="font-size:.9rem">Sibling EMA tables in the <em>same archive</em>
+          converted correctly with properly named columns &mdash;
+          <span class="mono">PAM.Rds</span> (9,040 rows, 0% NA),
+          <span class="mono">Mood.Rds</span>, <span class="mono">Sleep.Rds</span>.
+          Only <span class="mono">Stress.Rds</span> is mangled, and
+          <span class="mono">EMA_definition.json</span> &mdash; the label-text
+          codebook the method keys its remap on &mdash; is absent entirely.
+          <strong>StudentLife remains the correct target; the fix is a different
+          download, not a different method.</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:16px"></div>
+  <div class="panel">
     <div class="panel-hd"><h3>Every candidate considered</h3><span class="chip c-real">Verified against sources</span></div>
     <div class="panel-bd scroll"><table>
       <thead><tr><th>Dataset</th><th>Participants</th><th>Ordinal?</th><th>Density</th><th>Status</th></tr></thead>
       <tbody>
         <tr><td>RELAX</td><td class="num">31</td><td style="color:var(--accent)">yes</td><td class="num">max 106</td><td style="color:var(--blocked)">audited &mdash; fails density</td></tr>
         <tr><td>PMData</td><td class="num">16</td><td class="note">integer, no codebook</td><td class="num">max 147</td><td style="color:var(--blocked)">audited &mdash; fails density + A3 + direction</td></tr>
-        <tr><td>StudentLife</td><td class="num">48</td><td style="color:var(--accent)">yes</td><td class="num">~735</td><td style="color:var(--flag)">best fit &mdash; host unreachable</td></tr>
+        <tr><td>StudentLife <span class="note">(RDS repackaging)</span></td><td class="num">46</td><td style="color:var(--accent)">yes</td><td class="num">max 6 <span class="note">(~735 expected)</span></td><td style="color:var(--blocked)">audited &mdash; defective conversion</td></tr>
         <tr><td>IFH Affect</td><td class="num">21</td><td style="color:var(--blocked)">no &mdash; 0&ndash;100 sliders</td><td class="num">daily, 7.8 mo</td><td>wrong response format</td></tr>
         <tr><td>WESAD</td><td class="num">15</td><td style="color:var(--blocked)">no</td><td class="num">single session</td><td>benchmark only &mdash; cannot identify &rho;*</td></tr>
         <tr><td>ADARP</td><td class="num">~11</td><td class="note">unverified</td><td class="num">&le;14 days</td><td>too short</td></tr>
@@ -568,8 +602,10 @@ canvas{display:block; width:100%; height:auto}
     <p class="note" style="margin-top:12px"><strong>The finding, stated plainly:</strong>
       the method needs roughly 120 repeated <em>ordinal</em> self-reports per person,
       <em>plus</em> a documented scale, <em>plus</em> a sensor whose variance is stable
-      across epochs. Current open longitudinal datasets rarely provide all three. That is
-      a real constraint on the method, and now it has measured numbers behind it.</p>
+      across epochs. RELAX and PMData are intact datasets that genuinely cannot supply
+      that. StudentLife almost certainly can &mdash; the copy obtained so far is simply
+      a broken conversion. <strong>That is the single most important next step: obtain
+      the original Dartmouth release.</strong></p>
     </div>
   </div>
 </section>
@@ -850,7 +886,16 @@ const GATES = {
            ['Eligibility screen','fail','0 of 14 — density, A3 (Var ratios to 13.6), sign flips'],
            ['Placebo (epoch-1 split-half)','skip','never reached'],
            ['Primary estimator','skip','never reached']],
-    note:['bad','No result produced — exit code 3','Three independent blockers. Even the four densest participants fail — on assumption A3 or a sign flip rather than on count — so collecting more data would not rescue this dataset.']}
+    note:['bad','No result produced — exit code 3','Three independent blockers. Even the four densest participants fail — on assumption A3 or a sign flip rather than on count — so collecting more data would not rescue this dataset.']},
+  studentlife:{ title:'StudentLife — RDS repackaging, 46 participants', chip:'c-real', label:'Real files audited',
+    kpis:[['Conversation episodes','79,023','sensor side intact'],['Usable stress reports','122','of ~35,000 expected'],
+          ['Max per participant','6','requirement: 120'],['Eligible','0 / 46','bad']],
+    steps:[['Archive integrity','pass','224 MB, 54 members, zip test clean'],
+           ['Conversation sensor','pass','79,023 episodes, 49 participants, 0% invalid'],
+           ['Stress EMA parse','fail','response column named "null", 88.1% NA — 122 of 2017 rows usable'],
+           ['Codebook (EMA_definition.json)','fail','absent from this repackaging entirely'],
+           ['Temporal alignment','fail','survivors span 03-24/25; sensing starts 03-27 — zero overlap']],
+    note:['bad','No result produced — exit code 2 (DECISION REQUIRED)','This failure is different in kind. Sibling tables in the same archive (PAM: 9,040 rows, 0% NA; Mood; Sleep) converted correctly with named columns — only Stress is mangled. This is a defect of the repackaging, <strong>not a property of StudentLife</strong>. The fix is the original Dartmouth release, not a change to the method.']}
 };
 function renderGate(k){
   const g=GATES[k];
