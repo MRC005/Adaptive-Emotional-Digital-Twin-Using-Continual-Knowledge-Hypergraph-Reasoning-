@@ -1,0 +1,8 @@
+# Public demonstration API. Pinned lightly; the AEDT package itself is
+# installed from the repository root (see render.yaml / Procfile).
+fastapi>=0.115
+uvicorn[standard]>=0.32
+numpy>=1.26
+scipy>=1.11
+pandas>=2.1
+pyyaml>=6.0

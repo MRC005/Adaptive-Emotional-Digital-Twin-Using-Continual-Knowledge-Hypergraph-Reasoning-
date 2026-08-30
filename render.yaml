@@ -1,0 +1,21 @@
+# Render.com blueprint for the AEDT demonstration API.
+#
+# The service serves ONLY aggregate status and synthetic results. No dataset is
+# deployed: data/ is excluded by .gitignore and nothing under it is required at
+# run time.
+services:
+  - type: web
+    name: aedt-api
+    runtime: python
+    plan: free
+    region: oregon
+    buildCommand: "pip install --upgrade pip && pip install -r backend/requirements.txt && pip install -e ."
+    startCommand: "uvicorn backend.app:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: AEDT_ALLOWED_ORIGINS
+        # Set this to the deployed frontend origin once Vercel assigns it.
+        # Never "*": the browser is the only intended client.
+        sync: false

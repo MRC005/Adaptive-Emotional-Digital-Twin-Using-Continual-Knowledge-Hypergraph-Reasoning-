@@ -84,6 +84,9 @@ class StudentLifeAdapter(DatasetAdapter):
     can_support_longitudinal_estimand = True
     acquisition_instructions = ACQUISITION
 
+    #: filenames that alone are enough to consider the dataset "present"
+    ENOUGH = ("ema_definition", "rds_stress")
+
     # ------------------------------------------------------------- locate
     def locate(self, root: Path) -> dict[str, list[Path]]:
         if root is None or not Path(root).exists():
@@ -94,6 +97,11 @@ class StudentLifeAdapter(DatasetAdapter):
                             recursive=True)
                   if "definition" not in os.path.basename(f).lower()]
         return {
+            # the RDS repackaging, converted by scripts/convert_studentlife_rds.py
+            "rds_stress": [Path(f) for f in glob.glob(
+                os.path.join(r, "**", "stress_ema.csv"), recursive=True)],
+            "rds_conversation": [Path(f) for f in glob.glob(
+                os.path.join(r, "**", "conversation.csv"), recursive=True)],
             "ema_definition": [Path(f) for f in glob.glob(
                 os.path.join(r, "**", "EMA_definition.json"), recursive=True)],
             "stress_responses": stress,
@@ -105,6 +113,196 @@ class StudentLifeAdapter(DatasetAdapter):
                 os.path.join(r, "**", "*activity*", "*.csv"), recursive=True)],
         }
 
+    # ------------------------------------------------- RDS repackaging path
+    def _load_rds_derived(self, found: dict) -> LoadResult:
+        """Read the CSVs produced from the StudentLife RDS repackaging.
+
+        This layout carries NO ``EMA_definition.json``, so the label-text remap
+        the specification mandates cannot be applied. Stored integers are
+        therefore carried through UNMAPPED and the audit refuses primary
+        eligibility: without the codebook there is no way to verify that code 1
+        means "Feeling great" rather than "Stressed out".
+        """
+        prov: dict = {
+            "layout": "RDS repackaging converted to CSV",
+            "official_source": "https://studentlife.cs.dartmouth.edu/dataset.html",
+            "ema_definition_present": False,
+            "label_text_remap_applied": False,
+        }
+        # keep_default_na=False on the metadata column only: the defective
+        # repackaging names its response column literally "null", which pandas
+        # would otherwise read back as NaN and hide the diagnosis.
+        ema = pd.read_csv(found["rds_stress"][0],
+                          keep_default_na=True,
+                          converters={"response_column_name": str})
+        for c in ("uid", "timestamp", "response"):
+            if c not in ema.columns:
+                raise DecisionRequired(
+                    f"{found['rds_stress'][0]} lacks column {c!r}; columns "
+                    f"present: {list(ema.columns)}. Re-run "
+                    "scripts/convert_studentlife_rds.py.")
+        col = str(ema.get("response_column_name",
+                          pd.Series(["?"])).iloc[0])
+        prov["source_response_column"] = col
+        n_rows = len(ema)
+
+        raw = pd.to_numeric(ema["response"], errors="coerce")
+        usable = raw.notna() & (raw >= 1) & (raw <= 5)
+        prov["n_rows"] = int(n_rows)
+        prov["n_response_missing"] = int(ema["response"].isna().sum())
+        prov["n_response_non_numeric"] = int((~usable & ema["response"].notna()).sum())
+        prov["n_usable_responses"] = int(usable.sum())
+        prov["usable_fraction"] = float(usable.mean())
+        if col == "null" or usable.mean() < 0.5:
+            prov["conversion_defect"] = (
+                f"The stress response arrived in a column named {col!r} with "
+                f"only {int(usable.sum())} of {n_rows} rows "
+                f"({usable.mean():.1%}) parsable as a 1-5 response. Other EMA "
+                "tables in the same archive convert with correctly named "
+                "columns, so this is a defect of the repackaging, not of "
+                "StudentLife.")
+        if not usable.any():
+            raise DecisionRequired(
+                "StudentLife RDS repackaging: no parsable 1-5 stress responses "
+                f"at all in {found['rds_stress'][0]} (response column was "
+                f"{col!r}). Obtain the ORIGINAL Dartmouth release.")
+
+        d = pd.DataFrame({
+            "pid": "u" + ema.loc[usable, "uid"].astype(int).astype(str).str.zfill(2),
+            "ts": pd.to_datetime(ema.loc[usable, "timestamp"], unit="s", utc=True),
+            "raw_code": raw[usable].astype(int)})
+        n_dup = int(d.duplicated(subset=["pid", "ts"]).sum())
+        prov["n_duplicate_occasions_dropped"] = n_dup
+        d = d.drop_duplicates(subset=["pid", "ts"], keep="first")
+        # NOT remapped: without the codebook the severity order is unverifiable
+        d["report"] = d["raw_code"]
+        d["day"] = d["ts"].dt.tz_convert("UTC").dt.tz_localize(None).dt.normalize()
+
+        conv = pd.read_csv(found["rds_conversation"][0])
+        for c in ("uid", "start_timestamp", "end_timestamp"):
+            if c not in conv.columns:
+                raise DecisionRequired(
+                    f"{found['rds_conversation'][0]} lacks column {c!r}; "
+                    f"present: {list(conv.columns)}")
+        st = pd.to_numeric(conv["start_timestamp"], errors="coerce")
+        en = pd.to_numeric(conv["end_timestamp"], errors="coerce")
+        ok = st.notna() & en.notna() & (en > st)
+        prov["n_conversation_episodes"] = int(len(conv))
+        prov["n_conversation_invalid_dropped"] = int((~ok).sum())
+        cdf = pd.DataFrame({
+            "pid": "u" + conv.loc[ok, "uid"].astype(int).astype(str).str.zfill(2),
+            "day": pd.to_datetime(st[ok], unit="s").dt.normalize(),
+            self.primary_sensor: (en[ok] - st[ok]) / 60.0})
+        sens = cdf.groupby(["pid", "day"], as_index=False)[self.primary_sensor].sum()
+
+        df = d.merge(sens, on=["pid", "day"], how="inner")
+        prov["n_matched"] = int(len(df))
+        prov["stress_day_range"] = [str(d["day"].min().date()),
+                                    str(d["day"].max().date())]
+        prov["sensor_day_range"] = [str(sens["day"].min().date()),
+                                    str(sens["day"].max().date())]
+        prov["n_pid_overlap"] = int(len(set(d["pid"]) & set(sens["pid"])))
+        if df.empty:
+            shared_ids = prov["n_pid_overlap"] > 0
+            raise DecisionRequired(
+                "StudentLife RDS repackaging: NOT ONE stress response falls on "
+                "a day with conversation data, so no observation can be formed."
+                f" The {int(usable.sum())} parsable responses span "
+                f"{prov['stress_day_range'][0]} to {prov['stress_day_range'][1]}"
+                f", while conversation sensing spans "
+                f"{prov['sensor_day_range'][0]} to {prov['sensor_day_range'][1]}"
+                f". Participant identifiers DO match ({prov['n_pid_overlap']} "
+                "in common), so this is not an ID problem: the surviving "
+                "responses are from before the sensing period, and the study-"
+                "period EMA was lost in the column named "
+                f"{prov.get('source_response_column')!r}. "
+                "Obtain the ORIGINAL Dartmouth release."
+                if shared_ids else
+                "Participant identifiers do not match between the two tables.")
+        df.attrs["data_status"] = DataStatus.REAL.value
+        df.attrs["n_categories"] = 5
+        return LoadResult(frame=df, n_categories=5, sensor=self.primary_sensor,
+                          data_status=DataStatus.REAL, provenance=prov)
+
+    def _rds_defect_audit(self, p: Path, found: dict, exc: Exception
+                          ) -> DatasetAudit:
+        """A full structured audit for an archive that cannot be loaded.
+
+        A dataset that fails is still worth a complete audit record: the point
+        of the audit is to say precisely WHY, in a form a reviewer and a
+        machine can both read.
+        """
+        import numpy as _np
+        ema = pd.read_csv(found["rds_stress"][0],
+                          converters={"response_column_name": str})
+        conv = pd.read_csv(found["rds_conversation"][0])
+        raw = pd.to_numeric(ema["response"], errors="coerce")
+        usable = raw.notna() & (raw >= 1) & (raw <= 5)
+        col = str(ema["response_column_name"].iloc[0]) \
+            if "response_column_name" in ema.columns else "?"
+        per = ema.loc[usable].groupby("uid").size()
+        st = pd.to_numeric(conv["start_timestamp"], errors="coerce")
+        en = pd.to_numeric(conv["end_timestamp"], errors="coerce")
+        good = st.notna() & en.notna() & (en > st)
+        dist = raw[usable].value_counts().sort_index()
+        return DatasetAudit(
+            dataset_name=self.name, role=self.role, data_status=DataStatus.REAL,
+            source_status=(f"RDS repackaging audited at {p}; the archive loads "
+                           "but is DEFECTIVE for the stress EMA"),
+            local_files_available=True, root_path=str(p),
+            files_found=tuple(f"{k}: {len(v)}" for k, v in found.items() if v),
+            participant_count=int(ema["uid"].nunique()),
+            observation_count=int(usable.sum()),
+            sensor_modalities=("phone conversation episodes (audio inference)",),
+            self_report_variables=("single-item stress EMA (5 ordered levels)",),
+            self_report_scale=("5-point ordered; SEVERITY ORDER UNVERIFIABLE — "
+                               "EMA_definition.json is absent from this "
+                               "repackaging"),
+            stress_labels=(),
+            raw_stored_codes=tuple(int(v) for v in dist.index),
+            code_to_label_mapping={int(k): f"{int(k)} = stored integer; no "
+                                   "label text available in this repackaging"
+                                   for k in dist.index},
+            code_to_severity_mapping={},
+            timestamps_present=True, timestamp_format="unix epoch (s)",
+            timezone="UTC",
+            longitudinal_span_days=float(
+                (pd.to_datetime(en[good].max(), unit="s")
+                 - pd.to_datetime(st[good].min(), unit="s")).days),
+            observations_per_participant={str(k): int(v) for k, v in per.items()},
+            median_observations_per_participant=float(per.median()) if len(per) else 0.0,
+            missingness={
+                "stress_response_missing": float(ema["response"].isna().mean()),
+                "stress_response_unusable": float(1.0 - usable.mean()),
+                "conversation_episodes_invalid": float(1.0 - good.mean())},
+            participant_level_coverage={str(k): float(v / 735.0)
+                                        for k, v in per.items()},
+            sensor_report_alignment=("IMPOSSIBLE — zero temporal overlap "
+                                     "between usable reports and sensing"),
+            conversation_context_available=True,
+            eligible_for_primary_analysis=False,
+            eligible_for_benchmark_analysis=False,
+            exclusion_reasons=(
+                str(exc),
+                f"Only {int(usable.sum())} of {len(ema)} stress rows "
+                f"({usable.mean():.1%}) parse as a 1-5 response; the column is "
+                f"named {col!r} and is {ema['response'].isna().mean():.1%} NA.",
+                f"Maximum {int(per.max()) if len(per) else 0} usable responses "
+                "per participant against roughly 735 per student in the "
+                "published descriptor — a loss of about 99%.",
+                "EMA_definition.json is absent, so the label-text remap the "
+                "frozen specification mandates cannot be applied at all."),
+            acquisition_instructions=self.acquisition_instructions,
+            notes=(
+                "THE SENSOR SIDE IS INTACT: "
+                f"{int(good.sum())} conversation episodes across "
+                f"{int(conv['uid'].nunique())} participants, 0% invalid.",
+                "Other EMA tables in the same archive (PAM, Mood, Sleep) "
+                "converted correctly with named columns, so this is a defect "
+                "of the repackaging, NOT a property of StudentLife.",
+                "StudentLife remains the correct target. The fix is to obtain "
+                "the ORIGINAL Dartmouth release, not to change the method."))
+
     # -------------------------------------------------------------- audit
     def audit(self, root=None) -> DatasetAudit:
         p = self.resolve_root(root)
@@ -113,11 +311,21 @@ class StudentLifeAdapter(DatasetAdapter):
                 root, "REAL DATA UNAVAILABLE - STUDENTLIFE AUDIT NOT RUN: "
                       f"no directory at {root!r}")
         found = self.locate(p)
-        if not found.get("ema_definition"):
+        # The RDS repackaging is a different layout with no EMA_definition.json.
+        # It is present-but-defective rather than absent, so it gets a full
+        # audit record explaining exactly why it cannot be used.
+        if found.get("rds_stress") and found.get("rds_conversation") \
+                and not found.get("ema_definition"):
+            try:
+                res = self.load(root)
+            except DecisionRequired as exc:
+                return self._rds_defect_audit(Path(p), found, exc)
+            df = res.frame
+        elif not found.get("ema_definition"):
             return self.unavailable_audit(
                 root, "REAL DATA UNAVAILABLE - STUDENTLIFE AUDIT NOT RUN: "
                       f"EMA_definition.json not found under {p}")
-        if not found.get("stress_responses"):
+        if not found.get("ema_definition") or not found.get("stress_responses"):
             return self.unavailable_audit(
                 root, "REAL DATA UNAVAILABLE - STUDENTLIFE AUDIT NOT RUN: "
                       f"no stress response JSON files under {p}")
@@ -197,6 +405,12 @@ class StudentLifeAdapter(DatasetAdapter):
         p = self.require_files(root)
         found = self.locate(p)
         prov: dict = {}
+
+        # The RDS repackaging has no EMA_definition.json and a different shape;
+        # dispatch to its reader when the original layout is absent.
+        if found.get("rds_stress") and found.get("rds_conversation") \
+                and not found.get("ema_definition"):
+            return self._load_rds_derived(found)
 
         if not found["ema_definition"]:
             raise DecisionRequired(

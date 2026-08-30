@@ -22,7 +22,7 @@ primary longitudinal validation by passing a flag.
 | Dataset | Role | Status | Primary sensor | Self-report |
 |---|---|---|---|---|
 | **synthetic** | SIMULATION | ✅ implemented, runs | conversation minutes (simulated) | simulated 5-point ordinal |
-| **StudentLife** | **PRIMARY_LONGITUDINAL** | ⛔ PLANNED — files absent | daily conversation minutes | single-item stress EMA (5 ordered levels) |
+| **StudentLife** | **PRIMARY_LONGITUDINAL** | ⚠️ **RDS repackaging audited — DEFECTIVE conversion** | daily conversation minutes ✅ intact | single-item stress EMA ⛔ ~99% lost |
 | **RELAX** | LONGITUDINAL_ALTERNATIVE | ✅ **REAL — acquired & audited; FAILS eligibility** | heart rate from Polar IBI | `ifb-2` 7-point Likert (excited↔calm) |
 | **WESAD** | **BENCHMARK_PHYSIOLOGICAL** | ⛔ PLANNED — files absent | chest ECG window statistics | protocol condition label |
 | **PMData** | CONDITIONAL_SECONDARY | ✅ **REAL — acquired & audited; FAILS eligibility** | Fitbit resting heart rate | PMSys daily wellness `stress` |
@@ -373,3 +373,85 @@ python scripts/audit_dataset.py --fixture studentlife --out /tmp/sl_fixture
 A fixture directory carries a `_SYNTHETIC_FIXTURE` marker file. The pipeline
 reads that marker and **downgrades the result status to SYNTHETIC**, so a
 fixture can never produce a result stamped REAL.
+
+
+---
+
+## StudentLife audit — ⚠️ RUN ON AN RDS REPACKAGING, WHICH IS DEFECTIVE
+
+**Archive audited:** `data/raw/studentlife/dataset_rds.zip` (224 MB, 54 members,
+zip integrity OK). This is a third-party **R-serialised repackaging** of the
+Dartmouth study, not the original release.
+
+**Reproduce:**
+```bash
+python scripts/convert_studentlife_rds.py          # needs Rscript
+python scripts/audit_dataset.py --dataset studentlife --root data/interim/studentlife
+```
+
+### The sensor side is perfect
+
+| | measured |
+|---|---|
+| conversation episodes | **79 023** |
+| participants | **49** |
+| invalid episodes | **0.0%** |
+| span | 2013-03-27 → 2013-06-01 |
+| episode duration | median 263 s, no non-positive values |
+
+### The self-report side is destroyed
+
+`EMA/Stress.Rds` has 2017 rows and three columns: `timestamp`, `uid`, and a
+response column **literally named `null`**.
+
+| | measured | expected |
+|---|---|---|
+| response column name | **`null`** | `level` |
+| NA in response column | **88.1%** | ~0% |
+| parsable 1–5 responses | **122** (6.0%) | ~35 000 |
+| **max per participant** | **6** | **~735** |
+| stray GPS strings in the response column | 109 | 0 |
+| duplicate (uid, timestamp) rows | 13 | — |
+
+**And the two sides do not overlap in time.** All 122 surviving responses fall
+on **2013-03-24/25**, before conversation sensing begins on **2013-03-27**.
+Participant identifiers match (46 in common), so this is not an ID problem —
+the study-period EMA was simply lost in the `null` column.
+
+**Result: not one aligned observation can be formed.** The pipeline exits **2**
+with `DECISION REQUIRED`.
+
+### Why this is a conversion defect, not a StudentLife limitation
+
+Other EMA tables in the **same archive** converted correctly, with properly
+named columns:
+
+| table | rows | columns | NA |
+|---|---|---|---|
+| `PAM.Rds` | 9 040 | `picture_idx`, timestamp, uid | **0.0%** |
+| `Mood.Rds` | 277 | `happy`, `happyornot`, `sad`, `sadornot`, `location` | 0.4% |
+| `Sleep.Rds` | 1 644 | `hour`, `rate`, `social`, `location` | 15.5% |
+| **`Stress.Rds`** | 2 017 | **`null`** | **88.1%** |
+
+The converter preserves named fields everywhere else. The failure is specific
+to Stress.
+
+### Also missing: the codebook
+
+`EMA_definition.json` is **absent from this repackaging entirely**. That file is
+what the frozen specification keys its severity remap on. Without it there is no
+way to verify that stored code 1 means *"Feeling great"* rather than *"Stressed
+out"* — so the adapter carries the integers through **unmapped** and the audit
+sets `eligible_for_primary_analysis = False` on that ground alone.
+
+### What this changes
+
+**StudentLife remains the correct primary target.** Unlike RELAX (intrinsically
+too sparse) and PMData (intrinsically A3-unstable and undocumented), this
+failure is an artefact of *one particular download*. The published descriptor's
+~735 responses per student would comfortably clear the frozen screen.
+
+**The fix is a different archive, not a different method.** Obtain the original
+Dartmouth release, which ships `EMA/EMA_definition.json` and
+`EMA/response/Stress/Stress_uXX.json`. The adapter already supports that layout
+and is fixture-tested against it.

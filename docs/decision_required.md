@@ -3,7 +3,7 @@
 This file records every point where the implementation found a genuinely
 unspecified scientific decision, **and did not guess**.
 
-## Status: TWO DATASETS AUDITED, BOTH BLOCKED (D2, D7, D9)
+## Status: THREE DATASETS AUDITED, ALL BLOCKED (D2, D7, D9, D10)
 
 Neither obtainable real dataset can support the frozen primary endpoint. Both
 failures are measured, not assumed, and neither was worked around.
@@ -241,3 +241,32 @@ would not rescue PMData.
 Rejected alternatives: lowering the screen (changes the frozen method);
 switching to intraday `heart_rate.json` (a different, undeclared sensor and a
 new specification decision, not an implementation choice).
+
+
+### D10 — ⚠ BLOCKING: the StudentLife RDS repackaging is a defective conversion
+
+**Measured on `data/raw/studentlife/dataset_rds.zip`:**
+
+- `EMA/Stress.Rds` stores its response in a column **literally named `null`**,
+  **88.1% NA**, additionally containing 109 GPS coordinate strings
+- **122 of 2017 rows** parse as a 1–5 response (6.0%); **max 6 per
+  participant** against ~735 in the published descriptor — ~99% loss
+- All 122 survivors fall on **2013-03-24/25**, *before* conversation sensing
+  starts on 2013-03-27 → **zero temporal overlap, no observation formable**
+- **`EMA_definition.json` is absent**, so the mandated label-text remap cannot
+  be applied at all
+
+**Not a StudentLife limitation.** `PAM.Rds` (9 040 rows, 0% NA), `Mood.Rds` and
+`Sleep.Rds` in the *same archive* converted correctly with named columns. The
+conversation sensor is likewise perfect (79 023 episodes, 49 participants, 0%
+invalid).
+
+**Resolution: obtain the ORIGINAL Dartmouth release** — not a change to the
+method, the threshold, or the report variable.
+
+**Rejected alternative:** substituting PAM for the stress item. PAM is a
+different instrument (a 4×4 photographic affect grid whose `picture_idx` is
+*not* an ordered severity scale), the frozen specification lists it as
+**Ablation 6 — a sensitivity analysis, not the primary**, and mapping its index
+to severity would need the PAM codebook. Using it as the primary would be
+changing the specification to fit a damaged file.

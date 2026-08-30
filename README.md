@@ -13,8 +13,8 @@
 | **Implemented & verified** | Full pipeline, 16 modules, 230+ tests passing |
 | **Validated on SYNTHETIC data** | Estimator calibration, placebo, bias envelope, ablation |
 | **Validated on REAL data** | ❌ **NONE.** No primary ρ\* result exists from any real dataset |
-| **Real data acquired & audited** | ✅ **RELAX** (31 pp) and ✅ **PMData** (16 pp) — **both fail the eligibility screen** |
-| **Pending** | A dataset with sufficient self-report density *and* a documented scale |
+| **Real data acquired & audited** | ✅ **RELAX** (31 pp), ✅ **PMData** (16 pp), ⚠️ **StudentLife** (RDS repackaging) — **all three blocked** |
+| **Pending** | The **original** Dartmouth StudentLife release |
 
 **There is no real-data empirical result in this repository, and the software
 refuses to manufacture one.**
@@ -26,9 +26,18 @@ the strict audit. **Both fail it**, for different reasons:
 |---|---|---|---|
 | **RELAX** (Halmich et al. 2026, Zenodo [10.5281/zenodo.20701999](https://doi.org/10.5281/zenodo.20701999), CC-BY-4.0) | 31 | **0 / 31** | self-report density — median ~50 aligned reports vs the 120 required |
 | **PMData** (Thambawita et al. 2020, [Simula](https://datasets.simula.no/pmdata/), CC BY 4.0) | 16 (14 usable) | **0 / 14** | density **+** assumption **A3** (Var(s) epoch ratios to 13.6) **+** an undocumented scale direction |
+| **StudentLife** — *RDS repackaging* (Wang et al. 2014) | 46 | **0 / 46** | **defective conversion**: the stress response column is named `null` and is 88% NA; 122 of ~35 000 responses survive, and none overlap the sensing period |
 
-The pipeline exits with code 3 on each and reports the failure. **No threshold
-was relaxed to make either fit.** See [`docs/dataset_audit.md`](docs/dataset_audit.md)
+The pipeline exits non-zero on each and reports the failure. **No threshold was
+relaxed to make any of them fit.**
+
+**The StudentLife failure is different in kind, and that matters.** RELAX and
+PMData are intact datasets that genuinely cannot support the method. The
+StudentLife archive audited here is a *damaged R-serialised repackaging* of a
+dataset that almost certainly can: its conversation sensor is perfect (79 023
+episodes, 49 participants, 0% invalid), and sibling EMA tables in the same
+archive (PAM, Mood, Sleep) converted correctly — only `Stress.Rds` is mangled.
+**The fix is a different download, not a different method.** See [`docs/dataset_audit.md`](docs/dataset_audit.md)
 and [`docs/dataset_compatibility.md`](docs/dataset_compatibility.md).
 
 Every other result here is **SYNTHETIC**, generated from the frozen model in
@@ -148,6 +157,16 @@ python scripts/run_demo.py --dataset relax --root data/raw/relax --sensitivity
 
 The demo **exits 3 and produces no ρ\* estimate** — that is the correct result.
 
+### Audit StudentLife (RDS repackaging)
+
+```bash
+python scripts/convert_studentlife_rds.py          # needs Rscript
+python scripts/audit_dataset.py --dataset studentlife --root data/interim/studentlife
+```
+
+Extracts 0.6 MB of a 224 MB archive and reports the conversion defect. Exits
+**2** with `DECISION REQUIRED` — the correct result.
+
 ### Audit the datasets
 
 ```bash
@@ -241,6 +260,7 @@ What a reviewer can check, and how.
 | Real data is not faked | missing archive → `REAL DATA UNAVAILABLE`, exit 6 | `tests/integration/test_missing_real_data.py` |
 | **RELAX really was audited, and really failed** | 0/31 eligible; pipeline exits 3 | `tests/regression/test_relax_real_audit.py` |
 | **PMData really was audited, and really failed** | 0/14 eligible; A3 violated; direction undocumented | `tests/regression/test_pmdata_real_audit.py` |
+| **The StudentLife archive is a broken conversion** | response column named `null`, 88% NA, no temporal overlap | `tests/regression/test_studentlife_rds_audit.py` |
 
 ## The four contributions
 
@@ -330,14 +350,15 @@ is implemented directly. Runs on any laptop, no GPU, no network at run time.
 The **science is frozen**. The **software is built and tested**. **Real-data
 validation is still pending — and it is now a harder problem than a download.**
 
-Two obtainable longitudinal datasets (RELAX, PMData) were acquired and
-audited, and **both fail** — RELAX on self-report density, PMData on density,
-on assumption A3, and on an undocumented scale direction. That is a real
+Three real archives were acquired and audited, and **all three are blocked** —
+RELAX on self-report density, PMData on density plus assumption A3 plus an
+undocumented scale direction, and the StudentLife RDS repackaging on a defective
+conversion that destroyed ~99% of its stress EMA. That is a real
 finding rather than an excuse: the method needs roughly 120 repeated ordinal
 self-reports per person **plus** a documented scale **plus** a sensor whose
 variance is stable across epochs, and current open longitudinal datasets rarely
-provide all three. StudentLife, which does have the density (~735/participant),
-is currently unreachable.
+provide all three. StudentLife does have the density (~735/participant) and remains the right
+target — the copy obtained so far is simply a broken conversion.
 
 **This project is not publication-ready.** The theory and the simulation
 evidence are sound; the empirical section has no evidence at all.
