@@ -31,3 +31,6 @@ data/synthetic/*
 !data/**/.gitkeep
 
 *.jsonl
+
+# ---------------------------------------------------------------- frontend
+node_modules/
