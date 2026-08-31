@@ -35,3 +35,8 @@ data/synthetic/*
 
 # ---------------------------------------------------------------- frontend
 node_modules/
+
+# Vite env files may hold per-developer overrides; the committed
+# .env.production / .env.development carry the public backend URL only.
+frontend/.env.local
+frontend/.env.*.local

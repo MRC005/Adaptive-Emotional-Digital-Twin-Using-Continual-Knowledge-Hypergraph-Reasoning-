@@ -38,6 +38,51 @@ export function syntheticBanner(twin) {
     Nothing here describes anyone.</div>`;
 }
 
+/**
+ * Which engine actually ran. Three states, never blurred:
+ *   A the research model produced this
+ *   B it did not, and the reason is given
+ *   C is transient and handled during the request, not here
+ */
+export function engineBanner(ev) {
+  if (ev.backend === "transformer") {
+    const timing = ev.inferenceMs != null
+      ? ` Inference took ${Math.round(ev.inferenceMs)} ms`
+        + (ev.roundTripMs ? `, ${Math.round(ev.roundTripMs)} ms including the network.` : ".")
+      : "";
+    return `<div class="msg ok"><b>Emotion identified using the RoBERTa GoEmotions model.</b>
+      Running as an int8 ONNX build of the same fine-tune${timing}</div>`;
+  }
+  return `<div class="msg warn"><b>The research model was not used.</b>
+    ${esc(ev.note || "A simplified word-list baseline produced this result instead.")}
+    <br><span class="hint">This baseline scores macro-F1 0.098 against the model's
+    0.493 on the same held-out data, so treat the label as indicative only.</span></div>`;
+}
+
+/**
+ * GoEmotions is MULTI-LABEL: the scores are independent sigmoids and do not sum
+ * to 1. Showing one label at "57%" invites reading it as a probability over
+ * emotions, which it is not. So the primary is shown with its own score, and
+ * anything else above the operating threshold is listed beside it.
+ */
+const ALSO_THRESHOLD = 0.15;   // the value tuned on the GoEmotions validation split
+
+export function alsoDetected(ev) {
+  const raw = ev.rawTop || [];
+  if (ev.backend !== "transformer" || raw.length < 2) return "";
+  const others = raw.slice(1).filter(([, s]) => s >= ALSO_THRESHOLD);
+  const primary = raw[0];
+  return `<p class="hint" style="margin:8px 0 0">
+    The model scores each of its 28 emotions independently, so these are not
+    percentages of one another. Strongest: <b>${esc(primary[0])}</b>
+    (${(primary[1] * 100).toFixed(0)})${
+      others.length
+        ? `. Also above the ${ALSO_THRESHOLD} threshold: `
+          + others.map(([l, sc]) => `${esc(l)} (${(sc * 100).toFixed(0)})`).join(", ")
+        : `. Nothing else passed the ${ALSO_THRESHOLD} threshold.`}</p>`;
+}
+
+
 export function renderUnderstanding(ev, { engine }) {
   const known = knownFields(ev);
   const missing = unknownFields(ev);
@@ -51,7 +96,11 @@ export function renderUnderstanding(ev, { engine }) {
       <td><b>${esc(p.value)}</b></td>
       <td class="src">${esc(SOURCE_WORD[p.source])}${
         p.confidence != null && p.source === FieldSource.MODEL
-          ? ` · ${(p.confidence * 100).toFixed(0)}% confident` : ""}</td>
+          // NOT a percentage. GoEmotions has a multi-label sigmoid head, so
+          // this is that one label's independent score and the 28 scores do
+          // not sum to 1. Calling it "% confident" invited exactly the wrong
+          // reading, and made a perfectly ordinary 0.57 look like a weak result.
+          ? ` · score ${p.confidence.toFixed(2)}` : ""}</td>
       <td class="ev">${p.evidence ? esc(p.evidence) : "—"}</td>
       <td><select class="fix" data-field="${f}">
         <option value="">change…</option>
@@ -71,9 +120,8 @@ export function renderUnderstanding(ev, { engine }) {
         ${missing.length ? `<p class="hint" style="margin:0 0 8px">
           Not mentioned, so left blank rather than guessed:
           <b>${missing.map((f) => esc(FIELD_LABELS[f] || f)).join(", ")}</b>.</p>` : ""}
-        <p class="hint" style="margin:0">Feeling classified by
-          <b>${esc(info.name)}</b>. ${esc(info.detail)}</p>
-        ${ev.note ? `<p class="hint" style="margin:6px 0 0">${esc(ev.note)}</p>` : ""}
+        ${engineBanner(ev)}
+        ${alsoDetected(ev)}
       </div>
       <div class="actions">
         <button class="b run" id="t-save">Add to my history</button>

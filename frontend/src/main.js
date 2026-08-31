@@ -21,8 +21,8 @@ import { analyze, activeEngine } from "./lib/engine.js";
 import { renderReport, renderPrecomputed } from "./ui/results.js";
 import { initTheme, getTheme, setTheme, onThemeChange } from "./lib/theme.js";
 import { PersonalTwin, buildEvent, correctField } from "./lib/twin.js";
-import { classify, ENGINE_INFO, transformerConfigured, useTransformer,
-         setUseTransformer } from "./lib/emotion_engine.js";
+import { classify, ENGINE_INFO, STATE, probeHealth, transformerConfigured,
+         useTransformer, setUseTransformer } from "./lib/emotion_engine.js";
 import { buildDemoHistory, DEMO_PERSON_ID } from "./lib/demo_history.js";
 import { renderHistory, renderSimilar, renderUnderstanding, syntheticBanner }
   from "./ui/twin_view.js";
@@ -275,11 +275,17 @@ function ensureTwin() {
   return state.twin;
 }
 
-async function makeEvent(text, timestamp, fields, dataStatus = "USER") {
-  const pred = await classify(text);
+async function makeEvent(text, timestamp, fields, dataStatus = "USER",
+                        onState = () => {}) {
+  const pred = await classify(text, { onState });
   const ev = buildEvent(text, { personId: ensureTwin().personId, timestamp,
                                 userFields: fields, prediction: pred, dataStatus });
   if (pred.note) ev.note = pred.note;
+  ev.engineState = pred.state;
+  ev.distribution = pred.distribution || null;
+  ev.rawTop = pred.rawTop || null;
+  ev.inferenceMs = pred.inferenceMs ?? null;
+  ev.roundTripMs = pred.roundTripMs ?? null;
   return ev;
 }
 
@@ -343,21 +349,34 @@ function viewTwinMode() {
   });
 }
 
+function progressPanel(message, sub = "") {
+  return `<div class="panel"><div class="pad running">
+    <span class="spin" aria-hidden="true"></span>
+    <div><div>${esc(message)}</div>
+    ${sub ? `<div class="hint" style="margin-top:3px">${esc(sub)}</div>` : ""}</div>
+    </div></div>`;
+}
+
 async function analyseCheckIn() {
   const text = ($("#t-text").value || "").trim();
   if (!text) return;
   if (state.busy) return;
   setBusy(true, "Reading");
-  $("#t-understand").innerHTML = `<div class="panel"><div class="pad running">
-    <span class="spin" aria-hidden="true"></span><span>Working out the feeling and the situation…</span>
-    </div></div>`;
+  const show = (m, sub) => { $("#t-understand").innerHTML = progressPanel(m, sub); };
+  show("Analysing your check-in…");
   try {
-    const ev = await makeEvent(text);
+    // State C is reported as it happens, so a cold start reads as "waking up"
+    // rather than as a failure. This is the difference the old code missed.
+    const ev = await makeEvent(text, undefined, undefined, "USER", (st) => {
+      if (st.state === STATE.WAKING)
+        show("The analysis service is waking up. This may take a moment.",
+             `Attempt ${st.attempt} — free hosting suspends the service when idle.`);
+    });
     state.draft = ev;
     renderDraft();
   } catch (e) {
     $("#t-understand").innerHTML = `<div class="msg stop"><b>Could not read that check-in.</b>
-      ${esc(e.message)}</div>`;
+      ${esc(e.message)}<br><span class="hint">Nothing was saved.</span></div>`;
   } finally { setBusy(false); }
 }
 

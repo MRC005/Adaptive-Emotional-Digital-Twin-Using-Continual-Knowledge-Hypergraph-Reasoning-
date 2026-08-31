@@ -1,8 +1,24 @@
-# Public demonstration API. Pinned lightly; the AEDT package itself is
-# installed from the repository root (see render.yaml / Procfile).
+# Public demonstration API. The AEDT package itself is installed from the
+# repository root (see render.yaml / Procfile).
 fastapi>=0.115
 uvicorn[standard]>=0.32
 numpy>=1.26
 scipy>=1.11
 pandas>=2.1
 pyyaml>=6.0
+
+# ---------------------------------------------------- emotion model runtime
+# DELIBERATELY NOT torch/transformers. Measured resident memory:
+#
+#   torch + transformers                 664 MB   exceeds the 512 MB free tier
+#   onnxruntime + transformers           403 MB   on imports alone
+#   onnxruntime + tokenizers             287 MB   fits, and is what runs here
+#
+# It is the SAME fine-tune: SamLowe/roberta-base-go_emotions-onnx is that
+# author's ONNX export, and model_quantized.onnx its int8 quantisation.
+# Agreement with the torch reference is measured by
+# scripts/verify_onnx_agreement.py: mean |dP| 0.0141, top-1 label agreement
+# 0.963, check-in label agreement 0.970.
+onnxruntime>=1.17
+tokenizers>=0.15
+huggingface-hub>=0.23

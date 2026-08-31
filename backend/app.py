@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import os
 import time
+from contextlib import asynccontextmanager
 from typing import Literal
 
 from fastapi import FastAPI, HTTPException
@@ -29,6 +30,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from aedt import __version__
+from aedt.emotion.onnx_detect import ONNX_FILE, ONNX_REPO
 from aedt.constants import (BOOTSTRAP_B, MIN_CATEGORIES_USED,
                             MIN_REPORTS_PER_EPOCH, SEED, VAR_RATIO_HI,
                             VAR_RATIO_LO, DataStatus)
@@ -36,12 +38,50 @@ from aedt.constants import (BOOTSTRAP_B, MIN_CATEGORIES_USED,
 # ---------------------------------------------------------------- config
 ALLOWED = [o.strip() for o in os.environ.get(
     "AEDT_ALLOWED_ORIGINS",
-    "http://localhost:3000,http://localhost:5173").split(",") if o.strip()]
+    "http://localhost:3000,http://localhost:5173,http://localhost:4173,"
+    "http://127.0.0.1:4173").split(",") if o.strip()]
+
+#: Vercel gives every deployment its own hostname (production, previews, and a
+#: new one per commit), so an explicit allow-list cannot keep up and would fail
+#: silently in the browser as a CORS error. A regex scoped to vercel.app is the
+#: narrowest rule that actually works. It is NOT "*": credentials stay off and
+#: only GET/POST with Content-Type are admitted. Set AEDT_ALLOWED_ORIGIN_REGEX
+#: to tighten it to one project once its hostname is stable.
+ALLOWED_REGEX = os.environ.get(
+    "AEDT_ALLOWED_ORIGIN_REGEX",
+    r"https://.*\.vercel\.app")
 MAX_PARTICIPANTS = 60
 MAX_PER_EPOCH = 400
 MAX_BOOTSTRAP = 999
 
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Build the emotion model once, before the first request.
+
+    Loading inside a request handler would make the first user pay ~4 s and
+    would rebuild the session on every worker. Warming here also means /health
+    can report the truth: by the time the service accepts traffic, the model is
+    either ready or has failed with a recorded reason.
+
+    A failure is NOT fatal. The rest of the API (status, demo, results) must
+    keep serving, and /health reports model.status = "unavailable" so the
+    browser can say so instead of silently pretending.
+    """
+    from aedt.emotion.onnx_detect import get_detector
+    det = get_detector()
+    t0 = time.time()
+    ok = det.load()
+    _app.state.model_ready = ok
+    _app.state.model_load_seconds = round(time.time() - t0, 3)
+    _app.state.model_error = det.load_error
+    if ok:
+        det.predict("warm up")          # first inference builds internal buffers
+        _app.state.model_warm_seconds = round(time.time() - t0, 3)
+    yield
+
+
 app = FastAPI(
+    lifespan=lifespan,
     title="AEDT demonstration API",
     version=__version__,
     description=("Aggregate status and synthetic demonstration results for the "
@@ -52,6 +92,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED,          # never "*": the browser is the only client
+    allow_origin_regex=ALLOWED_REGEX,
     allow_credentials=False,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
@@ -67,10 +108,43 @@ async def _harden(request, call_next):
     return resp
 
 
-# ---------------------------------------------------------------- health
+# ------------------------------------------------------------ root/health
+@app.get("/")
+def root() -> dict:
+    """A root route, so hitting the bare URL is informative rather than a 404.
+
+    Its absence is what made the deployment look dead: the service was healthy
+    the whole time, but the first thing anyone tries returned
+    {"detail":"Not Found"}.
+    """
+    return {"status": "ok",
+            "service": "Adaptive Emotional Digital Twin backend",
+            "version": __version__,
+            "docs": "/api/docs", "health": "/health",
+            "endpoints": ["/health", "/api/emotion", "/api/demo/scenarios",
+                          "/api/demo/run", "/api/project-status",
+                          "/api/results/summary"]}
+
+
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok", "service": "aedt-demo-api", "version": __version__}
+    """Alive AND ready are different states, and this reports both.
+
+    A health check that returns ok while the model is missing is how a browser
+    ends up silently using a word list under a label that says RoBERTa.
+    """
+    ready = bool(getattr(app.state, "model_ready", False))
+    model = {
+        "name": ONNX_REPO,
+        "artifact": ONNX_FILE,
+        "status": "loaded" if ready else "unavailable",
+        "load_seconds": getattr(app.state, "model_load_seconds", None),
+    }
+    if not ready and getattr(app.state, "model_error", None):
+        # the class of failure, not a stack trace or a filesystem path
+        model["reason"] = str(app.state.model_error).split(":")[0]
+    return {"status": "ok", "service": "AEDT", "version": __version__,
+            "model": model}
 
 
 # ---------------------------------------------------------- project status
@@ -257,36 +331,43 @@ class CheckIn(BaseModel):
 
 @app.post("/api/emotion")
 def detect_emotion(req: CheckIn) -> dict:
-    """Transformer emotion detection + rule-based context extraction.
+    """RoBERTa emotion detection + rule-based context extraction.
 
-    This is the only endpoint that runs a neural model. It is stateless: the
-    text is classified and discarded, nothing is written to disk, and no
-    person identifier is accepted, so there is no check-in history on the
-    server to leak. The browser keeps the history locally.
+    Stateless by construction: the text is classified and discarded, no
+    identifier is accepted, and nothing is written to disk. There is therefore
+    no check-in history on the server that could leak. The browser keeps the
+    history locally.
 
-    When torch/transformers are not installed the detector reports
-    ``backend: "lexicon"`` and the client labels it a baseline rather than
-    presenting it as the model.
+    If the model is unavailable this returns 503 rather than a lexicon answer.
+    The caller must be able to tell the difference, because the interface
+    promises which engine ran.
     """
     from aedt.emotion.context import extract_context
-    from aedt.emotion.detect import default_detector, self_reported_emotion
+    from aedt.emotion.detect import self_reported_emotion
+    from aedt.emotion.onnx_detect import get_detector
 
     text = req.text.strip()
     if not text:
         raise HTTPException(status_code=400, detail="empty text")
 
-    det = default_detector()
-    pred = det.predict(text)
+    t0 = time.time()
+    pred = get_detector().predict(text)
+    if pred is None:
+        raise HTTPException(
+            status_code=503,
+            detail="The emotion model is not loaded on this instance. No "
+                   "prediction was produced; do not present a fallback as a "
+                   "model result.")
+
     ctx = extract_context(text)
     stated = self_reported_emotion(text)
-
     return {
         "data_status": DataStatus.SYNTHETIC.value,   # not participant data
         "prediction": pred.to_dict(),
         "self_reported": ({"label": stated[0], "span": stated[1]}
                           if stated else None),
         "context": {k: v.to_dict() for k, v in ctx.items()},
-        "model_available": det.available,
-        "note": ("Stateless. The text is not stored and no identifier is "
-                 "accepted."),
+        "model_available": True,
+        "inference_ms": round(1000 * (time.time() - t0), 1),
+        "note": "Stateless. The text is not stored and no identifier is accepted.",
     }
