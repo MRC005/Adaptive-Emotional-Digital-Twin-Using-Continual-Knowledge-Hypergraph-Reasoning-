@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import os
 import time
+import asyncio
 from contextlib import asynccontextmanager
 from typing import Literal
 
@@ -56,28 +57,49 @@ MAX_BOOTSTRAP = 999
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    """Build the emotion model once, before the first request.
+    """Start serving IMMEDIATELY; load the model in the background.
 
-    Loading inside a request handler would make the first user pay ~4 s and
-    would rebuild the session on every worker. Warming here also means /health
-    can report the truth: by the time the service accepts traffic, the model is
-    either ready or has failed with a recorded reason.
+    The model must not be loaded inline here. Measured from a cold cache the
+    load takes ~250 s (a 125 MB download plus session build), and a lifespan
+    that blocks for that long means the port never opens, Render's health
+    check times out, and the deploy is marked failed. The service would look
+    broken for the one reason that is entirely avoidable.
 
-    A failure is NOT fatal. The rest of the API (status, demo, results) must
-    keep serving, and /health reports model.status = "unavailable" so the
-    browser can say so instead of silently pretending.
+    So the port opens at once and /health tells the truth in three states:
+
+        loading      the background task is still working
+        loaded       ready
+        unavailable  it failed, with the reason
+
+    The browser already knows how to wait on "loading" -- that is the WAKING
+    state -- so a cold start reads as "waking up", not as a failure.
+
+    The model is still loaded exactly ONCE per process, never per request.
     """
-    from aedt.emotion.onnx_detect import get_detector
-    det = get_detector()
-    t0 = time.time()
-    ok = det.load()
-    _app.state.model_ready = ok
-    _app.state.model_load_seconds = round(time.time() - t0, 3)
-    _app.state.model_error = det.load_error
-    if ok:
-        det.predict("warm up")          # first inference builds internal buffers
-        _app.state.model_warm_seconds = round(time.time() - t0, 3)
-    yield
+    _app.state.model_ready = False
+    _app.state.model_loading = True
+    _app.state.model_error = None
+    _app.state.model_load_seconds = None
+
+    async def _warm() -> None:
+        from aedt.emotion.onnx_detect import get_detector
+        det = get_detector()
+        t0 = time.time()
+        # to_thread: the load is blocking CPU/IO work and must not stall the
+        # event loop, or /health would be unanswerable while it runs
+        ok = await asyncio.to_thread(det.load)
+        if ok:
+            await asyncio.to_thread(det.predict, "warm up")
+        _app.state.model_ready = ok
+        _app.state.model_error = det.load_error
+        _app.state.model_load_seconds = round(time.time() - t0, 3)
+        _app.state.model_loading = False
+
+    task = asyncio.create_task(_warm())
+    try:
+        yield
+    finally:
+        task.cancel()
 
 
 app = FastAPI(
@@ -134,13 +156,14 @@ def health() -> dict:
     ends up silently using a word list under a label that says RoBERTa.
     """
     ready = bool(getattr(app.state, "model_ready", False))
+    loading = bool(getattr(app.state, "model_loading", False))
     model = {
         "name": ONNX_REPO,
         "artifact": ONNX_FILE,
-        "status": "loaded" if ready else "unavailable",
+        "status": "loaded" if ready else "loading" if loading else "unavailable",
         "load_seconds": getattr(app.state, "model_load_seconds", None),
     }
-    if not ready and getattr(app.state, "model_error", None):
+    if not ready and not loading and getattr(app.state, "model_error", None):
         # the class of failure, not a stack trace or a filesystem path
         model["reason"] = str(app.state.model_error).split(":")[0]
     return {"status": "ok", "service": "AEDT", "version": __version__,
@@ -353,11 +376,15 @@ def detect_emotion(req: CheckIn) -> dict:
     t0 = time.time()
     pred = get_detector().predict(text)
     if pred is None:
+        loading = bool(getattr(app.state, "model_loading", False))
         raise HTTPException(
             status_code=503,
-            detail="The emotion model is not loaded on this instance. No "
-                   "prediction was produced; do not present a fallback as a "
-                   "model result.")
+            detail=("The emotion model is still loading on this instance. "
+                    "Retry shortly." if loading else
+                    "The emotion model is not loaded on this instance. No "
+                    "prediction was produced; do not present a fallback as a "
+                    "model result."),
+            headers={"Retry-After": "10"} if loading else None)
 
     ctx = extract_context(text)
     stated = self_reported_emotion(text)

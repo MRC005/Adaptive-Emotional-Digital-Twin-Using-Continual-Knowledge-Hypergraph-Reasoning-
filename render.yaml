@@ -9,7 +9,9 @@ services:
     runtime: python
     plan: free
     region: oregon
-    buildCommand: "pip install --upgrade pip && pip install -r backend/requirements.txt && pip install -e ."
+    # The model is fetched at BUILD time, so a restart loads it from disk in
+    # ~1 s instead of re-downloading 125 MB and taking ~250 s.
+    buildCommand: "pip install --upgrade pip && pip install -r backend/requirements.txt && pip install -e . && python scripts/prefetch_model.py"
     startCommand: "uvicorn backend.app:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: /health
     envVars:
