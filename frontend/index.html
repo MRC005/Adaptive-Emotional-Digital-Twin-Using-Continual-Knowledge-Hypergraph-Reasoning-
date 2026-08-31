@@ -4,35 +4,40 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AEDT — Longitudinal Drift Analysis</title>
-<meta name="description" content="Analysis workstation for detecting change in the relationship between a passively measured signal and a repeated self-report.">
+<meta name="description" content="Checks whether the relationship between passive phone sensing and a repeated self-report changes over time.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="./src/styles.css">
 </head>
 <body>
+<a class="skip" href="#work">Skip to content</a>
 <div class="app">
-  <div class="topbar">
+  <header class="topbar">
     <div class="appname">
       <b>Adaptive Emotional Digital Twin</b>
       <span>Longitudinal drift analysis</span>
     </div>
-    <div class="tabs" id="tabs">
-      <button data-tab="analyze" class="on">Analyze</button>
+    <nav class="tabs" id="tabs" aria-label="Sections">
+      <button data-tab="home" class="on">Home</button>
+      <button data-tab="analyze">Analyze</button>
       <button data-tab="datasets">Datasets</button>
       <button data-tab="runs">Previous runs</button>
       <button data-tab="method">Method</button>
-    </div>
+    </nav>
     <div class="topright">
-      <span id="loaded">No dataset loaded</span>
       <span class="engine" id="engine"><i></i><span>Ready</span></span>
+      <label class="themepick">
+        <span class="vh">Theme</span>
+        <select id="theme" title="Theme">
+          <option value="system">Theme: system</option>
+          <option value="light">Theme: light</option>
+          <option value="dark">Theme: dark</option>
+        </select>
+      </label>
     </div>
-  </div>
-
-  <div class="body">
-    <aside class="side" id="side"></aside>
-    <main class="workspace"><div class="sheet" id="work"></div></main>
-  </div>
+  </header>
+  <main class="workspace"><div class="sheet" id="work"></div></main>
 </div>
 <script type="module" src="./src/main.js"></script>
 </body>

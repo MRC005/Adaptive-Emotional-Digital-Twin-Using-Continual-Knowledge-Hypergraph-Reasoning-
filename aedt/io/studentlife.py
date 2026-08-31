@@ -24,8 +24,10 @@ mapping by position would silently invert the scale.
 """
 from __future__ import annotations
 
+import collections
 import glob
 import json
+import re
 import logging
 import os
 from pathlib import Path
@@ -59,10 +61,63 @@ ACQUISITION -- StudentLife (Dartmouth), Wang et al. 2014.
      before interpreting anything else."""
 
 
+def normalise_ema_definition(raw):
+    """Return {name: entry} whatever shape EMA_definition.json arrives in.
+
+    The RDS repackaging ships a mapping keyed by EMA name. The ORIGINAL
+    Dartmouth release ships a LIST of {"name": ..., "questions": [...]}
+    objects. Both are legitimate; only the container differs.
+    """
+    if isinstance(raw, dict):
+        return raw
+    if isinstance(raw, list):
+        out = {}
+        for i, entry in enumerate(raw):
+            if isinstance(entry, dict):
+                out[str(entry.get("name", f"entry_{i}"))] = entry
+        return out
+    raise DecisionRequired(
+        f"EMA_definition.json has unexpected top-level type {type(raw).__name__}; "
+        "expected an object keyed by EMA name or a list of EMA objects.")
+
+
+_BRACKET_OPTION = re.compile(r"\[(\d+)\]\s*([^,\[]+)")
+
+
+def parse_bracketed_options(text: str) -> list[str] | None:
+    """Parse the ORIGINAL release's option string into an ordered label list.
+
+    The Dartmouth archive stores options as one string carrying explicit codes:
+
+        "[1]A little stressed, [2]Definitely stressed, [3]Stressed out,
+         [4]Feeling good, [5]Feeling great, "
+
+    The codes are read and CHECKED rather than assumed from position. If they
+    are not exactly 1..n in order this raises, because every downstream
+    severity map is keyed by stored code and a silent renumbering there would
+    corrupt the response scale.
+    """
+    if not isinstance(text, str) or "[" not in text:
+        return None
+    pairs = [(int(c), lab.strip()) for c, lab in _BRACKET_OPTION.findall(text)
+             if lab.strip()]
+    if not pairs:
+        return None
+    codes = [c for c, _ in pairs]
+    if codes != list(range(1, len(codes) + 1)):
+        raise DecisionRequired(
+            f"EMA option codes are not a contiguous 1..n run: {codes}. "
+            "The severity map is keyed by stored code, so the option order "
+            "must be confirmed against the documentation before use.")
+    return [lab for _, lab in pairs]
+
+
 def find_response_options(node):
     """Locate the response-option list wherever it sits in the EMA entry."""
     if isinstance(node, list) and node and all(isinstance(v, str) for v in node):
         return node
+    if isinstance(node, str):
+        return parse_bracketed_options(node)
     if isinstance(node, dict):
         for v in node.values():
             r = find_response_options(v)
@@ -332,7 +387,7 @@ class StudentLifeAdapter(DatasetAdapter):
 
         # ---- steps 2-5: labels, codes, severity map (raises on surprise)
         with open(found["ema_definition"][0]) as f:
-            ema_def = json.load(f)
+            ema_def = normalise_ema_definition(json.load(f))
         stress_key = next((k for k in ema_def if "stress" in k.lower()), None)
         if stress_key is None:
             raise DecisionRequired(
@@ -417,7 +472,7 @@ class StudentLifeAdapter(DatasetAdapter):
                 f"EMA_definition.json not found under {p}. Locate it and pass "
                 "its parent as --root.")
         with open(found["ema_definition"][0]) as f:
-            ema_def = json.load(f)
+            ema_def = normalise_ema_definition(json.load(f))
         prov["ema_definition_path"] = str(found["ema_definition"][0])
 
         stress_key = next((k for k in ema_def if "stress" in k.lower()), None)
@@ -440,6 +495,7 @@ class StudentLifeAdapter(DatasetAdapter):
 
         # ---- stress responses
         rows = []
+        prov_counts: collections.Counter = collections.Counter()
         for fp in sorted(found["stress_responses"]):
             pid = os.path.splitext(fp.name)[0].split("_")[-1]
             try:
@@ -449,29 +505,45 @@ class StudentLifeAdapter(DatasetAdapter):
                 continue
             if not isinstance(recs, list) or not recs:
                 continue
-            lvl_key = next((k for k in recs[0] if k.lower() in
-                            ("level", "response", "value", "answer")), None)
-            ts_key = next((k for k in recs[0] if "time" in k.lower()
-                           or k.lower() in ("resp_time", "ts")), None)
-            if lvl_key is None or ts_key is None:
-                raise DecisionRequired(
-                    f"Cannot identify the response/timestamp fields in {fp}. "
-                    f"Keys present: {list(recs[0].keys())}")
+            # Key resolution is PER RECORD, not from recs[0]. In the original
+            # Dartmouth release ~90% of Stress records are keyed
+            # ("level", "location") and ~10% carry the answer under a literal
+            # "null" key -- a collection-side defect in the archive itself. The
+            # first record of a file is often one of the malformed ones, so
+            # inferring the schema from it rejects the whole file.
+            #
+            # A "null" value is only accepted when it is a digit inside the
+            # documented code range. The same key also holds GPS strings such
+            # as "43.759,-72.328", which are locations, not responses, and are
+            # discarded rather than coerced.
             for r in recs:
-                v, t = r.get(lvl_key), r.get(ts_key)
-                if v in (None, "", "null") or t in (None, ""):
+                if not isinstance(r, dict):
                     continue
-                try:
-                    code = int(float(v))
-                except (TypeError, ValueError):
+                t = next((r[k] for k in r if "time" in k.lower()
+                          or k.lower() in ("resp_time", "ts")), None)
+                if t in (None, ""):
                     continue
+                raw = r.get("level")
+                via = "level"
+                if raw in (None, "", "null"):
+                    raw, via = r.get("null"), "null-key"
+                if raw in (None, "", "null"):
+                    continue
+                text = str(raw).strip()
+                if not text.isdigit():
+                    prov_counts["dropped_non_numeric"] += 1
+                    continue
+                code = int(text)
                 if code not in code_to_sev:
+                    prov_counts["dropped_out_of_range"] += 1
                     continue
+                prov_counts[f"recovered_via_{via}"] += 1
                 rows.append((pid, t, code, code_to_sev[code]))
         if not rows:
             raise DecisionRequired(
                 "Stress files found but no parsable responses. Inspect the "
                 "level/timestamp field names in the response JSON.")
+        prov["response_recovery"] = dict(prov_counts)
         ema = pd.DataFrame(rows, columns=["pid", "ts", "raw_code", "report"])
 
         # ---- timestamps: DETECT the encoding, never assume it

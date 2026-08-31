@@ -13,7 +13,7 @@ from aedt.schemas import validate_long_frame
 
 def test_every_adapter_is_registered_with_a_declared_role():
     assert set(ADAPTERS) == {"synthetic", "studentlife", "pmdata", "relax",
-                             "wesad"}
+                             "wesad", "college_experience"}
     for name, a in ADAPTERS.items():
         assert isinstance(a.role, DatasetRole)
         assert a.name == name
@@ -187,10 +187,14 @@ def test_wesad_cannot_support_the_longitudinal_estimand():
         assert_benchmark_only("wesad")
 
 
-def test_only_studentlife_relax_and_pmdata_claim_longitudinal_support():
+def test_only_longitudinal_archives_claim_longitudinal_support():
+    """WESAD is the boundary case: a real dataset that structurally cannot
+    support a within-person epoch ratio, and must never claim it can."""
     longitudinal = {n for n, a in ADAPTERS.items()
                     if a.can_support_longitudinal_estimand}
-    assert longitudinal == {"synthetic", "studentlife", "pmdata", "relax"}
+    assert longitudinal == {"synthetic", "studentlife", "pmdata", "relax",
+                            "college_experience"}
+    assert not ADAPTERS["wesad"].can_support_longitudinal_estimand
 
 
 # --------------------------------------------------------------- fixtures

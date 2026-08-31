@@ -1,0 +1,17 @@
+{
+  "generated_utc": "2026-08-31T14:35:18+00:00",
+  "produced_by": "scripts/export_real_results.py and scripts/run_college_experience.py",
+  "sources": {
+    "college_experience": "data/raw/college-experience/{EMA/general_ema.csv, Sensing/sensing.csv}",
+    "studentlife": "data/raw/studentlife/{EMA/response/Stress/*.json, sensing/conversation/*.csv}"
+  },
+  "transformation": "adapter -> canonical LongFrame(pid, ts, report, sensor) -> window assignment -> eligibility screen -> placebo gate -> participant-cluster bootstrap",
+  "raw_data_modified": false,
+  "seed": 20260828,
+  "outputs": [
+    "data/processed/college_experience_results.csv",
+    "data/processed/college_experience_results.json",
+    "frontend/src/data/real_datasets.json"
+  ],
+  "note": "Raw archives are never written to and are never redistributed. Exported artefacts carry no participant-level identifiers."
+}

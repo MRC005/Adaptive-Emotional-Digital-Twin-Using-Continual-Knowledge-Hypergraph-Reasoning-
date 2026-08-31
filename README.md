@@ -6,53 +6,138 @@
 
 ---
 
-## ⚠️ Scientific status — read this first
+## Scientific status — read this first
 
 | | Status |
 |---|---|
-| **Implemented & verified** | Full pipeline, 16 modules, 230+ tests passing |
+| **Implemented & verified** | Full pipeline, 16 modules, 250+ tests passing |
 | **Validated on SYNTHETIC data** | Estimator calibration, placebo, bias envelope, ablation |
-| **Validated on REAL data** | ❌ **NONE.** No primary ρ\* result exists from any real dataset |
-| **Real data acquired & audited** | ✅ **RELAX** (31 pp), ✅ **PMData** (16 pp), ⚠️ **StudentLife** (RDS repackaging) — **all three blocked** |
-| **Pending** | The **original** Dartmouth StudentLife release |
+| **Validated on REAL data** | ⚠️ **Partial.** One archive of four supports the method. Its **pre-specified primary configuration returns insufficient evidence**; two pre-specified secondary configurations produced estimates, both **no detectable drift** |
+| **Real data acquired & audited** | ✅ **College Experience Study** (218 pp, 4 years), ✅ **StudentLife** original release (48 pp), ✅ **RELAX** (31 pp), ✅ **PMData** (16 pp) |
 
-**There is no real-data empirical result in this repository, and the software
-refuses to manufacture one.**
+**No drift has been demonstrated in real data by this project, and no threshold
+was changed to obtain a result.**
 
-**Two** real datasets have been downloaded, schema-verified and put through
-the strict audit. **Both fail it**, for different reasons:
+### The four archives
 
-| dataset | participants | eligible | why it fails |
+| dataset | participants | verdict | why |
 |---|---|---|---|
-| **RELAX** (Halmich et al. 2026, Zenodo [10.5281/zenodo.20701999](https://doi.org/10.5281/zenodo.20701999), CC-BY-4.0) | 31 | **0 / 31** | self-report density — median ~50 aligned reports vs the 120 required |
-| **PMData** (Thambawita et al. 2020, [Simula](https://datasets.simula.no/pmdata/), CC BY 4.0) | 16 (14 usable) | **0 / 14** | density **+** assumption **A3** (Var(s) epoch ratios to 13.6) **+** an undocumented scale direction |
-| **StudentLife** — *RDS repackaging* (Wang et al. 2014) | 46 | **0 / 46** | **defective conversion**: the stress response column is named `null` and is 88% NA; 122 of ~35 000 responses survive, and none overlap the sensing period |
+| **College Experience Study** (Nepal et al. 2024, [IMWUT 8(1) art. 38](https://doi.org/10.1145/3643501)) | 218 | ✅ **Ready** | 35 289 aligned observations, median 169 per person, span 4.8 years. **121 participants clear the unchanged 60-per-window screen.** Response direction is stated in the published codebook |
+| **StudentLife** — *original Dartmouth release* (Wang et al. 2014) | 48 | ❌ **Incompatible** | the only dense item is not ordered by severity, and every properly ordered item is far too sparse — see below |
+| **RELAX** (Halmich et al. 2026, [10.5281/zenodo.20701999](https://doi.org/10.5281/zenodo.20701999), CC-BY-4.0) | 31 | ❌ **Incompatible** | median ~50 aligned reports against the 120 required |
+| **PMData** (Thambawita et al. 2020, [Simula](https://datasets.simula.no/pmdata/), CC BY 4.0) | 16 (14 usable) | ❌ **Incompatible** | density, assumption **A3** (variance ratios to 13.6), and an undocumented scale direction |
 
-The pipeline exits non-zero on each and reports the failure. **No threshold was
-relaxed to make any of them fit.**
+### A correction to an earlier claim in this file
 
-**The StudentLife failure is different in kind, and that matters.** RELAX and
-PMData are intact datasets that genuinely cannot support the method. The
-StudentLife archive audited here is a *damaged R-serialised repackaging* of a
-dataset that almost certainly can: its conversation sensor is perfect (79 023
-episodes, 49 participants, 0% invalid), and sibling EMA tables in the same
-archive (PAM, Mood, Sleep) converted correctly — only `Stress.Rds` is mangled.
-**The fix is a different download, not a different method.** See [`docs/dataset_audit.md`](docs/dataset_audit.md)
-and [`docs/dataset_compatibility.md`](docs/dataset_compatibility.md).
+A previous version of this README audited a **third-party RDS repackaging** of
+StudentLife, found its stress column named `null` and 88% empty, and concluded
+*"the fix is a different download, not a different method."*
 
-Every other result here is **SYNTHETIC**, generated from the frozen model in
-`docs/frozen_scientific_specification.md` §5, and labelled as such on every
-figure, table and result object. Nothing here is evidence about humans.
+**That prediction was wrong, and the original release is now in hand.** Two
+findings replace it:
 
-When real files are absent the system reports
-`REAL DATA UNAVAILABLE - <DATASET> AUDIT NOT RUN` and **never** substitutes
-synthetic data.
+1. The repackaging was indeed defective, and the cause is now exact: 90% of
+   Stress records in the original are keyed `level`, and ~10% carry the answer
+   under a literal `null` key. The repackaging kept the 10% and dropped the 90%
+   — which is precisely the 122 usable responses the earlier audit counted.
+2. **The correct download does not rescue the dataset.** StudentLife's Stress
+   item is documented as *"[1] A little stressed, [2] Definitely stressed,
+   [3] Stressed out, [4] Feeling good, [5] Feeling great"*. The numbers are not
+   ordered by stress, so an ordinal probit fitted to them models a scale that
+   does not exist. Remapping by label text fixes the ordering but cannot create
+   data: even then **one participant** reaches 60 responses in both windows,
+   against the 10 participants required. Every properly ordered alternative
+   item (`Behavior/anxious`, `Sleep/rate`, `Social/number`) is sparser still —
+   median 4 to 25 responses per person, most 79.
+
+The rejection does not rest on the number 60. Sweeping the per-window minimum
+from 20 to 100 across three window definitions, StudentLife reaches 10
+qualifying participants only at 20–30 per window — a threefold relaxation that
+would fit a five-category probit slope to roughly 20 points per person.
+
+### What the real-data analysis actually returned
+
+Protocol fixed before any result was inspected. Every configuration that was
+run is reported, whatever it said.
+
+| configuration | included | result | ρ\* | 95% interval |
+|---|---|---|---|---|
+| **Primary** — stress vs conversation minutes, own-span halves | 9 of 33 | **Insufficient evidence** | — | — |
+| S1 — windows by equal observation count | 8 of 33 | Insufficient evidence | — | — |
+| S2 — windows by cohort calendar median | 7 of 33 | Insufficient evidence | — | — |
+| S3 — sensor: phone unlock minutes | 61 of 218 | No detectable drift | 0.913 | [0.721, 1.180] |
+| S4 — report: time spent with others | 15 of 33 | No detectable drift | 1.199 | [0.891, 1.589] |
+
+The primary misses the participant floor by one. **It is reported as
+insufficient evidence and is not replaced by S3, which produced a number.**
+
+Conversation audio is documented *Android only* in the data dictionary and is
+87.8% zero on iOS against 13.1% on Android; the adapter therefore restricts
+conversation analyses to the Android cohort, because a stored zero on a
+platform that never ran the sensor is absent instrumentation, not silence.
+
+Everything else in this repository is **SYNTHETIC**, generated from the frozen
+model in `docs/frozen_scientific_specification.md` §5 and labelled as such on
+every figure, table and result object.
 
 | Label | Meaning |
 |---|---|
 | **REAL** | computed from audited files actually present on disk |
 | **SYNTHETIC** | simulation, or a dataset-shaped fixture |
 | **PLANNED** | not computed; no data has been analysed |
+
+---
+
+## The application
+
+The deliverable is a working analysis application, not a project write-up.
+
+```bash
+npm --prefix frontend install
+npm --prefix frontend run dev
+```
+
+It opens on a plain-English page explaining what the tool does, and three ways in:
+
+- **Guided example** — data built so the right answer is known in advance
+  (detectable change / stable control / limited evidence). Computed live in
+  your browser.
+- **Real data** — the audited study results above, plus the audit explaining
+  which archives can support the method at all. You can also open your own CSV,
+  which is read locally and never transmitted.
+- **Sandbox** — apply a deliberate change to a copy of the data and see what
+  the method does. Each change states its expected effect *before* the run, and
+  the result is checked against it afterwards.
+
+Results lead with a verdict in one line, then what it does and does not mean in
+plain words, then the evidence, then the statistics. Light and dark themes are
+both supported and the choice is remembered.
+
+**Where computation happens.** Guided examples, the sandbox and uploaded CSVs
+run live in the browser on a JavaScript port of the estimator, pinned to the
+Python reference by `tests/regression/test_js_python_agreement.py` (fails above
+1e-3 divergence; measured agreement 1.8e-5). Bundled study results were computed
+**offline** by the Python implementation and are displayed, not recomputed — the
+archives are gigabytes and are licensed for research use, not redistribution.
+Nothing exported to the browser carries a participant identifier, a timestamp,
+or a raw value.
+
+---
+
+## Adding a dataset
+
+1. Write an adapter in `aedt/io/` subclassing `DatasetAdapter`, implementing
+   `locate`, `audit` and `load`. `audit` must be safe to call when the files
+   are absent and must never guess a field it cannot read.
+2. Emit the canonical frame: `pid`, `ts`, `report`, `raw_response`, and one
+   sensor column. Take the response direction from the codebook; if the release
+   does not document it, say so and leave `severity_direction_confirmed` False.
+3. Register it (`@register_adapter`) and export it from `aedt/io/__init__.py`.
+4. Add a regression test asserting what the archive does and does not support.
+5. Raw files are never modified. Derived artefacts go to `data/interim/` or
+   `data/processed/` with a `PROVENANCE.json`.
+
+`aedt/io/college_experience.py` is the worked example.
 
 ---
 
@@ -96,14 +181,19 @@ estimated. `EstimatorResult` refuses to carry one.
 
 **<https://claude.ai/code/artifact/2d693337-529c-4470-90b2-674a261c161c>**
 
-A self-contained walkthrough: the problem, the pipeline, the two-curve
-epoch-1-vs-epoch-2 plot, the context hypergraph, the audit gate (switchable
-between the synthetic cohort, RELAX and PMData), and the results. Every panel
-carries a **REAL / SYNTHETIC** stamp, and the real-data panels show the audit
-failures rather than hiding them.
+The published build of the application described above. It runs the guided
+examples and the sandbox live in the browser, and displays the audited study
+results.
 
-Source: [`demo/index.html`](demo/index.html) — single file, no build step, no
-network calls at run time beyond the webfont.
+For a demonstration with no server and no network:
+
+```bash
+npm --prefix frontend run build && python3 scripts/build_single_file.py
+```
+
+That writes `frontend/dist/aedt-standalone.html`, a single file that opens from
+disk. It is the same bundle, so the analysis is identical; only the packaging
+differs.
 
 ## Quick start
 
@@ -347,18 +437,32 @@ is implemented directly. Runs on any laptop, no GPU, no network at run time.
 
 ## Status
 
-The **science is frozen**. The **software is built and tested**. **Real-data
-validation is still pending — and it is now a harder problem than a download.**
+The **science is frozen**. The **software is built, tested and usable**.
 
-Three real archives were acquired and audited, and **all three are blocked** —
-RELAX on self-report density, PMData on density plus assumption A3 plus an
-undocumented scale direction, and the StudentLife RDS repackaging on a defective
-conversion that destroyed ~99% of its stress EMA. That is a real
-finding rather than an excuse: the method needs roughly 120 repeated ordinal
-self-reports per person **plus** a documented scale **plus** a sensor whose
-variance is stable across epochs, and current open longitudinal datasets rarely
-provide all three. StudentLife does have the density (~735/participant) and remains the right
-target — the copy obtained so far is simply a broken conversion.
+**Real-data status, stated precisely:** four archives have been acquired and
+audited. One supports the method. Its pre-specified primary configuration
+returns *insufficient evidence* by one participant; two pre-specified secondary
+configurations return *no detectable drift* with wide intervals. No drift has
+been demonstrated in real data, and no threshold was moved to obtain a result.
 
-**This project is not publication-ready.** The theory and the simulation
-evidence are sound; the empirical section has no evidence at all.
+**What would change this:** more participants meeting the observation floor,
+which means either a denser EMA protocol or a cohort larger than 218. The
+limitation is study design, not software.
+
+---
+
+## Honest scope
+
+This project investigates whether the *relationship* between a passively
+measured signal and a repeated ordinal self-report changes over time. It does
+**not** measure anyone's emotional state, and a "drift detected" verdict is not
+a clinical finding. ρ itself is not identified; 1 − ρ\* is a lower bound on
+multiplicative recalibration. Added measurement noise is indistinguishable from
+genuine recalibration, and the sandbox demonstrates this deliberately.
+
+## Provenance
+
+Research design, scientific specification and all decisions are the author's.
+Implementation was carried out with AI coding assistance; every threshold,
+estimand and audit rule was fixed by the author before implementation, and the
+frozen specification in `docs/` governs the code rather than the reverse.

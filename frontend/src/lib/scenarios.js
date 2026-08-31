@@ -96,6 +96,12 @@ export const CONTROLS = {
   shift: {
     id: "shift",
     name: "Known distribution shift",
+    plain:
+      "A group of people whose scale was deliberately made to drift: late in the study "
+      + "they use the numbers differently from how they used them early on, while what "
+      + "is actually happening to them also changes. The method should notice the scale "
+      + "change and, by design, understate how big it is.",
+    expected: "Drift detected",
     kind: "Positive control",
     expect: "Drift detected",
     blurb:
@@ -112,8 +118,13 @@ export const CONTROLS = {
   stable: {
     id: "stable",
     name: "Stable control",
+    plain:
+      "A group whose lives genuinely change over the study, but who use the scale the "
+      + "same way throughout. This is the harder test: a method that mistakes real "
+      + "change for scale change will wrongly report drift here.",
+    expected: "No detectable drift",
     kind: "Negative control",
-    expect: "No meaningful drift",
+    expect: "No detectable drift",
     blurb:
       "The same generator with NO recalibration applied, but with a genuine change " +
       "in the construct still present. A method that confuses real change with " +
@@ -129,6 +140,11 @@ export const CONTROLS = {
   ambiguous: {
     id: "ambiguous",
     name: "Ambiguous / limited evidence",
+    plain:
+      "A small group, a short study, most answers bunched at the bottom of the scale, "
+      + "and a lot of missing responses — the conditions real studies often have. "
+      + "There is not enough here to answer the question either way.",
+    expected: "Insufficient evidence",
     kind: "Boundary case",
     expect: "Insufficient evidence",
     blurb:

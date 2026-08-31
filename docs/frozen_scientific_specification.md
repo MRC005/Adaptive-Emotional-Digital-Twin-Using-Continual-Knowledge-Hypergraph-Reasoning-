@@ -66,7 +66,7 @@ intersection. **"Not found" is not "novel", and this document says so.**
 | **H4** | Participant-cluster inference gives approximately nominal type-I error at realistic study density. | Supported (8.3% against a nominal 5%), SYNTHETIC |
 | **H5** | The natural affine approach fabricates apparent scale compression on ordinal responses. | Supported (−0.107 null bias), SYNTHETIC |
 | **H6** | Residual latent curvature beyond the threshold structure biases the null by no more than ≈0.07. | Supported, SYNTHETIC |
-| **H7** | Real mobile-sensing data can support the inference at usable precision. | **NOT SUPPORTED SO FAR.** One real dataset (RELAX, 31 participants) has been acquired and audited; its self-report density is about half what the method requires, so 0/31 participants qualify and no estimate was produced. |
+| **H7** | Real mobile-sensing data can support the inference at usable precision. | **PARTIALLY SUPPORTED.** Four archives audited. The College Experience Study (218 participants, 4.8 years) clears the unchanged screen and the pipeline ran on it. The pre-specified primary returns insufficient evidence (9 eligible against 10 required); two pre-specified secondaries return no detectable drift with wide intervals (rho* 0.913 [0.721, 1.180] and 1.199 [0.891, 1.589]). So real data can support the inference, but not yet at usable precision. RELAX (0/31) and PMData (0/14) are too sparse; StudentLife's original release is incompatible because its densest item is not ordered by severity. |
 
 ## 5. Mathematical model — FROZEN
 

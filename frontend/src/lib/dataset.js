@@ -58,8 +58,12 @@ export function suggestColumns(header, records) {
     const u = new Set(vals);
     return u.size >= 2 && u.size <= 11 && [...u].every((v) => Number.isInteger(v));
   });
-  const participant = pick("participant", "subject", "pid", "uid", "user", "id");
-  const time = pick("timestamp", "time", "date", "occasion", "day");
+  // Ordered most-specific first: "id" is last because it matches inside many
+  // unrelated names. "person" and "respondent" were added after a plain CSV
+  // headed `person` was left unmapped in testing.
+  const participant = pick("participant", "respondent", "subject", "person",
+                           "pid", "uid", "user", "id");
+  const time = pick("timestamp", "datetime", "time", "date", "occasion", "day");
   const report = smallInt.find((c) => c !== participant && c !== time) ||
                  pick("stress", "report", "rating", "score", "response");
   // the sensor must not be a column already spoken for, nor the ordinal report

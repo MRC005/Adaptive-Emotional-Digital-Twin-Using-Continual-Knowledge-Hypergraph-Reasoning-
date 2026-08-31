@@ -1,0 +1,335 @@
+{
+  "generated_utc": "2026-08-31T14:35:18+00:00",
+  "seed": 20260828,
+  "computed": "offline, by scripts/export_real_results.py, against the local archives; displayed by the browser, not recomputed in it",
+  "privacy": "no participant identifiers, timestamps, raw sensing values or raw self-reports are present in this file",
+  "datasets": [
+    {
+      "id": "college_experience",
+      "name": "College Experience Study",
+      "status": "ready",
+      "citation": "Nepal et al. 2024, Proc. ACM IMWUT 8(1) art. 38, doi:10.1145/3643501",
+      "participants": 218,
+      "observations": 35289,
+      "span_days": 1742.0,
+      "median_obs_per_participant": 169.0,
+      "report_scale": "1: Not at All; 2: A Little Bit; 3: Somewhat; 4: Very Much; 5: Extremely",
+      "notes": [
+        "Participants with >= 60 aligned observations in BOTH halves of their own span: 121 (the screen requires >= 10).",
+        "Median aligned observations per participant: 169; median per-participant span 1258 days.",
+        "Scale direction CONFIRMED ASCENDING from the published data dictionary. This is the property PMData could not establish.",
+        "EMA and sensing join exactly on (uid, day); nothing is interpolated and nothing is imputed.",
+        "Conversation audio is documented Android only in the data dictionary and is 87.8% zero on iOS against 13.1% on Android. Conversation analyses therefore run on the 33-participant Android cohort; unlock and location features use all 218."
+      ],
+      "sensor_platforms": {
+        "conversation_minutes": "Android only (per data dictionary)",
+        "conversation_episodes": "Android only (per data dictionary)",
+        "unlock_minutes": "all platforms",
+        "travel_distance": "all platforms"
+      },
+      "runs": [
+        {
+          "label": "Primary \u2014 stress vs conversation minutes",
+          "primary": true,
+          "report": "stress",
+          "sensor": "conversation_minutes",
+          "windows": "own_span_halves",
+          "participants": 33,
+          "observations": 7256,
+          "screened": 33,
+          "eligible": 9,
+          "exclusion_reasons": [
+            {
+              "reason": "epochN: N reports < N",
+              "participants": 22
+            },
+            {
+              "reason": "sensor-report slope flips sign between epochs (bN=N, bN=N); the ratio is not interpretable",
+              "participants": 8
+            },
+            {
+              "reason": "epoch N: |beta| = N below the floor N",
+              "participants": 4
+            },
+            {
+              "reason": "epochN: no sensor variation (AN)",
+              "participants": 2
+            },
+            {
+              "reason": "Var(s) epoch ratio N outside [N, N] -- assumption AN not supported",
+              "participants": 2
+            }
+          ],
+          "status": "INSUFFICIENT_EVIDENCE",
+          "headline": "Insufficient evidence",
+          "why": "9 of 33 participants passed the screen. A participant-clustered interval needs at least 10, so no estimate is produced."
+        },
+        {
+          "label": "S1 \u2014 windows by equal observation count",
+          "primary": false,
+          "report": "stress",
+          "sensor": "conversation_minutes",
+          "windows": "observation_halves",
+          "participants": 33,
+          "observations": 7256,
+          "screened": 33,
+          "eligible": 8,
+          "exclusion_reasons": [
+            {
+              "reason": "epochN: N reports < N",
+              "participants": 22
+            },
+            {
+              "reason": "epoch N: |beta| = N below the floor N",
+              "participants": 9
+            },
+            {
+              "reason": "sensor-report slope flips sign between epochs (bN=N, bN=N); the ratio is not interpretable",
+              "participants": 4
+            },
+            {
+              "reason": "epochN: no sensor variation (AN)",
+              "participants": 1
+            },
+            {
+              "reason": "Var(s) epoch ratio N outside [N, N] -- assumption AN not supported",
+              "participants": 1
+            }
+          ],
+          "status": "INSUFFICIENT_EVIDENCE",
+          "headline": "Insufficient evidence",
+          "why": "8 of 33 participants passed the screen. A participant-clustered interval needs at least 10, so no estimate is produced."
+        },
+        {
+          "label": "S2 \u2014 windows by cohort calendar median",
+          "primary": false,
+          "report": "stress",
+          "sensor": "conversation_minutes",
+          "windows": "calendar_median",
+          "participants": 33,
+          "observations": 7256,
+          "screened": 33,
+          "eligible": 7,
+          "exclusion_reasons": [
+            {
+              "reason": "epochN: N reports < N",
+              "participants": 22
+            },
+            {
+              "reason": "epochN: no sensor variation (AN)",
+              "participants": 13
+            },
+            {
+              "reason": "epochN: only N response categories used (AN)",
+              "participants": 11
+            },
+            {
+              "reason": "sensor-report slope flips sign between epochs (bN=N, bN=N); the ratio is not interpretable",
+              "participants": 6
+            },
+            {
+              "reason": "epoch N: |beta| = N below the floor N",
+              "participants": 3
+            },
+            {
+              "reason": "Var(s) epoch ratio N outside [N, N] -- assumption AN not supported",
+              "participants": 2
+            }
+          ],
+          "status": "INSUFFICIENT_EVIDENCE",
+          "headline": "Insufficient evidence",
+          "why": "7 of 33 participants passed the screen. A participant-clustered interval needs at least 10, so no estimate is produced."
+        },
+        {
+          "label": "S3 \u2014 sensor: phone unlock minutes",
+          "primary": false,
+          "report": "stress",
+          "sensor": "unlock_minutes",
+          "windows": "own_span_halves",
+          "participants": 218,
+          "observations": 35289,
+          "screened": 218,
+          "eligible": 61,
+          "exclusion_reasons": [
+            {
+              "reason": "epochN: N reports < N",
+              "participants": 149
+            },
+            {
+              "reason": "sensor-report slope flips sign between epochs (bN=N, bN=N); the ratio is not interpretable",
+              "participants": 38
+            },
+            {
+              "reason": "epoch N: |beta| = N below the floor N",
+              "participants": 20
+            },
+            {
+              "reason": "Var(s) epoch ratio N outside [N, N] -- assumption AN not supported",
+              "participants": 5
+            },
+            {
+              "reason": "epochN: only N response categories used (AN)",
+              "participants": 4
+            },
+            {
+              "reason": "epochN: no sensor variation (AN)",
+              "participants": 4
+            }
+          ],
+          "status": "NO_MEANINGFUL_DRIFT",
+          "headline": "No detectable drift",
+          "rho_star": 0.913,
+          "ci_low": 0.721,
+          "ci_high": 1.1803,
+          "n_used": 61,
+          "n_resamples": 2000,
+          "per_participant_rho": [
+            0.4754,
+            5.6958,
+            1.7473,
+            0.3033,
+            2.762,
+            1.4671,
+            4.8751,
+            0.3097,
+            2.296,
+            2.0127,
+            3.6693,
+            1.5812,
+            0.8866,
+            0.3322,
+            0.6212,
+            4.326,
+            1.2939,
+            1.5456,
+            1.4112,
+            1.3063,
+            0.6198,
+            1.2708,
+            0.4071,
+            2.8012,
+            0.9919,
+            0.6211,
+            0.1527,
+            0.3038,
+            0.2765,
+            1.0498,
+            2.6335,
+            0.5644,
+            1.4645,
+            0.7934,
+            0.1313,
+            0.6592,
+            2.788,
+            0.2052,
+            0.438,
+            0.5764,
+            5.2279,
+            0.8181,
+            0.562,
+            1.4443,
+            1.2513,
+            0.4705,
+            0.3481,
+            0.5229,
+            7.5861,
+            5.0052,
+            0.5309,
+            0.5926,
+            0.2212,
+            0.6929,
+            2.4982,
+            0.2189,
+            0.8488,
+            0.3524,
+            0.255,
+            1.5845,
+            0.7831
+          ],
+          "why": "The 95% interval [0.721, 1.180] includes 1. The data do not show a change; that is not the same as showing there is none."
+        },
+        {
+          "label": "S4 \u2014 report: time spent with others",
+          "primary": false,
+          "report": "social_level",
+          "sensor": "conversation_minutes",
+          "windows": "own_span_halves",
+          "participants": 33,
+          "observations": 7256,
+          "screened": 33,
+          "eligible": 15,
+          "exclusion_reasons": [
+            {
+              "reason": "epochN: N reports < N",
+              "participants": 22
+            },
+            {
+              "reason": "sensor-report slope flips sign between epochs (bN=N, bN=N); the ratio is not interpretable",
+              "participants": 5
+            },
+            {
+              "reason": "epochN: no sensor variation (AN)",
+              "participants": 2
+            },
+            {
+              "reason": "Var(s) epoch ratio N outside [N, N] -- assumption AN not supported",
+              "participants": 2
+            },
+            {
+              "reason": "epoch N: |beta| = N below the floor N",
+              "participants": 1
+            }
+          ],
+          "status": "NO_MEANINGFUL_DRIFT",
+          "headline": "No detectable drift",
+          "rho_star": 1.1994,
+          "ci_low": 0.8906,
+          "ci_high": 1.5894,
+          "n_used": 15,
+          "n_resamples": 2000,
+          "per_participant_rho": [
+            1.7947,
+            0.5703,
+            2.4419,
+            2.3306,
+            0.8374,
+            1.3203,
+            0.8522,
+            0.9905,
+            0.8692,
+            2.9005,
+            0.9651,
+            1.6379,
+            0.3848,
+            2.3554,
+            0.7786
+          ],
+          "why": "The 95% interval [0.891, 1.589] includes 1. The data do not show a change; that is not the same as showing there is none."
+        }
+      ]
+    },
+    {
+      "id": "studentlife",
+      "name": "StudentLife (original Dartmouth release)",
+      "status": "incompatible",
+      "citation": "Wang et al. 2014, UbiComp; studentlife.cs.dartmouth.edu",
+      "participants": 48,
+      "observations": 2043,
+      "median_obs_per_participant": 35.0,
+      "span_days": 66.60114583333333,
+      "notes": [
+        "The item with usable density is Stress, but its documented options are \u201c1 a little stressed, 2 definitely stressed, 3 stressed out, 4 feeling good, 5 feeling great\u201d. The numbers are not ordered by stress, so an ordinal model fitted to them is fitting a scale that does not exist. The loader remaps them by label text, which fixes the ordering but cannot create more data.",
+        "Even after recovering malformed records and applying that remap, only 1 participant has 60 or more responses in both halves of their own span. The screen needs at least 10.",
+        "This does not depend on the number 60. Sweeping the per-window minimum from 20 to 100 across three window rules, StudentLife reaches 10 qualifying participants only at 20-30 per window \u2014 a threefold relaxation of the pre-specified rule, which would leave a five-category probit slope fitted to roughly 20 points per person.",
+        "Every properly ordered alternative item is far sparser than Stress: Behavior/anxious: 43 participants, median 4 responses each, most 75 \u2014 0 reach the 120 the screen needs; Behavior/calm: 42 participants, median 4 responses each, most 75 \u2014 0 reach the 120 the screen needs; Sleep/rate: 49 participants, median 25 responses each, most 73 \u2014 0 reach the 120 the screen needs; Social/number: 48 participants, median 22 responses each, most 79 \u2014 0 reach the 120 the screen needs; Activity/working: 46 participants, median 8 responses each, most 39 \u2014 0 reach the 120 the screen needs; Exercise/exercise: 46 participants, median 11 responses each, most 44 \u2014 0 reach the 120 the screen needs.",
+        "About 10% of Stress records in the original archive store the answer under a literal \u201cnull\u201d key rather than \u201clevel\u201d, and that key also holds GPS strings. Those are recovered when the value is a digit in range and discarded when it is a coordinate.",
+        "Stored codes are NOT in severity order; the remap reorders them by label text.",
+        "Read the [9b] association-strength diagnostic before interpreting any estimate."
+      ],
+      "exclusion_reasons": [
+        "only 1 participants have >= 120 matched reports (60 per epoch); the primary analysis needs at least 10."
+      ],
+      "runs": []
+    }
+  ]
+}

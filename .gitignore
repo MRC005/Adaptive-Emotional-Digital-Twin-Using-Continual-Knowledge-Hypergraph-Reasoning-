@@ -27,6 +27,7 @@ data/interim/*
 data/interim/*/**
 !data/interim/*/PROVENANCE.json
 data/processed/*
+!data/processed/PROVENANCE.json
 data/synthetic/*
 !data/**/.gitkeep
 

@@ -1,0 +1,51 @@
+{
+  "dataset": "College Experience Study",
+  "citation": "Nepal, S., Liu, W., Pillai, A., Wang, W., Vojdanovski, V., Huckins, J. F., Rogers, C., Meyer, M. L., & Campbell, A. T. (2024). Capturing the College Experience: A Four-Year Mobile Sensing Study of Mental Health, Resilience, and Behavior of College Students during the Pandemic. Proc. ACM IMWUT 8(1), art. 38.",
+  "doi": "https://doi.org/10.1145/3643501",
+  "official_source": "https://www.kaggle.com/datasets/subigyanepal/college-experience-dataset",
+  "key_files": [
+    "EMA/general_ema.csv",
+    "Sensing/sensing.csv",
+    "EMA/Data Dictionary (general EMA).csv",
+    "Sensing/Data Dictionary (Daily).csv"
+  ],
+  "variables_used": {
+    "report": "EMA general_ema.stress (1-5, ASCENDING per data dictionary)",
+    "sensors": [
+      "audio_convo_duration_ep_0 (Android only)",
+      "audio_convo_num_ep_0 (Android only)",
+      "unlock_duration_ep_0 (all platforms)",
+      "loc_dist_ep_0 (all platforms)"
+    ],
+    "join_key": "(uid, day) exact inner join"
+  },
+  "redistribution": "NOT redistributed. Obtain from the official source above.",
+  "recorded_utc": "2026-08-31T14:40:12+00:00",
+  "root": "data/raw/college-experience",
+  "file_count": 256,
+  "total_bytes": 2759147605,
+  "key_file_digests": {
+    "EMA/general_ema.csv": {
+      "bytes": 16449907,
+      "sha256_first_bytes": "7cc1a2a257bee72aca2f274dad5706ee5f087e90c7e1024e27fd78e2da29509b",
+      "hashed_bytes": 16449907
+    },
+    "Sensing/sensing.csv": {
+      "bytes": 521959313,
+      "sha256_first_bytes": "716b0bf02106d45d3bae1806e188d4ca868cc70fb501d73f14bc54b3fc283a19",
+      "hashed_bytes": 67108864
+    },
+    "EMA/Data Dictionary (general EMA).csv": {
+      "bytes": 2890,
+      "sha256_first_bytes": "27be6494e723d5b9d6c413ada87130589701cf5df48e9d0136e372ef44d36daa",
+      "hashed_bytes": 2890
+    },
+    "Sensing/Data Dictionary (Daily).csv": {
+      "bytes": 26662,
+      "sha256_first_bytes": "556140e26e1c24269f2c5c04dfe043498497e84889ded2b36cb4a347a23fd649",
+      "hashed_bytes": 26662
+    }
+  },
+  "raw_data_modified": false,
+  "note": "Provenance only. The archive itself is never committed and never modified. Digests cover the first 64 MB of each key file, which is enough to detect a substituted or truncated file without hashing gigabytes."
+}

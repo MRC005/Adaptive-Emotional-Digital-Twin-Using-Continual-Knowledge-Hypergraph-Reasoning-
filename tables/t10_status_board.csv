@@ -18,7 +18,7 @@ Uncertainty (participant bootstrap),YES,,,,aedt/inference/bootstrap.py - resampl
 Bias envelope,YES,,,,aedt/audit/envelope.py - 9 enumerated scenarios,SYNTHETIC
 Dataset audit framework,YES,,,,aedt/io/base.py + per-adapter audit(); every mandated field,SYNTHETIC
 StudentLife adapter,YES,,,fixture-tested only,aedt/io/studentlife.py - passes on a StudentLife-shaped fixture; NEVER RUN ON THE REAL ARCHIVE,SYNTHETIC
-PMData adapter,YES,,,fixture-tested only,aedt/io/pmdata.py - passes on a PMData-shaped fixture; NEVER RUN ON THE REAL ARCHIVE,SYNTHETIC
+PMData adapter,YES,,,run on REAL files,"aedt/io/pmdata.py - real archive opened and audited (Thambawita et al. 2020); two real bugs fixed that only the real files exposed (mixed tz join, stress==0 sentinel)",SYNTHETIC
 RELAX adapter,YES,,,run on REAL files,"aedt/io/relax.py - real archive acquired and audited (Zenodo 10.5281/zenodo.20701999, CC-BY-4.0); schema, anchors and timestamps verified against the release",SYNTHETIC
 WESAD adapter,YES,,,benchmark only,aedt/io/wesad.py - refuses the primary analysis by construction; NEVER RUN ON THE REAL ARCHIVE,SYNTHETIC
 Epoch 1 vs Epoch 2 visualisation,YES,,,,aedt/viz/curves.py - the two-curve plot,SYNTHETIC
@@ -31,8 +31,12 @@ Controlled synthetic simulations,YES,,,,Historical: 13 misspecification scenario
 Realistic synthetic simulation gate,YES,,,,"Historical: G1/G2/G3, power and placebo at realistic density",SYNTHETIC
 REAL-DATA ACQUISITION (RELAX),YES,,,,31 participants acquired from Zenodo 10.5281/zenodo.20701999 (CC-BY-4.0); 453 MB of a 16.5 GB archive via range requests; provenance with per-file SHA-256 recorded,SYNTHETIC
 REAL-DATA AUDIT (T4 on real RELAX files),YES,,,,"Strict audit run on the real files: schema, answer-label anchors, timestamp cross-check, participant IDs, missingness",SYNTHETIC
-REAL-DATA primary rho* estimate,,,YES,,BLOCKED and correctly so: RELAX fails the frozen eligibility screen (0/31 participants reach 60 reports per epoch; densest has 93). Pipeline exits 3. NO estimate exists from any real dataset,PLANNED
-REAL-DATA ACQUISITION (StudentLife / PMData / WESAD),,,YES,,No file opened. StudentLife is currently unreachable from this environment (connection timeout on every URL tried),PLANNED
+REAL-DATA primary rho* estimate,,,,,"College Experience Study (218 pp) clears the unchanged screen: 121 participants reach 60 observations per window. The PRE-SPECIFIED PRIMARY (stress vs conversation minutes, own-span halves) returns INSUFFICIENT EVIDENCE at 9 eligible against the 10 required, and is reported as such. Pre-specified secondaries S3 (unlock minutes, 61 eligible, rho* 0.913 [0.721, 1.180]) and S4 (social_level, 15 eligible, rho* 1.199 [0.891, 1.589]) both return NO DETECTABLE DRIFT. RELAX 0/31 and PMData 0/14 remain blocked; StudentLife (original release) is incompatible. NO DRIFT HAS BEEN DEMONSTRATED IN REAL DATA",SYNTHETIC
+REAL-DATA ACQUISITION (College Experience Study),YES,,,,"218 participants, 35,289 aligned observations, 4.8-year span (Nepal et al. 2024, IMWUT 8(1) art. 38). Response direction is documented in the published codebook",SYNTHETIC
+"REAL-DATA AUDIT (StudentLife, ORIGINAL release)",YES,,,,"Incompatible: the dense Stress item is not ordered by severity, and after remapping by label text only 1 participant reaches 60 responses per window against the 10 required. Verdict is stable across per-window minima from 20 to 100 and three window rules",SYNTHETIC
+REAL-DATA ACQUISITION (PMData),YES,,,,"1.4 GB archive present locally; 0.32 MB extracted (wellness + resting HR + overview). 16 participants, ~105-150 day spans",SYNTHETIC
+REAL-DATA AUDIT (T4 on real PMData files),YES,,,,"Strict audit run: 0 of 14 eligible. Fails on report density, on assumption A3 (Var(s) ratios to 13.6), and on an undocumented scale direction",SYNTHETIC
+REAL-DATA ACQUISITION (StudentLife / WESAD),,,YES,,No file opened. StudentLife is currently unreachable from this environment (connection timeout on every URL tried),PLANNED
 Cross-dataset pooling,,,YES,,Requires two audited real cohorts,PLANNED
 Ablations 2-7,,,YES,,Only Ablation 1 (context representation) is implemented and run,PLANNED
 Manuscript,,YES,,,Theory and simulation sections are supported; the empirical section has no evidence yet,SYNTHETIC

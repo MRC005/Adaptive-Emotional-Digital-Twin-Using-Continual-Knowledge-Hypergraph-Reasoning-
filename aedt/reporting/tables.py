@@ -416,11 +416,26 @@ def status_board(rows: list[dict] | None = None) -> pd.DataFrame:
         ("REAL-DATA AUDIT (T4 on real RELAX files)", "COMPLETED",
          "Strict audit run on the real files: schema, answer-label anchors, "
          "timestamp cross-check, participant IDs, missingness"),
-        ("REAL-DATA primary rho* estimate", "PLANNED",
-         "BLOCKED and correctly so on BOTH audited datasets. RELAX: 0/31 "
-         "eligible (density). PMData: 0/14 eligible (density + A3 + "
-         "undocumented scale direction). Pipeline exits 3 on each. NO "
-         "estimate exists from any real dataset"),
+        ("REAL-DATA primary rho* estimate", "RUN, INSUFFICIENT EVIDENCE",
+         "College Experience Study (218 pp) clears the unchanged screen: 121 "
+         "participants reach 60 observations per window. The PRE-SPECIFIED "
+         "PRIMARY (stress vs conversation minutes, own-span halves) returns "
+         "INSUFFICIENT EVIDENCE at 9 eligible against the 10 required, and is "
+         "reported as such. Pre-specified secondaries S3 (unlock minutes, "
+         "61 eligible, rho* 0.913 [0.721, 1.180]) and S4 (social_level, 15 "
+         "eligible, rho* 1.199 [0.891, 1.589]) both return NO DETECTABLE "
+         "DRIFT. RELAX 0/31 and PMData 0/14 remain blocked; StudentLife "
+         "(original release) is incompatible. NO DRIFT HAS BEEN DEMONSTRATED "
+         "IN REAL DATA"),
+        ("REAL-DATA ACQUISITION (College Experience Study)", "COMPLETED",
+         "218 participants, 35,289 aligned observations, 4.8-year span "
+         "(Nepal et al. 2024, IMWUT 8(1) art. 38). Response direction is "
+         "documented in the published codebook"),
+        ("REAL-DATA AUDIT (StudentLife, ORIGINAL release)", "COMPLETED",
+         "Incompatible: the dense Stress item is not ordered by severity, and "
+         "after remapping by label text only 1 participant reaches 60 "
+         "responses per window against the 10 required. Verdict is stable "
+         "across per-window minima from 20 to 100 and three window rules"),
         ("REAL-DATA ACQUISITION (PMData)", "COMPLETED",
          "1.4 GB archive present locally; 0.32 MB extracted (wellness + "
          "resting HR + overview). 16 participants, ~105-150 day spans"),

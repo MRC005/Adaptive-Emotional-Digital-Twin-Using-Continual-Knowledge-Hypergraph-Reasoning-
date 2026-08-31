@@ -139,13 +139,34 @@ and the pre-specified sensitivity analysis terminate with exit code 3.
 
 ## What is honestly weak
 
-1. **No real-data empirical result exists.** One real dataset has now been
-   opened and audited, which is progress over "no file has been opened" — but
-   it *failed*, so the empirical claim still rests on nothing. The obstacle is
-   no longer a download; it is that the method needs ~120 repeated ordinal
-   self-reports per person and current open longitudinal datasets do not
-   provide that density.
-2. **The hypergraph-native estimator form FAILS on synthetic data, and we
+1. **No drift has been demonstrated in real data.** This is now a more
+   precise statement than it used to be. Four archives have been acquired and
+   audited, and one — the **College Experience Study** (218 participants,
+   4.8 years) — clears the unchanged eligibility screen, with 121 participants
+   reaching 60 observations in both windows. The pipeline therefore ran on real
+   data for the first time. What it returned:
+
+   - the **pre-specified primary** (stress vs conversation minutes, halves of
+     each participant's own span) returns **insufficient evidence**: 9 eligible
+     participants against the 10 a participant-clustered interval requires. It
+     misses by one, and is reported as insufficient rather than rescued;
+   - two **pre-specified secondary** configurations produced estimates, and
+     both return **no detectable drift** with wide intervals — S3 (phone unlock
+     minutes, 61 eligible) ρ\* = 0.913 [0.721, 1.180], and S4 (time spent with
+     others, 15 eligible) ρ\* = 1.199 [0.891, 1.589].
+
+   So the empirical claim rests on two null results with wide intervals, and on
+   no positive finding. A wide interval means evidence is absent, not that the
+   measure is stable.
+
+2. **The density obstacle is real but is no longer universal.** RELAX (median
+   50 aligned reports) and PMData remain too sparse. StudentLife's original
+   release is **incompatible for a different reason**: its densest item is not
+   ordered by severity, and after remapping by label text only one participant
+   reaches 60 responses per window. That verdict holds across per-window minima
+   from 20 to 100 and three window definitions, so it is not an artefact of the
+   threshold.
+3. **The hypergraph-native estimator form FAILS on synthetic data, and we
    report it.** Ablation 1 disqualifies the n-ary spread-ratio arm for two
    independent reasons: it does not hold its size when the truth is ρ = 1
    (falsely rejects, ρ\* ≈ 1.05 with a CI excluding 1), and it reports the
@@ -161,11 +182,11 @@ and the pre-specified sensitivity analysis terminate with exit code 3.
    The continuous covariate is retained as the frozen primary. The hypergraph
    earns its architectural place as the twin's contextual knowledge
    representation and its trust signal — **not** as the method.
-3. **"Reasoning" is the weakest title term.** One rule-based trust decision, not
+4. **"Reasoning" is the weakest title term.** One rule-based trust decision, not
    a reasoning engine. Stated in `tables/t11_title_alignment.md`.
-4. **Only one of seven ablations** is implemented and run.
-5. **Six of eight baselines**; the two omitted are documented with reasons.
-6. **Underpowered at 48 participants** for ρ = 0.85 (68.3% vs a pre-committed
+5. **Only one of seven ablations** is implemented and run.
+6. **Six of eight baselines**; the two omitted are documented with reasons.
+7. **Underpowered at 48 participants** for ρ = 0.85 (68.3% vs a pre-committed
    70%). Powered for ρ ≤ 0.80.
-7. **The scale-change vs relation-change confound is unresolved** and is the
+8. **The scale-change vs relation-change confound is unresolved** and is the
    sharpest referee objection. It belongs in the abstract.

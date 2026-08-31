@@ -263,7 +263,7 @@ export function runPipeline(byPid, K, opts = {}) {
     primary: { rhoStar: u.point, ciLow: u.ciLow, ciHigh: u.ciHigh,
                medianRhoStar: Math.exp(median(logs)), excludesNull,
                lowerBound: 1 - u.point, nUsed: u.nParticipants, perParticipant },
-    headline: excludesNull ? "Drift detected" : "No meaningful drift",
+    headline: excludesNull ? "Drift detected" : "No detectable drift",
     why: excludesNull
       ? `The sensor-to-report relationship is ${u.point.toFixed(3)} times as strong in the ` +
         `comparison window as in the baseline, and the 95% interval excludes 1.`

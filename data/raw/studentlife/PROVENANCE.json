@@ -1,0 +1,32 @@
+{
+  "dataset": "StudentLife (original Dartmouth release)",
+  "citation": "Wang, R., Chen, F., Chen, Z., Li, T., Harari, G., Tignor, S., Zhou, X., Ben-Zeev, D., & Campbell, A. T. (2014). StudentLife: assessing mental health, academic performance and behavioral trends of college students using smartphones. UbiComp.",
+  "official_source": "https://studentlife.cs.dartmouth.edu/dataset.html",
+  "key_files": [
+    "EMA/EMA_definition.json",
+    "EMA/response/Stress/*.json",
+    "sensing/conversation/*.csv"
+  ],
+  "variables_used": {
+    "report": "EMA Stress.level, remapped BY LABEL TEXT because the stored codes are NOT ordered by severity: [1]A little stressed, [2]Definitely stressed, [3]Stressed out, [4]Feeling good, [5]Feeling great",
+    "sensors": [
+      "conversation episodes -> daily conversation minutes"
+    ]
+  },
+  "audit_outcome": "INCOMPATIBLE with the frozen protocol. Non-monotone response coding, and only 1 participant reaches 60 responses in both windows against the 10 required.",
+  "supersedes": "the third-party RDS repackaging previously recorded at data/interim/studentlife/PROVENANCE.json, which retained the ~10% of Stress records keyed 'null' and dropped the ~90% keyed 'level'",
+  "redistribution": "NOT redistributed. Obtain from the official source above.",
+  "recorded_utc": "2026-08-31T14:40:12+00:00",
+  "root": "data/raw/studentlife",
+  "file_count": 1984,
+  "total_bytes": 3042012275,
+  "key_file_digests": {
+    "EMA/EMA_definition.json": {
+      "bytes": 25519,
+      "sha256_first_bytes": "cabde0ae9a66a07c719a29c10dc74917babefd35ad4168c715b1787e54297083",
+      "hashed_bytes": 25519
+    }
+  },
+  "raw_data_modified": false,
+  "note": "Provenance only. The archive itself is never committed and never modified. Digests cover the first 64 MB of each key file, which is enough to detect a substituted or truncated file without hashing gigabytes."
+}
