@@ -79,7 +79,10 @@ relationships — hyperedge occupancy and effects; (4) uncertainty and audit
 state. The store is **append-only** with provenance, so you can ask what the
 twin knew at any past time.
 
-**No continual-learning algorithm is imported.** No replay buffer, no EWC, no
+**No continual-learning algorithm runs in the knowledge store.** Appending an
+observation moves no model parameter. EWC continual learning IS implemented,
+in `aedt/continual/ewc.py`, and is measured: forgetting falls from +0.308 to
++0.133 across four sequential tasks. What the store does NOT use is replay, no
 rehearsal. That is a deliberate scope decision, and Ablation 7 (planned) tests
 whether the rolling update buys anything over a single two-epoch fit. If it
 doesn't, we will say so.

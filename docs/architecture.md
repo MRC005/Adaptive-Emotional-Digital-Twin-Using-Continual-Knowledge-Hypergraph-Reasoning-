@@ -137,7 +137,10 @@ observation dated before it — leakage is impossible by construction.
 
 **Exactly four things update:** personalised parameters; state history; context
 relationships; uncertainty and audit state. **No continual-learning algorithm
-is imported** — no replay buffer, no EWC, no rehearsal. That is a deliberate
+runs in THIS module** — appending knowledge moves no model parameter.
+EWC continual learning of parameters is implemented in
+`aedt/continual/ewc.py` (Layer 1, offline research pipeline). Keeping the
+two apart is a deliberate
 scope decision. Supersession is recorded as an *edge*; the superseded node's
 content is left intact so history stays inspectable.
 

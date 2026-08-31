@@ -1,0 +1,53 @@
+{
+  "emotion": {
+    "macro_f1": 0.4925,
+    "micro_f1": 0.5775,
+    "weighted_f1": 0.587,
+    "baseline_macro_f1": 0.0979,
+    "n_test": 5427,
+    "threshold": 0.15000000000000002,
+    "model": "SamLowe/roberta-base-go_emotions"
+  },
+  "hgnn": {
+    "majority": {
+      "macro_f1": 0.1233,
+      "sd": 0.0014,
+      "accuracy": 0.4455
+    },
+    "mlp": {
+      "macro_f1": 0.8153,
+      "sd": 0.0224,
+      "accuracy": 0.8806
+    },
+    "gcn": {
+      "macro_f1": 0.576,
+      "sd": 0.0842,
+      "accuracy": 0.8086
+    },
+    "hgnn": {
+      "macro_f1": 0.5116,
+      "sd": 0.0081,
+      "accuracy": 0.7912
+    }
+  },
+  "ewc": {
+    "sequential": {
+      "avg_accuracy": 0.6892,
+      "forgetting": 0.3082
+    },
+    "ewc": {
+      "avg_accuracy": 0.742,
+      "forgetting": 0.1333
+    },
+    "joint": {
+      "avg_accuracy": 0.7798
+    }
+  },
+  "ewc_sweep": {
+    "100": 0.31,
+    "1000": 0.31,
+    "10000": 0.2216,
+    "100000": 0.1593,
+    "1e+06": 0.1367
+  }
+}

@@ -240,3 +240,18 @@ figure.fig canvas{display:block;width:100%;height:auto}
   .segmented{display:flex;width:100%}
   .segmented button{flex:1;padding:8px 6px;font-size:12.5px}
 }
+
+/* ---------- Layer 1: check-in and understanding ---------- */
+textarea{width:100%;font-family:inherit;font-size:13.5px;padding:9px 10px;
+  border:1px solid var(--rule);border-radius:2px;background:var(--panel);
+  color:var(--ink);resize:vertical;line-height:1.5}
+textarea:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+td.src{color:var(--ink-2);font-size:12px;white-space:nowrap}
+td.ev{color:var(--ink-3);font-size:12px;font-style:italic}
+td.quote{color:var(--ink-2);font-size:12px;max-width:34ch}
+select.fix{font-size:12px;padding:2px 5px;max-width:150px}
+.radio{display:flex;align-items:flex-start;gap:8px;padding:6px 0;cursor:pointer;
+  font-size:13px}
+.radio input{margin:3px 0 0}
+.radio small{display:block;color:var(--ink-3);font-size:11.5px;line-height:1.45}
+.radio input:disabled + span{color:var(--ink-3)}

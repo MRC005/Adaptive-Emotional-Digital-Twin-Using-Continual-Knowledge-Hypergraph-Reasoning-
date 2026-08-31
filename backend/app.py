@@ -246,3 +246,47 @@ def results_summary() -> dict:
                                    "changed; asserted by a regression test")},
         "bias_envelope": {"low": 0.973, "high": 1.046, "n_scenarios": 9},
     }
+
+
+# --------------------------------------------------------------- Layer 1
+class CheckIn(BaseModel):
+    """One interaction. Text only: no identifier is accepted or stored."""
+
+    text: str = Field(..., min_length=1, max_length=1000)
+
+
+@app.post("/api/emotion")
+def detect_emotion(req: CheckIn) -> dict:
+    """Transformer emotion detection + rule-based context extraction.
+
+    This is the only endpoint that runs a neural model. It is stateless: the
+    text is classified and discarded, nothing is written to disk, and no
+    person identifier is accepted, so there is no check-in history on the
+    server to leak. The browser keeps the history locally.
+
+    When torch/transformers are not installed the detector reports
+    ``backend: "lexicon"`` and the client labels it a baseline rather than
+    presenting it as the model.
+    """
+    from aedt.emotion.context import extract_context
+    from aedt.emotion.detect import default_detector, self_reported_emotion
+
+    text = req.text.strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="empty text")
+
+    det = default_detector()
+    pred = det.predict(text)
+    ctx = extract_context(text)
+    stated = self_reported_emotion(text)
+
+    return {
+        "data_status": DataStatus.SYNTHETIC.value,   # not participant data
+        "prediction": pred.to_dict(),
+        "self_reported": ({"label": stated[0], "span": stated[1]}
+                          if stated else None),
+        "context": {k: v.to_dict() for k, v in ctx.items()},
+        "model_available": det.available,
+        "note": ("Stateless. The text is not stored and no identifier is "
+                 "accepted."),
+    }

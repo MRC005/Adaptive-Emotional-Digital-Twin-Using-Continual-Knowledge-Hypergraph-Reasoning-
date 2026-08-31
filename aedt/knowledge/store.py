@@ -13,10 +13,16 @@ WHAT UPDATES -- exactly four things, and nothing else (ROUND-17 §L):
   3. context relationships (hyperedge occupancy and effects)
   4. uncertainty and audit state
 
-NO CONTINUAL-LEARNING ALGORITHM IS IMPORTED. No replay buffer, no EWC, no
-rehearsal. That is a deliberate scope decision, not an oversight; Ablation 7
-tests whether the rolling update buys anything over a single two-epoch fit, and
-if it does not, we say so.
+THIS FILE IS DATA MEMORY, NOT CONTINUAL LEARNING. No model parameter is
+touched here: appending knowledge moves nothing. That distinction is the point,
+and conflating the two is the specific overclaim this project guards against.
+
+Continual learning of model PARAMETERS does now exist, in ``aedt/continual/ewc.py``
+(Layer 1, offline research pipeline), where an EWC penalty protects earlier
+tasks while later ones are learned. It is deliberately separate from this store:
+one records what happened, the other changes what a model believes. Ablation 7
+still tests whether the rolling update here buys anything over a single
+two-epoch fit, and if it does not, we say so.
 
 CAUSALITY. ``append`` refuses a node whose ``valid_from`` precedes the store's
 current time. Knowledge may only be added going forward, so a later fit can

@@ -1,8 +1,124 @@
-# Adaptive Emotional Digital Twin Using Continual Knowledge Hypergraph Reasoning
+# Adaptive Emotional Digital Twin Using Contextual Knowledge Hypergraphs, Continual Learning and Longitudinal Measurement-Drift Analysis
 
-> **Longitudinal self-report is the yardstick of digital mental health. This
-> project asks whether the yardstick itself moves — and builds the estimator
-> that measures it.**
+> **A Digital Twin learns what a person's emotional history has looked like.
+> A second layer asks whether a long history can be read as if the scale meant
+> one fixed thing throughout. The project builds both, and keeps them apart.**
+
+---
+
+## The two layers
+
+The system receives a person's interactions over time, identifies emotional and
+contextual patterns, represents context-rich emotional events as higher-order
+relationships, learns personalised temporal patterns, and continually updates an
+evolving twin — while explicitly investigating whether the relationship between
+behaviour and self-reported emotion stays stable.
+
+| | **Layer 1 — the personal twin** | **Layer 2 — longitudinal reliability** |
+|---|---|---|
+| **Question** | what has this person's history looked like? | can a long history be read as if the scale meant one fixed thing throughout? |
+| **Data** | your own check-ins (or a fictional demo user) | dense cohort archives (218 students, 4 years) |
+| **Method** | Transformer emotion detection, rule-based context extraction, event knowledge hypergraph, explainable retrieval | ordinal probit slope ratio ρ\*, eligibility screen, placebo gate, participant-cluster bootstrap |
+| **Output** | comparable past episodes and a pattern statement, or "still learning" | drift detected / no detectable drift / insufficient evidence / incompatible |
+| **Where it runs** | your device; the Transformer in the Python service, opt-in | offline Python, displayed in the browser |
+
+**How they connect — and how they do not.** Layer 2's finding is a *trust
+qualifier*, not a data path. If a cohort's measurement relationship drifts, a
+personal history spanning the same period should not be extrapolated as though
+the scale were fixed. Layer 2 never sees a personal check-in, and Layer 1 never
+contributes to ρ\*. A personal history is also **far too short** to run the
+Layer 2 estimator on one individual, and the application says so rather than
+implying otherwise.
+
+```
+interaction / check-in
+        ↓
+Transformer emotion detection  +  context extraction        ← Layer 1
+        ↓
+structured emotional event (per-field provenance)
+        ↓
+knowledge hypergraph  →  HGNN / higher-order learning (offline)
+        ↓
+personalised pattern model  →  continual learning, EWC (offline)
+        ↓
+Adaptive Emotional Digital Twin
+        ↓
+longitudinal measurement-drift analysis                     ← Layer 2
+        ↓
+calibrated insight, with its own limits stated
+```
+
+---
+
+## Layer 1 — what is implemented, and what it measured
+
+Every component below is real code with a measured result. Where a result is
+negative, it is reported as a negative result.
+
+| Component | Status | Where | Measured |
+|---|---|---|---|
+| **Transformer emotion detection** | IMPLEMENTED | `aedt/emotion/detect.py` | `SamLowe/roberta-base-go_emotions` (RoBERTa-base, 124.7M params). Held-out GoEmotions test split, 5,427 examples: **macro-F1 0.4925**, micro-F1 0.5775. Lexicon baseline 0.0979 |
+| **Context extraction** | IMPLEMENTED | `aedt/emotion/context.py` | deterministic rules; every value carries its evidence span; unstated fields stay UNKNOWN |
+| **Structured emotional event** | IMPLEMENTED | `aedt/emotion/events.py` | per-field provenance: extracted / user-reported / model / inferred / corrected / unknown |
+| **Knowledge hypergraph** | IMPLEMENTED | `aedt/hypergraph/event_graph.py` | one episode = one n-ary relation; typed vertices, incidence matrix, conjunctive queries |
+| **HGNN** | IMPLEMENTED, **negative result** | `aedt/models/hgnn.py` | Feng et al. convolution. macro-F1 **0.5116** vs GCN 0.576 vs structure-free MLP **0.8153** (5 seeds). The hypergraph did **not** earn its place |
+| **Continual learning (EWC)** | IMPLEMENTED, **positive result** | `aedt/continual/ewc.py` | forgetting **+0.3082 → +0.1333**; average accuracy 0.6892 → 0.742 against a joint upper bound of 0.7798 |
+| **Personal twin + retrieval** | IMPLEMENTED | `aedt/twin/personal_twin.py` | weighted field match with explanations; no pattern below 3 comparable episodes |
+
+### The three findings worth reading
+
+**1. GoEmotions has no "stress" label.** The taxonomy NLP emotion research
+standardised on does not contain the construct longitudinal wellbeing research
+measures. Measured on this checkpoint, *"I am stressed and exhausted"* returns
+sadness 0.463 with nervousness only 0.119, while *"I am so anxious about
+tomorrow"* correctly returns nervousness 0.504. Handled by precedence: an
+explicit first-person statement is a **self-report** and outranks the model,
+with the matched phrase shown as evidence.
+
+**2. The HGNN lost to a model with no structure at all.** MLP 0.8153,
+GCN 0.576, HGNN 0.5116. With a small categorical
+entity set, an episode's own membership already encodes the conjunction, and
+propagating over a near-complete graph blurs it. **This is the second
+independent hypergraph ablation in this project to reach that conclusion** — the
+Layer 2 ablation found the same thing on entirely different data.
+
+**3. EWC works, and the sweep shows why.** Catastrophic forgetting is
+demonstrated first (+0.3082 over four sequential tasks with
+conflicting rules), then reduced. The penalty-weight sweep is monotone:
+λ=100 → +0.31, λ=1000 → +0.31, λ=10000 → +0.2216, λ=100000 → +0.1593, λ=1e+06 → +0.1367.
+
+### What Layer 1 is NOT
+
+- **NOT fine-tuned by this project.** The emotion checkpoint was trained by its
+  author on GoEmotions. This project integrates and evaluates it.
+- **NOT a neural context extractor.** No labelled check-in data exists for that;
+  rules that return UNKNOWN are better than a model that returns confident noise.
+- **NOT trained on your check-ins.** Storing an event moves no model parameter.
+  EWC updates parameters, and only in the offline research pipeline.
+- **NOT running in your browser.** RoBERTa cannot. The browser uses a word-list
+  baseline unless you switch the Python service on, and the interface says which
+  one produced every label.
+- **NOT validated on real human check-in streams.** The HGNN and EWC experiments
+  use synthetic data with a known rule. No corpus of longitudinal personal
+  check-ins with emotion labels exists for this project.
+
+### Dataset roles, and why the others were not merged
+
+**GoEmotions is the primary**, and the only one used for a reported metric: it
+is the label space of the chosen checkpoint, it is large (58k), and its test
+split is genuinely held out.
+
+`EmpatheticDialogues`, `MELD` and `DailyDialog` were **considered and not
+used** — deliberately, not by oversight. Merging them would require reconciling
+four incompatible label sets (32 situation labels, 7 TV-dialogue emotions, and a
+neutral-dominated dialogue-act taxonomy), and a union taxonomy invented for
+convenience would make every reported number uninterpretable. They remain
+appropriate for a future domain-shift study, which is listed as remaining work
+rather than claimed as done.
+
+**These are text corpora, not longitudinal sensing.** GoEmotions cannot supply
+passive sensing, and the College Experience Study cannot supply labelled chat.
+The project never crosses them.
 
 ---
 
@@ -90,39 +206,64 @@ every figure, table and result object.
 
 ## The application
 
-The deliverable is a working analysis application, not a project write-up.
+The deliverable is a working application, not a project write-up.
 
 ```bash
 npm --prefix frontend install
 npm --prefix frontend run dev
 ```
 
-It opens on a plain-English page explaining what the tool does, and three ways in:
+Four modes:
 
-- **Guided example** — data built so the right answer is known in advance
-  (detectable change / stable control / limited evidence). Computed live in
-  your browser.
-- **Real data** — the audited study results above, plus the audit explaining
-  which archives can support the method at all. You can also open your own CSV,
-  which is read locally and never transmitted.
-- **Sandbox** — apply a deliberate change to a copy of the data and see what
-  the method does. Each change states its expected effect *before* the run, and
-  the result is checked against it afterwards.
+1. **My Digital Twin** — write how you are; the system reads the feeling and the
+   situation, shows you what it understood and **where each part came from**,
+   lets you correct anything, then stores the episode, updates the hypergraph,
+   retrieves comparable past episodes *with the reason they matched*, and either
+   states a pattern or says it is still learning. A **synthetic demonstration
+   user** can be loaded, labelled as fictional throughout.
+2. **Analyse real data** — the audited study results, the audit explaining which
+   archives can support the drift analysis, and CSV upload read locally.
+3. **Guided demonstration** — controlled data with a known answer.
+4. **Interactive sandbox** — deliberate perturbations, each stating its expected
+   effect before the run and checked after it.
 
-Results lead with a verdict in one line, then what it does and does not mean in
-plain words, then the evidence, then the statistics. Light and dark themes are
-both supported and the choice is remembered.
+Results lead with a verdict, then what it does and does not mean in plain words,
+then the evidence, then the statistics. Light and dark themes, remembered.
 
-**Where computation happens.** Guided examples, the sandbox and uploaded CSVs
-run live in the browser on a JavaScript port of the estimator, pinned to the
-Python reference by `tests/regression/test_js_python_agreement.py` (fails above
-1e-3 divergence; measured agreement 1.8e-5). Bundled study results were computed
-**offline** by the Python implementation and are displayed, not recomputed — the
-archives are gigabytes and are licensed for research use, not redistribution.
-Nothing exported to the browser carries a participant identifier, a timestamp,
-or a raw value.
+**Where computation happens, stated once:**
 
----
+| | runs where |
+|---|---|
+| context extraction, events, hypergraph, retrieval, patterns | your browser |
+| emotion — word-list baseline (default) | your browser |
+| emotion — RoBERTa (opt-in) | the Python service; only the sentence is sent |
+| guided demo, sandbox, uploaded CSV analysis | your browser |
+| bundled study results | offline Python, displayed not recomputed |
+| HGNN and EWC experiments | offline Python only |
+
+Personal history stays on your device. The archives are gigabytes and licensed
+for research use rather than redistribution, so nothing participant-level is
+shipped to the browser or served by the API.
+
+To run the backend that serves the Transformer:
+
+```bash
+uvicorn backend.app:app --reload --port 8000
+```
+
+Then set `window.AEDT_API_URL` in `frontend/config.js` and choose the
+Transformer in the Digital Twin's advanced settings. It is **off by default**,
+because a sentence about your health leaving your device should be a decision.
+
+### Reproducing the Layer 1 experiments
+
+```bash
+python3 scripts/eval_emotion_model.py      # GoEmotions held-out evaluation
+python3 scripts/run_hgnn_experiment.py     # HGNN vs GCN vs MLP vs majority
+python3 scripts/run_ewc_experiment.py      # forgetting, with a lambda sweep
+```
+
+Each writes a JSON report under `results/` carrying its own protocol block.
 
 ## Adding a dataset
 
@@ -431,9 +572,23 @@ tables, and the persisted twins.
 
 ## Requirements
 
-Python 3.11+ with `numpy`, `scipy`, `pandas`, `matplotlib`, `pyyaml`; `pytest`
-for the tests. **`statsmodels` is deliberately excluded** — the ordinal probit
-is implemented directly. Runs on any laptop, no GPU, no network at run time.
+**Layer 2 (the scientific core)** needs only Python 3.11+ with `numpy`, `scipy`,
+`pandas`, `matplotlib`, `pyyaml`, and `pytest`. **`statsmodels` is deliberately
+excluded** — the ordinal probit is implemented directly. No GPU, no network at
+run time.
+
+**Layer 1** additionally needs `torch`, `transformers`, `scikit-learn` and
+`datasets`. Without them the emotion detector reports `backend: "lexicon"` and
+says so, and the HGNN and EWC experiments print `NOT RUN` rather than
+estimating anything. Their tests skip rather than passing vacuously.
+
+```bash
+pip install -r requirements.txt          # Layer 2
+pip install torch transformers scikit-learn datasets   # Layer 1
+```
+
+The emotion checkpoint (~500 MB) downloads from the Hugging Face Hub on first
+use and is cached.
 
 ## Status
 

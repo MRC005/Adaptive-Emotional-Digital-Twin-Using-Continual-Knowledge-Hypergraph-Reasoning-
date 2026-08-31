@@ -20,7 +20,14 @@ import { parseCsv, suggestColumns, toRecords, validate } from "./lib/dataset.js"
 import { analyze, activeEngine } from "./lib/engine.js";
 import { renderReport, renderPrecomputed } from "./ui/results.js";
 import { initTheme, getTheme, setTheme, onThemeChange } from "./lib/theme.js";
+import { PersonalTwin, buildEvent, correctField } from "./lib/twin.js";
+import { classify, ENGINE_INFO, transformerConfigured, useTransformer,
+         setUseTransformer } from "./lib/emotion_engine.js";
+import { buildDemoHistory, DEMO_PERSON_ID } from "./lib/demo_history.js";
+import { renderHistory, renderSimilar, renderUnderstanding, syntheticBanner }
+  from "./ui/twin_view.js";
 import REAL from "./data/real_datasets.json";
+import L1 from "./data/layer1_results.json";
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"']/g,
@@ -50,6 +57,8 @@ const state = {
   sandboxBaseline: null,
   busy: false,
   showAdvanced: false,
+  twin: null,          // PersonalTwin, Layer 1
+  draft: null,         // the event awaiting confirmation
 };
 
 /* ------------------------------------------------------------------ chrome */
@@ -166,55 +175,87 @@ function viewHome() {
 
   $("#work").innerHTML = `
     <section class="hero">
-      <h1>What this tool does</h1>
-      <p class="lede">People answer questions like &ldquo;how stressed are you right now?&rdquo;
-        over months. The same answer can come to mean something different over time. This tool
-        checks whether the relationship between someone's passive phone data and their repeated
-        self&#8209;report <b>changes</b> between an earlier and a later period.</p>
-      <p class="lede2">It reports one of four things, and refusing to answer is a real answer:
-        <b>drift detected</b>, <b>no detectable drift</b>, <b>insufficient evidence</b>, or
-        <b>data incompatible with this analysis</b>.</p>
+      <h1>What AEDT does</h1>
+      <p class="lede">AEDT explores how emotions and personal context change over time.
+        Your <b>Digital Twin</b> builds a history of emotional experiences from what you write,
+        finds similar past situations, and offers evidence-based pattern insights.
+        Separate research tools investigate whether emotional measurements stay
+        <b>comparable</b> over months and years.</p>
+      <p class="lede2">Those are two different questions, and the tool keeps them apart.
+        One asks <i>what has this person's history looked like</i>. The other asks
+        <i>can a long history be read as if the scale meant one fixed thing throughout</i>.</p>
     </section>
 
-    <h2 class="sech">Three ways to start</h2>
+    <h2 class="sech">Four ways to start</h2>
     <div class="starts">
       <div class="start">
-        <h3>1. Try a controlled example</h3>
-        <p>Data built so the right answer is known in advance. The quickest way to see whether
-          the method behaves. <b>Start here.</b></p>
-        <button class="b run" data-go="guided">Run a guided example</button>
+        <h3>1. My Digital Twin</h3>
+        <p>Write how you are. The system reads the feeling and the situation, shows you what it
+          understood, and builds a personal history you can inspect. <b>Start here.</b></p>
+        <button class="b run" data-go="twin">Open my Digital Twin</button>
       </div>
       <div class="start">
-        <h3>2. Look at real data</h3>
-        <p>Results from real longitudinal studies, and the audit explaining which of them can
-          support this analysis at all. You can also open your own CSV.</p>
+        <h3>2. Analyse real data</h3>
+        <p>Results from audited longitudinal studies, and the audit explaining which archives
+          can support this analysis at all. You can also open your own CSV.</p>
         <button class="b" data-go="real">Open real data</button>
       </div>
       <div class="start">
-        <h3>3. Experiment</h3>
-        <p>Change the data on purpose and watch what the method does. Useful for seeing where
-          it breaks.</p>
+        <h3>3. Guided demonstration</h3>
+        <p>Controlled data where the right answer is known in advance, to check the scientific
+          estimator behaves.</p>
+        <button class="b" data-go="guided">Run a guided example</button>
+      </div>
+      <div class="start">
+        <h3>4. Interactive sandbox</h3>
+        <p>Change the data on purpose and watch what the analysis does. Useful for seeing where
+          the method breaks.</p>
         <button class="b" data-go="sandbox">Open the sandbox</button>
+      </div>
+    </div>
+
+    <h2 class="sech">The two layers, and how they connect</h2>
+    <div class="starts">
+      <div class="start">
+        <h3>Layer 1 — what the twin learns about a person</h3>
+        <p>A Transformer classifies the feeling; rules recover the situation; each episode
+          becomes one higher-order relation in a knowledge hypergraph; retrieval finds
+          comparable past episodes and explains why they matched.</p>
+        <p class="hint">Runs on your device. The Transformer runs in the Python service and only
+          when you switch it on.</p>
+      </div>
+      <div class="start">
+        <h3>Layer 2 — when a long history can be trusted</h3>
+        <p>If the relationship between behaviour and self-report drifts over a study, a history
+          spanning that period cannot be read as if the scale meant one fixed thing throughout.
+          Layer 2 tests that on dense cohort data.</p>
+        <p class="hint">Layer 2 never sees your check-ins, and a personal history is far too
+          short to run it on one individual. It qualifies how far a history may be
+          extrapolated; it is not a step in the twin's pipeline.</p>
       </div>
     </div>
 
     <h2 class="sech">Where the real data stands today</h2>
     <div class="panel"><div class="pad">
-      ${primary ? `
-        <p style="margin-top:0"><b>College Experience Study</b> (218 students, four years) is the
-          first archive of the four audited that carries enough repeated measurement to attempt
-          this analysis. Under the pre-specified primary configuration it still reports
+      ${(() => {
+        const ce = REAL.datasets.find((d) => d.id === "college_experience");
+        const primary = ce && ce.runs.find((r) => r.primary);
+        const withEst = ce ? ce.runs.filter((r) => r.rho_star != null) : [];
+        if (!primary) return `<p class="note">Real-dataset results were not generated in this build.</p>`;
+        return `<p style="margin-top:0"><b>College Experience Study</b> (218 students, four years)
+          is the first archive of the four audited with enough repeated measurement to attempt
+          the drift analysis. Under the pre-specified primary configuration it reports
           <b>${esc(primary.headline.toLowerCase())}</b>: ${primary.eligible} participants passed
           the screen and at least 10 are needed.</p>
-        <p>${withEstimate.length} pre-specified secondary configurations did produce an estimate,
-          and both report <b>no detectable drift</b> with wide intervals
-          ${withEstimate.map((r) => `<span class="mono">${r.rho_star.toFixed(3)}
+        <p>${withEst.length} pre-specified secondary configurations produced an estimate, and both
+          report <b>no detectable drift</b> with wide intervals
+          ${withEst.map((r) => `<span class="mono">${r.rho_star.toFixed(3)}
             [${r.ci_low.toFixed(3)}, ${r.ci_high.toFixed(3)}]</span>`).join(" and ")}.</p>
-        <p class="note">No drift has been demonstrated in real data by this project, and no
-          threshold was changed to obtain a result. The full audit, including the two datasets
-          that cannot support the method and why, is on the
-          <a href="#" data-tab-link="datasets">Datasets</a> page.</p>
-      ` : `<p class="note">Real-dataset results have not been generated in this build.</p>`}
+        <p class="note">No drift has been demonstrated in real data, and no threshold was changed
+          to obtain a result. The full audit is on the
+          <a href="#" data-tab-link="datasets">Datasets</a> page; the models behind Layer 1 and
+          their measured performance are on <a href="#" data-tab-link="method">Method</a>.</p>`;
+      })()}
     </div></div>`;
 
   for (const b of document.querySelectorAll("[data-go]"))
@@ -227,9 +268,151 @@ function viewHome() {
     a.addEventListener("click", (e) => { e.preventDefault(); go(a.dataset.tabLink); });
 }
 
+
+/* ---------------------------------------------------------- Layer 1: twin */
+function ensureTwin() {
+  if (!state.twin) state.twin = new PersonalTwin("You");
+  return state.twin;
+}
+
+async function makeEvent(text, timestamp, fields, dataStatus = "USER") {
+  const pred = await classify(text);
+  const ev = buildEvent(text, { personId: ensureTwin().personId, timestamp,
+                                userFields: fields, prediction: pred, dataStatus });
+  if (pred.note) ev.note = pred.note;
+  return ev;
+}
+
+function viewTwinMode() {
+  const twin = ensureTwin();
+  const engineOn = useTransformer();
+  const configured = transformerConfigured();
+
+  $("#work").innerHTML = `
+    ${syntheticBanner(twin)}
+    <div class="panel">
+      <header><h3>My Digital Twin</h3>
+        <span class="meta">${twin.events.length} episodes recorded</span></header>
+      <div class="pad">
+        <p class="intro">Write how you are and what is going on, in your own words. The system
+          works out the feeling and the situation, shows you exactly what it understood and
+          where each part came from, and lets you correct it before anything is stored.</p>
+        <textarea id="t-text" rows="3" placeholder="e.g. I am stressed and exhausted. I slept only four hours because I have an important exam tomorrow."></textarea>
+        <div class="actions" style="border:0;background:none;padding:10px 0 0">
+          <button class="b run" id="t-go">Analyse this check-in</button>
+          <button class="b" id="t-demo">Load demonstration user</button>
+          ${twin.events.length ? `<button class="b" id="t-clear">Clear history</button>` : ""}
+        </div>
+        <details class="adv">
+          <summary>Where the feeling is classified</summary>
+          <div class="form">
+            <div class="lbl">Classifier</div>
+            <div class="ctl">
+              <label class="radio"><input type="radio" name="eng" value="lexicon"
+                ${engineOn ? "" : "checked"}>
+                <span><b>${esc(ENGINE_INFO.lexicon.name)}</b>
+                <small>${esc(ENGINE_INFO.lexicon.detail)}</small></span></label>
+              <label class="radio"><input type="radio" name="eng" value="transformer"
+                ${engineOn ? "checked" : ""}${configured ? "" : " disabled"}>
+                <span><b>${esc(ENGINE_INFO.transformer.name)}</b>
+                <small>${esc(ENGINE_INFO.transformer.detail)}
+                ${configured ? "Your check-in sentence is sent to the analysis service."
+                             : "No analysis service is configured, so this is unavailable."}</small></span></label>
+            </div>
+          </div>
+          <p class="hint">The Transformer cannot run inside a browser, so it lives in the
+            Python service. It stays off until you choose it, because a sentence about your
+            health leaving your device should be a decision rather than a default.</p>
+        </details>
+      </div>
+    </div>
+    <div id="t-understand"></div>
+    <div id="t-result"></div>
+    <div id="t-history">${renderHistory(twin)}</div>`;
+
+  for (const r of document.querySelectorAll('input[name="eng"]'))
+    r.addEventListener("change", (e) => { setUseTransformer(e.target.value === "transformer"); });
+
+  $("#t-go").addEventListener("click", analyseCheckIn);
+  $("#t-demo").addEventListener("click", loadDemoUser);
+  const clr = $("#t-clear");
+  if (clr) clr.addEventListener("click", () => {
+    state.twin = new PersonalTwin("You");
+    state.draft = null;
+    viewTwinMode();
+  });
+}
+
+async function analyseCheckIn() {
+  const text = ($("#t-text").value || "").trim();
+  if (!text) return;
+  if (state.busy) return;
+  setBusy(true, "Reading");
+  $("#t-understand").innerHTML = `<div class="panel"><div class="pad running">
+    <span class="spin" aria-hidden="true"></span><span>Working out the feeling and the situation…</span>
+    </div></div>`;
+  try {
+    const ev = await makeEvent(text);
+    state.draft = ev;
+    renderDraft();
+  } catch (e) {
+    $("#t-understand").innerHTML = `<div class="msg stop"><b>Could not read that check-in.</b>
+      ${esc(e.message)}</div>`;
+  } finally { setBusy(false); }
+}
+
+function renderDraft() {
+  const ev = state.draft;
+  if (!ev) return;
+  $("#t-understand").innerHTML = renderUnderstanding(ev, {});
+  for (const sel of document.querySelectorAll("select.fix"))
+    sel.addEventListener("change", (e) => {
+      const v = e.target.value;
+      if (!v) return;
+      state.draft = correctField(state.draft, e.target.dataset.field, v);
+      renderDraft();
+    });
+  $("#t-discard").addEventListener("click", () => {
+    state.draft = null;
+    $("#t-understand").innerHTML = "";
+    $("#t-result").innerHTML = "";
+  });
+  $("#t-save").addEventListener("click", () => {
+    const twin = ensureTwin();
+    const similar = twin.similarEpisodes(state.draft);
+    const insight = twin.patternInsight(state.draft);
+    twin.addEvent(state.draft);
+    state.draft = null;
+    $("#t-understand").innerHTML = "";
+    $("#t-result").innerHTML = renderSimilar(similar, insight);
+    $("#t-history").innerHTML = renderHistory(twin);
+    $("#t-result").scrollIntoView({ block: "start", behavior: "smooth" });
+  });
+}
+
+async function loadDemoUser() {
+  if (state.busy) return;
+  setBusy(true, "Building history");
+  $("#t-understand").innerHTML = `<div class="panel"><div class="pad running">
+    <span class="spin" aria-hidden="true"></span>
+    <span>Building the fictional history through the real pipeline…</span></div></div>`;
+  try {
+    const twin = new PersonalTwin(DEMO_PERSON_ID, "SYNTHETIC_DEMO");
+    const events = await buildDemoHistory(
+      (text, ts, fields) => makeEvent(text, ts, fields, "SYNTHETIC_DEMO"));
+    for (const ev of events) twin.addEvent(ev);
+    state.twin = twin;
+    state.draft = null;
+    viewTwinMode();
+    $("#t-text").value = "I am stressed and exhausted. I slept only four hours "
+      + "because I have an important exam tomorrow.";
+  } finally { setBusy(false); }
+}
+
 /* ------------------------------------------------------------------ analyze */
 function modeBar() {
-  const modes = [["guided", "Guided example"], ["real", "Real data"], ["sandbox", "Sandbox"]];
+  const modes = [["twin", "My Digital Twin"], ["real", "Real data"],
+                 ["guided", "Guided example"], ["sandbox", "Sandbox"]];
   return `<div class="segmented" role="tablist" aria-label="Analysis mode">
     ${modes.map(([id, label]) => `<button role="tab" aria-selected="${state.mode === id}"
       class="${state.mode === id ? "on" : ""}" data-mode="${id}">${label}</button>`).join("")}
@@ -277,7 +460,17 @@ function viewAnalyze() {
   $("#work").innerHTML = `${modeBar()}<div id="modebody"></div>`;
   for (const b of document.querySelectorAll("[data-mode]"))
     b.addEventListener("click", () => { state.mode = b.dataset.mode; viewAnalyze(); });
-  ({ guided: viewGuided, real: viewReal, sandbox: viewSandbox }[state.mode])();
+  if (state.mode === "twin") {
+    // the twin view owns the workspace, so re-render the bar above it
+    const bar = modeBar();
+    viewTwinMode();
+    $("#work").insertAdjacentHTML("afterbegin", bar);
+    for (const b of document.querySelectorAll("[data-mode]"))
+      b.addEventListener("click", () => { state.mode = b.dataset.mode; viewAnalyze(); });
+    return;
+  }
+  ({ twin: viewTwinMode, guided: viewGuided, real: viewReal,
+     sandbox: viewSandbox }[state.mode] || viewTwinMode)();
 }
 
 /* ------------------------------------------------------- mode: guided */
@@ -769,6 +962,88 @@ function viewMethod() {
         changed, the same answer may no longer mean the same thing.</p>
       <p>We report the ratio of the two strengths, called &rho;*. A ratio near 1 means nothing
         detectable changed. Further from 1 means the relationship changed.</p>
+    </div></div>
+
+    <div class="panel"><header><h3>A2. Layer 1 — what the twin learns about a person</h3>
+      <span class="meta">measured, with baselines</span></header><div class="pad">
+      <p style="margin-top:0">Four steps turn a sentence into something the twin can reason over.
+        Each is a real component, and each has a measured limitation.</p>
+      <ol class="bul" style="padding-left:19px">
+        <li><b>Emotion detection.</b> <span class="mono">${esc(L1.emotion.model)}</span>, a
+          124.7M-parameter RoBERTa fine-tuned on GoEmotions by its author — <b>not by this
+          project</b>. Evaluated here on the held-out GoEmotions test split
+          (${L1.emotion.n_test.toLocaleString()} examples, threshold ${L1.emotion.threshold}
+          chosen on validation): <b>macro-F1 ${L1.emotion.macro_f1}</b>,
+          micro-F1 ${L1.emotion.micro_f1}. The word-list baseline scores
+          ${L1.emotion.baseline_macro_f1} on the same split.</li>
+        <li><b>Context extraction.</b> Deterministic rules over an explicit lexicon. Every value
+          carries the exact phrase that produced it, and anything unstated is left blank rather
+          than guessed.</li>
+        <li><b>Knowledge hypergraph.</b> Each episode becomes ONE relation joining everything
+          that co-occurred in it, so "poor sleep AND an exam tomorrow" is a single object rather
+          than two independent facts.</li>
+        <li><b>Retrieval and pattern statement.</b> Weighted field matching, with the matched
+          fields shown. Nothing is said about a tendency below three comparable episodes.</li>
+      </ol>
+      <p class="note" style="margin-top:10px"><b>A measured gap worth knowing.</b> GoEmotions has
+        28 labels and none of them is "stress" — the construct this project's longitudinal layer
+        is built around. Measured on this checkpoint, "I am stressed and exhausted" returns
+        sadness 0.463 with nervousness only 0.119. So an explicit first-person statement
+        ("I am stressed") is treated as a <b>self-report</b> and outranks the model, with the
+        matched phrase shown as evidence.</p>
+    </div></div>
+
+    <div class="panel"><header><h3>A3. Layer 1 research components</h3>
+      <span class="meta">trained offline; results reported whatever they say</span></header>
+      <div class="pad">
+      <p style="margin-top:0"><b>Hypergraph neural network.</b> A Feng et al. hypergraph
+        convolution, compared against a clique-expansion GCN and a structure-free MLP on
+        synthetic events with a known conjunctive rule (5 seeds, emotion vertices removed from
+        the input so the label cannot leak).</p>
+      <div class="gridwrap"><table class="grid">
+        <thead><tr><th>Model</th><th class="num">Macro-F1</th><th class="num">Accuracy</th></tr></thead>
+        <tbody>
+          <tr><th>Majority class</th><td class="num mono">${L1.hgnn.majority.macro_f1}</td>
+            <td class="num mono">${L1.hgnn.majority.accuracy}</td></tr>
+          <tr><th>MLP (no structure)</th><td class="num mono">${L1.hgnn.mlp.macro_f1}</td>
+            <td class="num mono">${L1.hgnn.mlp.accuracy}</td></tr>
+          <tr><th>GCN (pairwise)</th><td class="num mono">${L1.hgnn.gcn.macro_f1}</td>
+            <td class="num mono">${L1.hgnn.gcn.accuracy}</td></tr>
+          <tr><th>HGNN (higher-order)</th><td class="num mono">${L1.hgnn.hgnn.macro_f1}</td>
+            <td class="num mono">${L1.hgnn.hgnn.accuracy}</td></tr>
+        </tbody></table></div>
+      <p class="note" style="margin-top:9px"><b>The HGNN lost.</b> The structure-free MLP scores
+        ${L1.hgnn.mlp.macro_f1} against the HGNN's ${L1.hgnn.hgnn.macro_f1}. With a small
+        categorical entity set, an episode's own membership already encodes the conjunction, and
+        propagating over a near-complete graph only blurs it. This is reported because it is what
+        the experiment found; the same conclusion was reached independently by the Layer 2
+        hypergraph ablation.</p>
+
+      <p style="margin-top:14px"><b>Continual learning with EWC.</b> Four chronological periods,
+        each with a different context-to-emotion rule, trained in order. Forgetting and backward
+        transfer as defined by Lopez-Paz &amp; Ranzato, 5 seeds.</p>
+      <div class="gridwrap"><table class="grid">
+        <thead><tr><th>Arm</th><th class="num">Average accuracy</th><th class="num">Forgetting</th></tr></thead>
+        <tbody>
+          <tr><th>Sequential (no protection)</th>
+            <td class="num mono">${L1.ewc.sequential.avg_accuracy}</td>
+            <td class="num mono">+${L1.ewc.sequential.forgetting}</td></tr>
+          <tr><th>EWC</th><td class="num mono">${L1.ewc.ewc.avg_accuracy}</td>
+            <td class="num mono">+${L1.ewc.ewc.forgetting}</td></tr>
+          <tr><th>Joint training (upper bound)</th>
+            <td class="num mono">${L1.ewc.joint.avg_accuracy}</td><td class="num mono">—</td></tr>
+        </tbody></table></div>
+      <p class="note" style="margin-top:9px"><b>EWC worked.</b> Forgetting falls from
+        +${L1.ewc.sequential.forgetting} to +${L1.ewc.ewc.forgetting}, and the penalty weight
+        sweep is monotone: ${Object.entries(L1.ewc_sweep).map(([k, v]) =>
+          `&lambda;=${k} &rarr; +${v}`).join(", ")}. Catastrophic forgetting is demonstrated
+        first and then reduced, rather than asserted.</p>
+      <p class="note"><b>These are synthetic experiments.</b> No real check-in stream of this size
+        exists for this project. They compare models on identical data; they are not findings
+        about people.</p>
+      <p class="note"><b>Storing an event is not continual learning.</b> Adding an episode to your
+        history moves no model parameters. EWC updates parameters under a penalty, and only in
+        the offline research pipeline.</p>
     </div></div>
 
     <div class="panel"><header><h3>B. The method</h3></header><div class="pad">
