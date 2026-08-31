@@ -65,10 +65,40 @@ def test_health_distinguishes_alive_from_model_ready(client):
     d = r.json()
     assert d["status"] == "ok"
     assert "model" in d, "health must report the model, not just the process"
-    assert d["model"]["status"] in {"loaded", "unavailable"}
+    # Three states, because the model loads in the background so the port can
+    # open immediately: "loading" is a normal startup condition, not a failure,
+    # and the browser renders it as "waking up" rather than falling back.
+    assert d["model"]["status"] in {"loaded", "loading", "unavailable"}
     assert "roberta" in d["model"]["name"].lower()
     if d["model"]["status"] == "unavailable":
         assert "reason" in d["model"], "an unavailable model must say why"
+
+
+def test_port_opens_without_waiting_for_the_model():
+    """A blocking load took 259.9 s from a cold cache and would fail the deploy."""
+    import time
+    t0 = time.time()
+    with TestClient(app) as c:
+        opened = time.time() - t0
+        status = c.get("/health").json()["model"]["status"]
+    assert opened < 5.0, f"startup blocked for {opened:.1f}s before serving"
+    assert status in {"loading", "loaded"}
+
+
+def test_a_loading_model_is_reported_as_loading_not_broken(client, monkeypatch):
+    """503 while loading must be distinguishable from 503 because it failed."""
+    from aedt.emotion import onnx_detect
+
+    class NotYet:
+        def predict(self, text):
+            return None
+
+    monkeypatch.setattr(onnx_detect, "get_detector", lambda: NotYet())
+    monkeypatch.setattr(app.state, "model_loading", True, raising=False)
+    r = client.post("/api/emotion", json={"text": "hello"})
+    assert r.status_code == 503
+    assert "still loading" in r.json()["detail"].lower()
+    assert r.headers.get("Retry-After")
 
 
 def test_health_leaks_no_paths_or_environment(client):

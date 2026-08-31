@@ -289,6 +289,32 @@ async function makeEvent(text, timestamp, fields, dataStatus = "USER",
   return ev;
 }
 
+/**
+ * Say up front whether the research model is reachable, so a cold start is
+ * visible before the user has typed anything and a genuine outage is not
+ * discovered only after they press the button.
+ */
+async function reportEngineHealth() {
+  const slot = $("#t-enginestate");
+  if (!slot) return;
+  slot.innerHTML = `<span class="hint">Checking the analysis service…</span>`;
+  const h = await probeHealth();
+  if (h.modelReady) {
+    slot.innerHTML = `<span class="hint">Analysis service ready — `
+      + `${esc(h.model || "RoBERTa")}.</span>`;
+  } else if (h.loading) {
+    slot.innerHTML = `<span class="hint">The analysis service is waking up. `
+      + `Your first check-in may take a few seconds longer.</span>`;
+  } else if (h.reachable) {
+    slot.innerHTML = `<span class="hint">The analysis service is reachable but its `
+      + `model is not loaded${h.reason ? ` (${esc(h.reason)})` : ""}. `
+      + `The word-list baseline will be used and labelled as such.</span>`;
+  } else {
+    slot.innerHTML = `<span class="hint">The analysis service could not be reached. `
+      + `The word-list baseline will be used and labelled as such.</span>`;
+  }
+}
+
 function viewTwinMode() {
   const twin = ensureTwin();
   const engineOn = useTransformer();
@@ -326,6 +352,7 @@ function viewTwinMode() {
                              : "No analysis service is configured, so this is unavailable."}</small></span></label>
             </div>
           </div>
+          <p id="t-enginestate" style="margin-top:8px"></p>
           <p class="hint">The Transformer cannot run inside a browser, so it lives in the
             Python service. It stays off until you choose it, because a sentence about your
             health leaving your device should be a decision rather than a default.</p>
@@ -337,7 +364,11 @@ function viewTwinMode() {
     <div id="t-history">${renderHistory(twin)}</div>`;
 
   for (const r of document.querySelectorAll('input[name="eng"]'))
-    r.addEventListener("change", (e) => { setUseTransformer(e.target.value === "transformer"); });
+    r.addEventListener("change", (e) => {
+      setUseTransformer(e.target.value === "transformer");
+      if (e.target.value === "transformer") reportEngineHealth();
+    });
+  if (engineOn) reportEngineHealth();
 
   $("#t-go").addEventListener("click", analyseCheckIn);
   $("#t-demo").addEventListener("click", loadDemoUser);

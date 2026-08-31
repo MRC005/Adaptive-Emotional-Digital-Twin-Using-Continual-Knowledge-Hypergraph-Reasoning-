@@ -97,7 +97,9 @@ export async function probeHealth(timeoutMs = 8000) {
     const res = await fetch(`${base}/health`, { signal: ctl.signal });
     if (!res.ok) return { reachable: true, modelReady: false };
     const d = await res.json();
-    return { reachable: true, modelReady: d?.model?.status === "loaded",
+    const status = d?.model?.status;
+    return { reachable: true, modelReady: status === "loaded",
+             loading: status === "loading",     // starting, not broken
              reason: d?.model?.reason, model: d?.model?.name };
   } catch {
     return { reachable: false, modelReady: false };

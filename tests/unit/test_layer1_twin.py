@@ -229,3 +229,54 @@ def test_twin_round_trips_through_json(stocked):
     back = PersonalEmotionalTwin.from_dict(stocked.to_dict())
     assert back.n_events == stocked.n_events
     assert [e.event_id for e in back.events] == [e.event_id for e in stocked.events]
+
+
+# ------------------------------------------------------- personalisation
+def test_same_situation_different_history_gives_different_insight(lex):
+    """The core Digital Twin claim: the history, not the sentence, decides.
+
+    Two fictional people meet the same event. One has repeatedly reported
+    anxiety around exams after poor sleep; the other has repeatedly reported
+    calm around exams when prepared and with friends. The same query must
+    produce different personalised statements, or the twin is just a
+    sentence classifier with extra steps.
+    """
+    a = PersonalEmotionalTwin("User_A", data_status="SYNTHETIC_DEMO")
+    for day, emo in ((1, "anxiety"), (6, "anxiety"), (11, "anxiety"), (16, "anxiety")):
+        a.add_event(_ev("User_A", day, "Exam tomorrow and I slept badly.",
+                        {"event": "examination", "sleep": "poor", "emotion": emo},
+                        lex, status="SYNTHETIC_DEMO"))
+
+    b = PersonalEmotionalTwin("User_B", data_status="SYNTHETIC_DEMO")
+    for day, emo in ((1, "calm"), (6, "calm"), (11, "joy"), (16, "calm")):
+        b.add_event(_ev("User_B", day, "Exam tomorrow, well prepared, revised with friends.",
+                        {"event": "examination", "sleep": "good",
+                         "social": "with others", "emotion": emo},
+                        lex, status="SYNTHETIC_DEMO"))
+
+    qa = _ev("User_A", 25, "I have an exam tomorrow.",
+             {"event": "examination", "sleep": "poor"}, lex)
+    qb = _ev("User_B", 25, "I have an exam tomorrow.",
+             {"event": "examination", "sleep": "good", "social": "with others"}, lex)
+
+    ia, ib = a.pattern_insight(qa), b.pattern_insight(qb)
+    assert ia.sufficient and ib.sufficient
+    assert ia.dominant_emotion == "anxiety"
+    assert ib.dominant_emotion == "calm"
+    assert ia.dominant_emotion != ib.dominant_emotion, (
+        "the same situation produced the same insight for two different "
+        "histories, so the twin is not personalised")
+    # and each statement carries its own counts, not a generic template
+    assert str(ia.n_supporting) in ia.statement
+    assert str(ib.n_supporting) in ib.statement
+
+
+def test_one_twin_never_sees_another_twins_history(lex):
+    a = PersonalEmotionalTwin("User_A")
+    b = PersonalEmotionalTwin("User_B")
+    a.add_event(_ev("User_A", 1, "Exam tomorrow, slept badly.",
+                    {"event": "examination", "sleep": "poor"}, lex))
+    q = _ev("User_B", 5, "I have an exam tomorrow.",
+            {"event": "examination", "sleep": "poor"}, lex)
+    assert b.similar_episodes(q) == []
+    assert b.pattern_insight(q).sufficient is False
