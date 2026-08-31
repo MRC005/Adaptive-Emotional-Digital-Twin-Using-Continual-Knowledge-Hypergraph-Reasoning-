@@ -4,8 +4,9 @@
  * The product talks to an ENGINE, never to an implementation. Today the only
  * active engine is `local`, which runs the validated JavaScript port of the
  * estimator in the browser. A `remote` engine that forwards the identical
- * request to the Python FastAPI service is implemented below and can be
- * enabled by setting `window.AEDT_API_URL` — no product code changes.
+ * request to a Python FastAPI service is implemented below. Enabling it needs
+ * `window.AEDT_API_URL` AND `window.AEDT_ENGINE = "remote"`, and a service that
+ * implements POST /api/analyze — no product code changes.
  *
  * Both engines take the same input ({byPid, K, options}) and return the same
  * result shape, so swapping them cannot change what the UI renders.
@@ -34,7 +35,13 @@ export const ENGINES = {
     id: "remote",
     name: "Python analysis service",
     detail: "Forwards the same request to the reference Python implementation.",
-    available: () => Boolean(window.AEDT_API_URL),
+    // Requires BOTH a configured URL and an explicit opt-in. Presence of a URL is not
+    // enough: the currently deployed service exposes a bounded demo endpoint
+    // (/api/demo/run, fixed scenarios) and does NOT implement the general /api/analyze
+    // contract below, so selecting it automatically would fail every analysis. The
+    // opt-in is also a privacy boundary - an uploaded CSV is participant data and must
+    // not leave the machine unless someone deliberately asks for that.
+    available: () => Boolean(window.AEDT_API_URL) && window.AEDT_ENGINE === "remote",
     async run({ byPid, K, options }) {
       const base = String(window.AEDT_API_URL).replace(/\/$/, "");
       const ctl = new AbortController();
@@ -51,7 +58,10 @@ export const ENGINES = {
   },
 };
 
-/** The engine actually in use. Prefers remote only when explicitly configured. */
+/**
+ * The engine actually in use. Local unless someone has deliberately opted in to the
+ * remote service, which is off by default for the reasons given above.
+ */
 export function activeEngine() {
   return ENGINES.remote.available() ? ENGINES.remote : ENGINES.local;
 }

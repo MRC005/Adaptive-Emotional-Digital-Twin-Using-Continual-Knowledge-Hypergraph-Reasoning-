@@ -633,13 +633,20 @@ function viewMethod() {
         per-participant gain of the feature cancels in the ratio.</p>
     </div></div>
     <div class="panel"><header><h3>What this deployment computes</h3></header><div class="pad">
-      <p style="font-size:13px">All analysis runs in the browser. There is no analysis server in
-        this deployment. The estimator is a port of the reference Python implementation, and a
-        regression test in the repository runs fixed cases through both and fails if the fitted
-        slopes diverge by more than 1e-3; measured agreement is 1.8e-5.</p>
+      <p style="font-size:13px">Every number on this page is computed in your browser when you
+        press Run. Nothing is precomputed and no result is stored in the page. The estimator is a
+        port of the reference Python implementation, and a regression test in the repository runs
+        fixed cases through both and fails if the fitted slopes diverge by more than 1e-3;
+        measured agreement is 1.8e-5.</p>
+      <p style="font-size:13px;margin-top:9px">A Python service is deployed separately and serves a
+        bounded set of fixed demonstration scenarios. It is deliberately not what runs the analysis
+        here, for two reasons: it does not implement the general analysis endpoint, and a dataset you
+        upload is participant data, which stays on your machine. Uploaded files are read locally and
+        are never transmitted.</p>
       <p class="note" style="margin-top:9px">The analysis layer sits behind an engine interface, so a
-        Python service can be enabled later by configuring one endpoint without changing the
-        product. Full-length inference and archives that cannot be redistributed belong there.</p>
+        Python service that implements the same request can be switched on by configuring one
+        endpoint without changing the product. Full-length inference and archives that cannot be
+        redistributed belong there.</p>
     </div></div>
     <div class="panel"><header><h3>What the method cannot establish</h3></header><div class="pad">
       <ul style="margin:0;padding-left:18px;font-size:12.5px;line-height:1.65">
