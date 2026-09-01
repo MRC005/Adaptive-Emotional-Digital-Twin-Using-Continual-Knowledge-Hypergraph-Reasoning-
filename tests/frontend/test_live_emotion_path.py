@@ -108,3 +108,95 @@ console.log(JSON.stringify(goemotionsToCheckin("realization")));'''
     if p.returncode != 0:
         pytest.skip("goemotionsToCheckin is not exported")
     assert json.loads(p.stdout.strip()) != "confusion"
+
+
+# ------------------------------------------- two-user comparison (Part 11)
+TWO = ROOT / "frontend" / "src" / "ui" / "twouser.js"
+
+
+def run_two(body: str):
+    src = f'''
+import {{ PersonalTwin, buildEvent }} from "{TWIN.as_uri()}";
+{body}
+'''
+    p = subprocess.run(["node", "--input-type=module", "-e", src],
+                       capture_output=True, text=True, timeout=60)
+    if p.returncode != 0:
+        raise AssertionError(p.stderr.strip())
+    return json.loads(p.stdout.strip())
+
+
+HISTORIES = '''
+const mk = (pid, i, text, f) => buildEvent(text, {
+  personId: pid, timestamp: new Date(Date.UTC(2026, 0, 2 + i * 5)).toISOString(),
+  userFields: f, dataStatus: "SYNTHETIC_DEMO" });
+const A = new PersonalTwin("Person A", "SYNTHETIC_DEMO");
+[["Deadline due tomorrow, slept about four hours.", "anxiety"],
+ ["Another deadline, barely slept again.", "anxiety"],
+ ["Deadline week, sleeping badly.", "stress"],
+ ["Submission tomorrow, four hours of sleep.", "anxiety"],
+ ["Deadline again, hardly slept.", "anxiety"]].forEach(([t, e], i) =>
+   A.addEvent(mk("Person A", i, t, {event:"deadline", sleep:"poor", emotion:e})));
+const B = new PersonalTwin("Person B", "SYNTHETIC_DEMO");
+[["Deadline due tomorrow, work is already done.", "calm"],
+ ["Another deadline, finished it early.", "calm"],
+ ["Deadline week, on top of it.", "joy"],
+ ["Submission tomorrow, prepared well in advance.", "calm"],
+ ["Deadline again, comfortable with it.", "calm"]].forEach(([t, e], i) =>
+   B.addEvent(mk("Person B", i, t, {event:"deadline", sleep:"poor", emotion:e})));
+const q = (pid) => mk(pid, 40, "I have another deadline tomorrow and I barely slept.",
+                      {event:"deadline", sleep:"poor"});
+'''
+
+
+@node
+def test_two_user_page_exists_and_declares_its_histories_synthetic():
+    src = TWO.read_text()
+    assert "Illustrative synthetic histories" in src
+    assert "not real participants" in src
+    assert "SYNTHETIC_DEMO" in src
+
+
+@node
+def test_the_same_sentence_produces_different_personalised_results():
+    """The demonstration's whole claim, verified through the real retrieval logic."""
+    got = run_two(HISTORIES + '''
+const a = A.patternInsight(q("Person A")), b = B.patternInsight(q("Person B"));
+console.log(JSON.stringify({a: a.dominantEmotion, b: b.dominantEmotion,
+  aN: a.nSimilar, bN: b.nSimilar, aOk: a.sufficient, bOk: b.sufficient}));''')
+    assert got["aOk"] and got["bOk"]
+    assert got["a"] != got["b"], "the two histories did not separate"
+    assert got["a"] == "anxiety" and got["b"] == "calm"
+
+
+@node
+def test_the_contrast_is_not_explained_by_one_person_having_more_data():
+    """Equal episode counts, so the difference must come from their content."""
+    got = run_two(HISTORIES + '''
+console.log(JSON.stringify({a: A.events.length, b: B.events.length,
+  aSim: A.similarEpisodes(q("Person A"), {topK:25, minScore:1.5}).length,
+  bSim: B.similarEpisodes(q("Person B"), {topK:25, minScore:1.5}).length}));''')
+    assert got["a"] == got["b"], "the histories differ in size, confounding the comparison"
+    assert got["aSim"] == got["bSim"], "retrieval returned different counts"
+
+
+@node
+def test_the_result_is_computed_not_hard_coded():
+    """Swap the recorded feelings and the page's conclusion must follow."""
+    got = run_two(HISTORIES.replace('"anxiety"', '"__TMP__"')
+                           .replace('"calm"', '"anxiety"')
+                           .replace('"__TMP__"', '"calm"') + '''
+const a = A.patternInsight(q("Person A")), b = B.patternInsight(q("Person B"));
+console.log(JSON.stringify({a: a.dominantEmotion, b: b.dominantEmotion}));''')
+    assert got["a"] == "calm" and got["b"] == "anxiety", (
+        "inverting the histories did not invert the conclusion, so the output "
+        "is not derived from the stored history")
+
+
+@node
+def test_one_twin_cannot_read_the_other_twins_history():
+    got = run_two(HISTORIES + '''
+const empty = new PersonalTwin("Person C", "SYNTHETIC_DEMO");
+console.log(JSON.stringify({n: empty.similarEpisodes(q("Person C"), {topK:25}).length,
+  sufficient: empty.patternInsight(q("Person C")).sufficient}));''')
+    assert got["n"] == 0 and got["sufficient"] is False
