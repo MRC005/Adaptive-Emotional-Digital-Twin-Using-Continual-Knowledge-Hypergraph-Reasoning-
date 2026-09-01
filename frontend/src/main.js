@@ -23,6 +23,7 @@ import FIND from "./data/findings.json";
 import { viewDiscovered } from "./ui/discovered.js";
 import { viewEvolution } from "./ui/evolution.js";
 import { viewReadiness } from "./ui/readiness.js";
+import { viewTwoUser } from "./ui/twouser.js";
 import { initTheme, getTheme, setTheme, onThemeChange } from "./lib/theme.js";
 import { PersonalTwin, buildEvent, correctField } from "./lib/twin.js";
 import { classify, ENGINES, ENGINE_INFO, STATE, browserModelReady, getEngine,
@@ -1267,6 +1268,7 @@ function go(tab) {
     discovered: () => viewDiscovered($("#work")),
     research: viewResearch,
     readiness: () => viewReadiness($("#work")),
+    twouser: () => viewTwoUser($("#work")),
     // preserved so existing links and the research index keep working
     analyze: viewAnalyze, datasets: viewDatasets, runs: viewRuns, method: viewMethod,
   };
