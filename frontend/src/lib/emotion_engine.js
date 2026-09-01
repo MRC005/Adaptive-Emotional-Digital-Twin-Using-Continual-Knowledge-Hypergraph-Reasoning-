@@ -166,7 +166,11 @@ const TO_CHECKIN = {
   optimism: "joy", pride: "joy", admiration: "joy",
   gratitude: "gratitude", relief: "calm", approval: "calm", caring: "calm",
   desire: "calm",
-  confusion: "confusion", curiosity: "confusion", realization: "confusion",
+  confusion: "confusion", curiosity: "confusion",
+  // "realization" was mapped to confusion only to give all 28 labels a target.
+  // Realisation is arguably the OPPOSITE of confusion, and the mapping produced
+  // a real failure. Coverage is not a semantic justification; unmapped labels
+  // surface as neutral with the raw label shown beside them.
   surprise: "confusion", neutral: "neutral",
 };
 

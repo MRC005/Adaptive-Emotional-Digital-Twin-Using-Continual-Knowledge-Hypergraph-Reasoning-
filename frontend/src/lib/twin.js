@@ -25,11 +25,12 @@ export const FieldSource = {
   INFERRED: "inferred", CORRECTED: "corrected", UNKNOWN: "unknown",
 };
 
-export const CONTEXT_FIELDS = ["emotion", "event", "time_context", "sleep",
+export const CONTEXT_FIELDS = ["emotion", "statedEmotion", "event", "time_context", "sleep",
                                "activity", "social", "workload", "location"];
 
 export const FIELD_LABELS = {
-  emotion: "Feeling", event: "What happened", time_context: "When",
+  emotion: "Feeling",
+  statedEmotion: "You said", event: "What happened", time_context: "When",
   sleep: "Sleep", activity: "Activity", social: "People",
   workload: "How busy", location: "Where",
 };
@@ -62,7 +63,11 @@ const EVENT_LEXICON = {
                            "scan", "x-ray", "checkup", "check-up", "medical"],
   examination: ["exam", "examination", "finals", "midterm", "viva", "assessment"],
   deadline: ["deadline", "due tomorrow", "submission", "assignment due", "hand in"],
-  presentation: ["presentation", "present to", "demo", "defence", "interview"],
+  // "interview" was listed here, so the extractor displayed "presentation"
+  // while its own evidence span read "interview". A category that contradicts
+  // its evidence is worse than no category.
+  presentation: ["presentation", "present to", "defence", "defense"],
+  interview: ["interview", "technical round", "hiring", "recruiter"],
   work: ["work", "shift", "office", "meeting", "project"],
   study: ["study", "studying", "revision", "revising", "coursework", "lecture", "class"],
   travel: ["flight", "train", "travel", "journey", "commute", "trip"],
@@ -129,14 +134,49 @@ const SELF_REPORT = [
   [/\bi(?:'m| am| feel(?:ing)?)\s+(?:really\s+|so\s+|very\s+|quite\s+|a bit\s+)?(calm|relaxed|fine|ok|okay|settled|at ease)\b/, "calm"],
 ];
 
-export function selfReportedEmotion(text) {
+/**
+ * Constructions that REVERSE or CANCEL a following self-statement.
+ * Without these, "I am not sure I am good enough" matched "i am good" and the
+ * interface reported JOY for a sentence expressing self-doubt.
+ */
+const NEGATORS = /\b(not|never|hardly|barely|no longer|don'?t|doesn'?t|didn'?t|can'?t|cannot|isn'?t|aren'?t|wasn'?t|won'?t)\b/;
+
+/** Past or future framing: "yesterday I was anxious" is not a current state. */
+const PAST = /\b(yesterday|last night|last week|earlier|used to|i was|had been|this morning)\b/;
+const FUTURE = /\b(tomorrow|next week|will be|going to|expect to|i might|i may|probably)\b/;
+
+/**
+ * A feeling the person states OUTRIGHT, or null when the text does not.
+ *
+ * Three failures this now refuses, all of which the previous version got wrong
+ * because it took the LONGEST match anywhere in the string:
+ *
+ *   "I am not sure I am good enough"          -> null      (was: joy)
+ *   "I am grateful, but I am anxious"         -> anxiety    (was: gratitude)
+ *   "Yesterday I was anxious, now relieved"   -> null       (was: anxiety)
+ *
+ * The last surviving statement wins, because a narrative ends on its current
+ * state; an earlier clause is not the person's present feeling.
+ */
+export function selfReportedEmotion(text, { requirePresent = true } = {}) {
   const low = (text || "").toLowerCase();
-  let best = null;
+  const hits = [];
   for (const [re, label] of SELF_REPORT) {
-    const m = low.match(re);
-    if (m && (!best || m[0].length > best[1].length)) best = [label, m[0]];
+    const g = new RegExp(re.source, "g");
+    let m;
+    while ((m = g.exec(low)) !== null) {
+      // look back over this clause only, not the whole sentence
+      const before = low.slice(Math.max(0, m.index - 60), m.index);
+      const clause = before.split(",").pop().split(".").pop();
+      if (NEGATORS.test(clause)) continue;
+      if (requirePresent && (PAST.test(clause) || FUTURE.test(clause))) continue;
+      hits.push([m.index, label, m[0]]);
+    }
   }
-  return best;
+  if (!hits.length) return null;
+  hits.sort((a, b) => a[0] - b[0]);
+  const last = hits[hits.length - 1];
+  return [last[1], last[2]];
 }
 
 const longestHit = (low, phrases) => {
@@ -228,9 +268,13 @@ export function newEventId(pid, ts, text) {
 }
 
 /**
- * Build one event. Precedence for the feeling, strongest evidence first:
- * a field the user filled in, then an explicit "I am ..." in the sentence,
- * then whatever classifier is available.
+ * Build one event.
+ *
+ * The MODEL is the feeling. An explicit statement is recorded BESIDE it, in
+ * `statedEmotion`, and never instead of it. The old precedence let a regex
+ * silently overwrite the Transformer, which is how "I am not sure I am good
+ * enough" was reported as joy. A field the person filled in explicitly still
+ * wins: that is a real self-report through a control, not a substring match.
  */
 export function buildEvent(text, { personId, timestamp, userFields, prediction,
                                    dataStatus = "USER" } = {}) {
@@ -242,17 +286,22 @@ export function buildEvent(text, { personId, timestamp, userFields, prediction,
   let emotion;
   if (userFields && userFields.emotion) {
     emotion = P(userFields.emotion, FieldSource.USER_REPORTED, 1.0, "check-in field");
-  } else if (stated) {
-    emotion = P(stated[0], FieldSource.EXTRACTED, 0.95, `stated in the text: "${stated[1]}"`);
   } else {
     emotion = P(pred.label, FieldSource.MODEL, pred.score,
                 `${pred.backend}${pred.rawLabel ? ":" + pred.rawLabel : ""}`);
   }
+  const statedEmotion = stated
+    ? P(stated[0], FieldSource.EXTRACTED, 0.9, `you wrote: "${stated[1]}"`)
+    : P(null, FieldSource.UNKNOWN);
 
   const ev = { eventId: newEventId(personId, ts, text), personId, timestamp: ts,
                rawText: text, dataStatus, backend: pred.backend,
                modelVersion: pred.model || pred.backend, corrections: [] };
-  for (const f of CONTEXT_FIELDS) ev[f] = f === "emotion" ? emotion : (ctx[f] || UNKNOWN());
+  for (const f of CONTEXT_FIELDS) {
+    ev[f] = f === "emotion" ? emotion
+          : f === "statedEmotion" ? statedEmotion
+          : (ctx[f] || UNKNOWN());
+  }
   return ev;
 }
 
@@ -440,6 +489,57 @@ export class PersonalTwin {
       recurringContext: recurring,
       readyForPatterns: this.events.length >= MIN_EPISODES_FOR_PATTERN,
     };
+  }
+
+  /**
+   * How far personalisation is actually supported for this person, right now.
+   *
+   * THIS IS AN EXPERIMENTAL MECHANISM, NOT A VALIDATED RESULT. The thresholds
+   * below are engineering defaults chosen so the interface refuses to imply
+   * personal knowledge it does not have. The scientific question -- whether an
+   * evidence gate beats simply counting observations -- has NOT been tested,
+   * and the interface must say so wherever this is displayed.
+   *
+   * What IS measured, on 218 participants over 4.8 years, is the motivation:
+   * per-person predictability ranges from r = -0.24 to 0.69, so treating every
+   * user as equally personalisable is demonstrably wrong.
+   *
+   * Every number returned here comes from the stored history. Nothing is
+   * assumed and nothing is hard-coded per user.
+   */
+  personalisationStatus(query = null) {
+    const n = this.events.length;
+    const relevant = query ? this.similarEpisodes(query, { topK: 50, minScore: 1.5 }).length : 0;
+
+    let level, headline, action;
+    if (n < MIN_EPISODES_FOR_PATTERN) {
+      level = "insufficient";
+      headline = "Not enough history to personalise";
+      action = "Using a population-informed estimate";
+    } else if (query && relevant < 2) {
+      level = "emerging";
+      headline = "Some history, but little of it comparable to this situation";
+      action = "Mostly population-informed";
+    } else if (n < 10) {
+      level = "emerging";
+      headline = "Personal pattern is starting to form";
+      action = "Blending personal history with population patterns";
+    } else {
+      level = "supported";
+      headline = "Personal history is informing this estimate";
+      action = "Using your own history";
+    }
+
+    // Reasons are statements about the stored data, never invented text.
+    const reasons = [
+      `${n} observation${n === 1 ? "" : "s"} recorded`,
+      ...(query ? [`${relevant} comparable past episode${relevant === 1 ? "" : "s"}`] : []),
+      ...(n < MIN_EPISODES_FOR_PATTERN
+          ? [`at least ${MIN_EPISODES_FOR_PATTERN} are needed before any pattern is reported`]
+          : []),
+    ];
+    return { level, headline, action, reasons, nEvents: n, nRelevant: relevant,
+             experimental: true };
   }
 
   toJSON() {

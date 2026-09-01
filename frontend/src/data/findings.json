@@ -1,0 +1,165 @@
+{
+  "_source": "results/twin/twin_experiment.json + twin_ablation.json",
+  "_generated_by": "scripts/export_findings.py",
+  "cohort": {
+    "participants": 218,
+    "years": 4.8,
+    "reports": 35348,
+    "prediction_pairs": 25966,
+    "train": 130,
+    "val": 43,
+    "test": 44
+  },
+  "headline": {
+    "K": 80,
+    "models": {
+      "B0_majority": {
+        "macro_f1": 0.11411275689776211,
+        "ci": [
+          0.09808899420307966,
+          0.12812691724042166
+        ],
+        "accuracy": 0.339998094757533,
+        "mae": 0.8772640728299926
+      },
+      "B1_persistence": {
+        "macro_f1": 0.3319993469130363,
+        "ci": [
+          0.29396507199619953,
+          0.37220374960035335
+        ],
+        "accuracy": 0.4639879915067609,
+        "mae": 0.6908565603663276
+      },
+      "B2_global": {
+        "macro_f1": 0.173149734687385,
+        "ci": [
+          0.15323009645506092,
+          0.19406111818298274
+        ],
+        "accuracy": 0.34563578997907235,
+        "mae": 0.9287932973358349
+      },
+      "B3_static_prior": {
+        "macro_f1": 0.18863720322162952,
+        "ci": [
+          0.16750318188000854,
+          0.21035280972591358
+        ],
+        "accuracy": 0.39617352214061613,
+        "mae": 0.8154832283821153
+      },
+      "B4_calibrated": {
+        "macro_f1": 0.19788401880072756,
+        "ci": [
+          0.17726623444156167,
+          0.2196886018084732
+        ],
+        "accuracy": 0.40827841484784966,
+        "mae": 0.7838187734943084
+      },
+      "T_twin": {
+        "macro_f1": 0.2846994263207557,
+        "ci": [
+          0.2531417264713038,
+          0.3146168632575276
+        ],
+        "accuracy": 0.5039204181830447,
+        "mae": 0.5976303196443501
+      }
+    },
+    "twin_vs_persistence": {
+      "mean_diff": -0.047299920592280636,
+      "median_diff": -0.04212988939129092,
+      "ci_low": -0.07488329243313477,
+      "ci_high": -0.02036686354729853,
+      "improved": 9,
+      "harmed": 22,
+      "tied": 0,
+      "n_participants": 31,
+      "frac_improved": 0.2903225806451613
+    },
+    "twin_vs_calibrated": {
+      "mean_diff": 0.08681540752002807,
+      "median_diff": 0.09769141846865229,
+      "ci_low": 0.05969630883387263,
+      "ci_high": 0.11195096433787294,
+      "improved": 26,
+      "harmed": 5,
+      "tied": 0,
+      "n_participants": 31,
+      "frac_improved": 0.8387096774193549
+    }
+  },
+  "learning_curve": [
+    {
+      "K": 0,
+      "twin": 0.2623108027379371,
+      "persistence": 0.29565143388277093,
+      "twin_acc": 0.4453184954167815,
+      "twin_mae": 0.6992970240874299
+    },
+    {
+      "K": 5,
+      "twin": 0.2698806043772332,
+      "persistence": 0.30401838054444574,
+      "twin_acc": 0.46695226769453935,
+      "twin_mae": 0.6677721842453391
+    },
+    {
+      "K": 10,
+      "twin": 0.2703121701162164,
+      "persistence": 0.30385165436561223,
+      "twin_acc": 0.4696668921922175,
+      "twin_mae": 0.6658694732367121
+    },
+    {
+      "K": 20,
+      "twin": 0.2736922649814521,
+      "persistence": 0.3108033400269515,
+      "twin_acc": 0.4733795801097226,
+      "twin_mae": 0.6581540929058489
+    },
+    {
+      "K": 40,
+      "twin": 0.2839444094206595,
+      "persistence": 0.31598614769050454,
+      "twin_acc": 0.4802518866302177,
+      "twin_mae": 0.6430600275799526
+    },
+    {
+      "K": 80,
+      "twin": 0.2846994263207557,
+      "persistence": 0.3319993469130363,
+      "twin_acc": 0.5039204181830447,
+      "twin_mae": 0.5976303196443501
+    }
+  ],
+  "ablation": {
+    "A1_global_only": 0.15822410933185932,
+    "A3_global_plus_history": 0.27573308130798274,
+    "A5_no_trajectory": 0.26758348535692006,
+    "A6_no_behaviour": 0.28503885490220565,
+    "A4_full_twin_online": 0.2736922649814521
+  },
+  "ceiling": {
+    "within_person_autocorrelation": 0.339,
+    "variance_explained": 0.115,
+    "icc_between_person": 0.246,
+    "strongest_behaviour_r": 0.0907,
+    "behaviour_variance_explained": 0.008,
+    "per_person_r_median": 0.346,
+    "per_person_r_iqr": [
+      0.239,
+      0.466
+    ],
+    "per_person_r_range": [
+      -0.243,
+      0.687
+    ],
+    "frac_near_unpredictable": 0.13,
+    "frac_well_predictable": 0.17,
+    "early_late_r": 0.355,
+    "n_participants_analysed": 194
+  }
+}
