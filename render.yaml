@@ -14,6 +14,12 @@ services:
     buildCommand: "pip install --upgrade pip && pip install -r backend/requirements.txt && pip install -e . && python scripts/prefetch_model.py"
     startCommand: "uvicorn backend.app:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: /health
+    # Explicit, because the service did NOT redeploy on three consecutive
+    # pushes: the deployed build served 5 routes while main had 10. If a
+    # service was created by hand rather than from this blueprint, Render may
+    # ignore the file entirely -- in that case turn Auto-Deploy on in
+    # Settings > Build & Deploy, or the same drift will happen again.
+    autoDeploy: true
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"

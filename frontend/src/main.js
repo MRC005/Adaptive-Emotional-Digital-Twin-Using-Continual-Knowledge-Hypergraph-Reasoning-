@@ -21,8 +21,9 @@ import { analyze, activeEngine } from "./lib/engine.js";
 import { renderReport, renderPrecomputed } from "./ui/results.js";
 import { initTheme, getTheme, setTheme, onThemeChange } from "./lib/theme.js";
 import { PersonalTwin, buildEvent, correctField } from "./lib/twin.js";
-import { classify, ENGINE_INFO, STATE, probeHealth, transformerConfigured,
-         useTransformer, setUseTransformer } from "./lib/emotion_engine.js";
+import { classify, ENGINES, ENGINE_INFO, STATE, browserModelReady, getEngine,
+         probeHealth, serviceConfigured, setEngine, warmBrowserModel }
+  from "./lib/emotion_engine.js";
 import { buildDemoHistory, DEMO_PERSON_ID } from "./lib/demo_history.js";
 import { renderHistory, renderSimilar, renderUnderstanding, syntheticBanner }
   from "./ui/twin_view.js";
@@ -57,6 +58,7 @@ const state = {
   sandboxBaseline: null,
   busy: false,
   showAdvanced: false,
+  showEngine: false,
   twin: null,          // PersonalTwin, Layer 1
   draft: null,         // the event awaiting confirmation
 };
@@ -221,8 +223,9 @@ function viewHome() {
         <p>A Transformer classifies the feeling; rules recover the situation; each episode
           becomes one higher-order relation in a knowledge hypergraph; retrieval finds
           comparable past episodes and explains why they matched.</p>
-        <p class="hint">Runs on your device. The Transformer runs in the Python service and only
-          when you switch it on.</p>
+        <p class="hint">Runs on your device, including the Transformer: the model is
+          downloaded once (about 125 MB) and then classifies in your browser, so your
+          check-ins never leave it.</p>
       </div>
       <div class="start">
         <h3>Layer 2 — when a long history can be trusted</h3>
@@ -297,28 +300,65 @@ async function makeEvent(text, timestamp, fields, dataStatus = "USER",
 async function reportEngineHealth() {
   const slot = $("#t-enginestate");
   if (!slot) return;
+  const engine = getEngine();
+
+  if (engine === ENGINES.LEXICON) {
+    slot.innerHTML = `<span class="hint">Using the word-list baseline. Results are
+      labelled as a baseline, not as the model.</span>`;
+    return;
+  }
+
+  if (engine === ENGINES.BROWSER) {
+    if (browserModelReady()) {
+      slot.innerHTML = `<span class="hint">Model loaded in this tab. Nothing leaves
+        your device.</span>`;
+      return;
+    }
+    slot.innerHTML = `<span class="hint">The model will download once
+      (about ${ENGINE_INFO.browser.name ? "125" : "125"} MB) the first time you
+      analyse a check-in, then stay cached.</span>
+      <button class="b tiny" id="t-warm" style="margin-left:6px">Download now</button>`;
+    const warm = $("#t-warm");
+    if (warm) warm.addEventListener("click", async () => {
+      warm.disabled = true;
+      try {
+        await warmBrowserModel((p) => {
+          slot.innerHTML = `<span class="hint">Downloading the model… ${p.pct || 0}%
+            <span class="mono">(${((p.loaded || 0) / 1e6).toFixed(0)} of
+            ${((p.total || 0) / 1e6).toFixed(0)} MB)</span></span>`;
+        });
+        slot.innerHTML = `<span class="hint">Model loaded in this tab. Nothing
+          leaves your device.</span>`;
+      } catch (e) {
+        slot.innerHTML = `<span class="hint">The model could not be downloaded
+          (${esc(e.message)}). The word-list baseline will be used and labelled
+          as such.</span>`;
+      }
+    });
+    return;
+  }
+
+  // the Python service
   slot.innerHTML = `<span class="hint">Checking the analysis service…</span>`;
   const h = await probeHealth();
   if (h.modelReady) {
-    slot.innerHTML = `<span class="hint">Analysis service ready — `
-      + `${esc(h.model || "RoBERTa")}.</span>`;
+    slot.innerHTML = `<span class="hint">Analysis service ready — ${esc(h.model || "RoBERTa")}.</span>`;
   } else if (h.loading) {
-    slot.innerHTML = `<span class="hint">The analysis service is waking up. `
-      + `Your first check-in may take a few seconds longer.</span>`;
+    slot.innerHTML = `<span class="hint">The analysis service is waking up. Your first
+      check-in may take a few seconds longer.</span>`;
   } else if (h.reachable) {
-    slot.innerHTML = `<span class="hint">The analysis service is reachable but its `
-      + `model is not loaded${h.reason ? ` (${esc(h.reason)})` : ""}. `
-      + `The word-list baseline will be used and labelled as such.</span>`;
+    slot.innerHTML = `<span class="hint">The service is reachable but its model is not
+      loaded${h.reason ? ` (${esc(h.reason)})` : ""}. Consider the in-browser model,
+      which needs no server.</span>`;
   } else {
-    slot.innerHTML = `<span class="hint">The analysis service could not be reached. `
-      + `The word-list baseline will be used and labelled as such.</span>`;
+    slot.innerHTML = `<span class="hint">The analysis service could not be reached.
+      Consider the in-browser model, which needs no server.</span>`;
   }
 }
 
 function viewTwinMode() {
   const twin = ensureTwin();
-  const engineOn = useTransformer();
-  const configured = transformerConfigured();
+  const engine = getEngine();
 
   $("#work").innerHTML = `
     ${syntheticBanner(twin)}
@@ -335,27 +375,26 @@ function viewTwinMode() {
           <button class="b" id="t-demo">Load demonstration user</button>
           ${twin.events.length ? `<button class="b" id="t-clear">Clear history</button>` : ""}
         </div>
-        <details class="adv">
+        <details class="adv"${state.showEngine ? " open" : ""}>
           <summary>Where the feeling is classified</summary>
-          <div class="form">
-            <div class="lbl">Classifier</div>
-            <div class="ctl">
-              <label class="radio"><input type="radio" name="eng" value="lexicon"
-                ${engineOn ? "" : "checked"}>
-                <span><b>${esc(ENGINE_INFO.lexicon.name)}</b>
-                <small>${esc(ENGINE_INFO.lexicon.detail)}</small></span></label>
-              <label class="radio"><input type="radio" name="eng" value="transformer"
-                ${engineOn ? "checked" : ""}${configured ? "" : " disabled"}>
-                <span><b>${esc(ENGINE_INFO.transformer.name)}</b>
-                <small>${esc(ENGINE_INFO.transformer.detail)}
-                ${configured ? "Your check-in sentence is sent to the analysis service."
-                             : "No analysis service is configured, so this is unavailable."}</small></span></label>
-            </div>
+          <div class="engines">
+            ${[ENGINES.LEXICON, ENGINES.BROWSER, ENGINES.SERVICE].map((id) => {
+              const info = ENGINE_INFO[id];
+              const disabled = id === ENGINES.SERVICE && !serviceConfigured();
+              return `<label class="radio">
+                <input type="radio" name="eng" value="${id}"
+                  ${engine === id ? "checked" : ""}${disabled ? " disabled" : ""}>
+                <span><b>${esc(info.name)}</b>
+                  <small>${esc(info.detail)}${
+                    disabled ? " No analysis service is configured, so this is unavailable." : ""}</small>
+                </span></label>`;
+            }).join("")}
           </div>
           <p id="t-enginestate" style="margin-top:8px"></p>
-          <p class="hint">The Transformer cannot run inside a browser, so it lives in the
-            Python service. It stays off until you choose it, because a sentence about your
-            health leaving your device should be a decision rather than a default.</p>
+          <p class="hint">A 124.7M-parameter Transformer cannot be bundled into a
+            page, so it is either downloaded once into your browser or run in the
+            Python service. The word list is neither, and is labelled a baseline
+            wherever it appears.</p>
         </details>
       </div>
     </div>
@@ -363,12 +402,14 @@ function viewTwinMode() {
     <div id="t-result"></div>
     <div id="t-history">${renderHistory(twin)}</div>`;
 
+  const det = document.querySelector("details.adv");
+  if (det) det.addEventListener("toggle", () => { state.showEngine = det.open; });
   for (const r of document.querySelectorAll('input[name="eng"]'))
     r.addEventListener("change", (e) => {
-      setUseTransformer(e.target.value === "transformer");
-      if (e.target.value === "transformer") reportEngineHealth();
+      setEngine(e.target.value);
+      reportEngineHealth();
     });
-  if (engineOn) reportEngineHealth();
+  reportEngineHealth();
 
   $("#t-go").addEventListener("click", analyseCheckIn);
   $("#t-demo").addEventListener("click", loadDemoUser);
@@ -399,9 +440,13 @@ async function analyseCheckIn() {
     // State C is reported as it happens, so a cold start reads as "waking up"
     // rather than as a failure. This is the difference the old code missed.
     const ev = await makeEvent(text, undefined, undefined, "USER", (st) => {
-      if (st.state === STATE.WAKING)
+      if (st.state !== STATE.WAKING) return;
+      if (st.phase === "download")
+        show(`Downloading the emotion model… ${st.pct || 0}%`,
+             "This happens once; afterwards it is cached in your browser.");
+      else
         show("The analysis service is waking up. This may take a moment.",
-             `Attempt ${st.attempt} — free hosting suspends the service when idle.`);
+             `Attempt ${st.attempt || 1} — free hosting suspends the service when idle.`);
     });
     state.draft = ev;
     renderDraft();
@@ -1019,7 +1064,14 @@ function viewMethod() {
       <p style="margin-top:0">Four steps turn a sentence into something the twin can reason over.
         Each is a real component, and each has a measured limitation.</p>
       <ol class="bul" style="padding-left:19px">
-        <li><b>Emotion detection.</b> <span class="mono">${esc(L1.emotion.model)}</span>, a
+        <li><b>Emotion detection.</b> By default this runs <b>in your browser</b>:
+          the model is downloaded once (about 125 MB) and classifies on your device,
+          so check-ins never leave it. The same model is also available through the
+          Python service. Agreement was measured both ways — ONNX vs torch mean
+          |&Delta;P| 0.0141 with 96.3% top-1 label agreement, and browser vs ONNX the
+          same top label on every case (max |&Delta;| 0.045) — so a browser result is
+          a RoBERTa result. The model is
+          <span class="mono">${esc(L1.emotion.model)}</span>, a
           124.7M-parameter RoBERTa fine-tuned on GoEmotions by its author — <b>not by this
           project</b>. Evaluated here on the held-out GoEmotions test split
           (${L1.emotion.n_test.toLocaleString()} examples, threshold ${L1.emotion.threshold}

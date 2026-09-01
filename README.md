@@ -230,13 +230,37 @@ Four modes:
 Results lead with a verdict, then what it does and does not mean in plain words,
 then the evidence, then the statistics. Light and dark themes, remembered.
 
-**Where computation happens, stated once:**
+**Where the emotion model runs — three choices, and the interface always says
+which one produced a label:**
+
+| Engine | Runs where | Cost | Default |
+|---|---|---|---|
+| **RoBERTa in your browser** | your device | 125 MB once, then ~250 ms | **yes** |
+| RoBERTa via the analysis service | Python service | network round trip; free tier may sleep | no |
+| Word-list baseline | your device | instant, but macro-F1 0.098 vs 0.493 | no |
+
+The in-browser engine is the default because it is the real model *and* it
+removes every deployment failure mode at once: no stale build, no cold start,
+no 512 MB memory ceiling, no CORS. Your check-in text never leaves the device.
+
+**Agreement is measured, not asserted.** The deployed artefact is
+`SamLowe/roberta-base-go_emotions-onnx :: model_quantized.onnx`, the same
+author's int8 ONNX export of the same fine-tune. Two checks pin it:
+
+```bash
+python3 scripts/verify_onnx_agreement.py                   # ONNX vs torch
+node frontend/scripts/verify_browser_agreement.mjs         # browser vs ONNX
+```
+
+Measured: ONNX vs torch — mean |ΔP| **0.0141**, top-1 label agreement **0.963**,
+check-in label agreement **0.970**. Browser vs ONNX — same top label on every
+case, max |Δ| **0.045**. Chained, the browser result is the RoBERTa result.
+
+**Everything else:**
 
 | | runs where |
 |---|---|
 | context extraction, events, hypergraph, retrieval, patterns | your browser |
-| emotion — word-list baseline (default) | your browser |
-| emotion — RoBERTa (opt-in) | the Python service; only the sentence is sent |
 | guided demo, sandbox, uploaded CSV analysis | your browser |
 | bundled study results | offline Python, displayed not recomputed |
 | HGNN and EWC experiments | offline Python only |
