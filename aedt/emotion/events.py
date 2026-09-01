@@ -89,6 +89,11 @@ class EmotionalEvent:
     raw_text: str = ""
 
     emotion: Provenanced = field(default_factory=Provenanced.unknown)
+    #: A feeling the person stated OUTRIGHT ("I am stressed"), kept SEPARATE
+    #: from the model's prediction rather than overwriting it. Both are shown.
+    #: The regex used to silently replace `emotion`, which is how a sentence
+    #: reading "I am not sure I am good enough" was reported as joy.
+    stated_emotion: Provenanced = field(default_factory=Provenanced.unknown)
     event: Provenanced = field(default_factory=Provenanced.unknown)
     time_context: Provenanced = field(default_factory=Provenanced.unknown)
     sleep: Provenanced = field(default_factory=Provenanced.unknown)
@@ -102,8 +107,8 @@ class EmotionalEvent:
     corrections: tuple[str, ...] = ()    # names of fields the user overrode
 
     #: Fields that participate in the hypergraph and in similarity.
-    CONTEXT_FIELDS = ("emotion", "event", "time_context", "sleep",
-                      "activity", "social", "workload", "location")
+    CONTEXT_FIELDS = ("emotion", "stated_emotion", "event", "time_context",
+                      "sleep", "activity", "social", "workload", "location")
 
     # ------------------------------------------------------------- access
     def get(self, name: str) -> Provenanced:

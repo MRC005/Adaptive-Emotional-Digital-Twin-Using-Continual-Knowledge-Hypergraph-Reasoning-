@@ -8,8 +8,8 @@ What these guard:
   * an unstated field stays UNKNOWN and is never filled with a default;
   * every extracted value carries the phrase that produced it;
   * a user correction is recorded as a correction, not silently merged;
-  * a self-report outranks the model, which is how "stress" survives a label
-    space that does not contain it;
+  * a self-report is reported BESIDE the model and never overrides it;
+  * negated and past-framed statements are refused rather than guessed;
   * the lexicon fallback is always labelled a lexicon, so a demo can never
     present it as the Transformer.
 """
@@ -90,12 +90,20 @@ def test_no_self_report_when_nothing_is_stated():
     assert self_reported_emotion("The weather is bad today.") is None
 
 
-def test_self_report_outranks_the_classifier(lex):
-    """GoEmotions has no 'stress' class; this is how the construct survives."""
+def test_a_statement_is_reported_beside_the_model_not_instead_of_it(lex):
+    """UPDATED: this test previously asserted the regex OVERRODE the model.
+
+    That behaviour was the root cause of a documented failure -- "I am not sure
+    I am good enough" was reported as joy -- so the precedence was removed. The
+    statement is now carried in its own field. GoEmotions still has no "stress"
+    class, so `stated_emotion` remains how that construct reaches the user; it
+    simply no longer overwrites the classifier.
+    """
     ev = build_event("I am stressed and exhausted.", person_id="U1", detector=lex)
-    assert ev.emotion.value == "stress"
-    assert ev.emotion.source is FieldSource.EXTRACTED
-    assert "stated in the text" in ev.emotion.evidence
+    assert ev.emotion.source is FieldSource.MODEL
+    assert ev.stated_emotion.value == "stress"
+    assert ev.stated_emotion.source is FieldSource.EXTRACTED
+    assert "stated in the text" in ev.stated_emotion.evidence
 
 
 def test_user_reported_emotion_outranks_everything(lex):
@@ -112,13 +120,21 @@ def test_lexicon_is_always_labelled_a_lexicon(lex):
     assert not p.is_model            # nothing may present this as the Transformer
 
 
-def test_every_goemotions_label_maps_into_the_checkin_taxonomy():
+def test_mapped_labels_are_valid_and_unmapped_ones_fall_back_explicitly():
+    """UPDATED: full 28-label coverage is no longer required, deliberately.
+
+    The previous version asserted every GoEmotions label had a target, which is
+    what motivated `realization -> confusion` -- a mapping with no semantic
+    justification that produced a real failure. Coverage is not a reason. A
+    label with no defensible target is left unmapped and surfaces as neutral,
+    with the raw label shown beside it.
+    """
     from aedt.emotion.detect import _GOEMOTIONS_TO_CHECKIN
-    assert len(_GOEMOTIONS_TO_CHECKIN) >= 28
     for label in _GOEMOTIONS_TO_CHECKIN.values():
         assert label in CHECKIN_EMOTIONS
-    # an unknown label falls back explicitly, it does not raise or invent
+    assert "realization" not in _GOEMOTIONS_TO_CHECKIN
     assert goemotions_to_checkin("not_a_real_label") == "neutral"
+    assert goemotions_to_checkin("realization") == "neutral"
 
 
 def test_empty_input_is_not_given_a_confident_answer(lex):
@@ -164,3 +180,56 @@ def test_event_round_trips_through_json(lex):
     for f in EmotionalEvent.CONTEXT_FIELDS:
         assert back.get(f).value == ev.get(f).value
         assert back.get(f).source is ev.get(f).source
+
+
+# ---------------------------------------------- repaired failure modes (Part K)
+@pytest.mark.parametrize("text", [
+    "I am not sure I am good enough.",      # was reported as JOY
+    "I am not happy about this.",
+    "I don't feel calm at all.",
+])
+def test_negated_statements_are_not_reported_as_feelings(text):
+    assert self_reported_emotion(text) is None
+
+
+def test_past_framing_is_not_reported_as_a_current_feeling():
+    assert self_reported_emotion("Yesterday I was anxious, but now I feel relieved.") is None
+
+
+def test_the_last_surviving_statement_wins_not_the_first():
+    """'grateful ... but anxious' must resolve to the current state, not the aside."""
+    got = self_reported_emotion("I am grateful, but I am anxious.")
+    assert got is not None and got[0] == "anxiety"
+
+
+def test_a_statement_never_overrides_the_model(lex):
+    """The regex may inform, never replace. This was the root cause of Case 1."""
+    ev = build_event("I am stressed and exhausted.", person_id="U1", detector=lex)
+    assert ev.emotion.source is FieldSource.MODEL
+    assert ev.stated_emotion.value == "stress"
+    assert ev.stated_emotion.source is FieldSource.EXTRACTED
+    assert "stated in the text" in ev.stated_emotion.evidence
+
+
+def test_realization_is_no_longer_mapped_to_confusion():
+    """Coverage is not a semantic justification."""
+    assert goemotions_to_checkin("realization") != "confusion"
+
+
+def test_interview_is_not_reported_as_a_presentation():
+    """The category must never contradict its own evidence span."""
+    c = extract_context("I have an interview tomorrow.")
+    assert c["event"].value == "interview"
+    assert "interview" in c["event"].evidence
+    assert extract_context("My presentation is tomorrow.")["event"].value == "presentation"
+
+
+def test_a_correction_never_destroys_the_model_prediction(lex):
+    """The disagreement is the error signal; losing it makes evaluation impossible."""
+    ev = build_event("I am fine.", person_id="U1", detector=lex)
+    original = ev.emotion.value
+    fixed = ev.with_correction("emotion", "sadness")
+    assert fixed.emotion.value == "sadness"
+    assert fixed.emotion.source is FieldSource.CORRECTED
+    assert ev.emotion.value == original          # the original object is intact
+    assert "emotion" in fixed.corrections

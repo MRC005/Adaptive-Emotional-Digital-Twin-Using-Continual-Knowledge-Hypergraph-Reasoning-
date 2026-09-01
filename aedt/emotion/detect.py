@@ -84,7 +84,13 @@ _GOEMOTIONS_TO_CHECKIN: dict[str, str] = {
     "optimism": "joy", "pride": "joy", "admiration": "joy",
     "gratitude": "gratitude", "relief": "calm", "approval": "calm",
     "caring": "calm", "desire": "calm",
-    "confusion": "confusion", "curiosity": "confusion", "realization": "confusion",
+    "confusion": "confusion", "curiosity": "confusion",
+    # "realization" was mapped to confusion purely to give all 28 labels a
+    # target. Realisation is arguably the OPPOSITE of confusion, and the
+    # mapping produced a documented failure (a narrative about anxiety was
+    # displayed as "confusion"). Coverage is not a semantic justification.
+    # Labels without a defensible target are left unmapped and surface as
+    # "neutral" with the raw label shown beside it.
     "surprise": "confusion",
     "neutral": "neutral",
 }
@@ -118,15 +124,55 @@ SELF_REPORT_PATTERNS: tuple[tuple[str, str], ...] = (
 )
 
 
-def self_reported_emotion(text: str) -> tuple[str, str] | None:
-    """(label, matched span) when the text states a feeling outright."""
+#: Constructions that REVERSE or CANCEL a following self-statement. Without
+#: these, "I am not sure I am good enough" matched "i am good" and was reported
+#: as JOY -- a sentence expressing self-doubt labelled as happiness.
+_NEGATORS = re.compile(
+    r"\b(not|never|hardly|barely|no longer|don'?t|doesn'?t|didn'?t|can'?t|cannot|"
+    r"isn'?t|aren'?t|wasn'?t|won'?t)\b")
+
+#: Past or future framing. "Yesterday I was anxious" is not a current state.
+_PAST = re.compile(r"\b(yesterday|last night|last week|earlier|used to|"
+                   r"i was|had been|this morning)\b")
+_FUTURE = re.compile(r"\b(tomorrow|next week|will be|going to|expect to|"
+                     r"i might|i may|probably)\b")
+
+
+def self_reported_emotion(text: str, *, require_present: bool = True
+                          ) -> tuple[str, str] | None:
+    """(label, matched span) when the text states a CURRENT feeling outright.
+
+    Returns None rather than guessing when the statement is negated or framed
+    in the past or future. Three failures this now refuses, all of which the
+    previous version got wrong:
+
+        "I am not sure I am good enough"          -> None  (was: joy)
+        "Yesterday I was anxious, now relieved"   -> None  (was: none, by luck)
+        "I am grateful, but I am anxious"         -> the LAST statement wins
+
+    The last-statement rule matters because a narrative ends on its current
+    state; an earlier subordinate clause is not the person's present feeling.
+    """
     low = (text or "").lower()
-    best: tuple[str, str] | None = None
+    hits: list[tuple[int, str, str]] = []
     for pattern, label in SELF_REPORT_PATTERNS:
-        m = re.search(pattern, low)
-        if m and (best is None or len(m.group(0)) > len(best[1])):
-            best = (label, m.group(0))
-    return best
+        for m in re.finditer(pattern, low):
+            # look back a short window for a negator attached to this clause
+            window = low[max(0, m.start() - 40):m.start()]
+            clause = window.rsplit(",", 1)[-1].rsplit(".", 1)[-1]
+            if _NEGATORS.search(clause):
+                continue
+            if require_present:
+                before = low[max(0, m.start() - 60):m.start()]
+                seg = before.rsplit(",", 1)[-1].rsplit(".", 1)[-1]
+                if _PAST.search(seg) or _FUTURE.search(seg):
+                    continue
+            hits.append((m.start(), label, m.group(0)))
+    if not hits:
+        return None
+    # the LAST surviving statement is the current one
+    hits.sort(key=lambda h: h[0])
+    return hits[-1][1], hits[-1][2]
 
 
 @dataclass(frozen=True)

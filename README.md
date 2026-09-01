@@ -1,8 +1,47 @@
-# Adaptive Emotional Digital Twin Using Contextual Knowledge Hypergraphs, Continual Learning and Longitudinal Measurement-Drift Analysis
+# Longitudinal Affect Modelling: What Personalisation Does and Does Not Buy
 
-> **A Digital Twin learns what a person's emotional history has looked like.
-> A second layer asks whether a long history can be read as if the scale meant
-> one fixed thing throughout. The project builds both, and keeps them apart.**
+> **A pre-registered test of the personalised digital-twin hypothesis on 218
+> participants over four years — and a null result. Carrying the last reported
+> value forward beat every personalised model we built.**
+
+---
+
+## The headline result
+
+We pre-registered a protocol ([`docs/preregistration_twin_prediction.md`](docs/preregistration_twin_prediction.md))
+and committed it before writing any model, then tested:
+
+> *Does a personalised, continually updated twin predict an individual's next
+> reported stress better than strong baselines, on held-out participants and
+> strictly future observations?*
+
+**Answer: no.** Two of five pre-registered criteria were met.
+
+| Model | macro-F1 @ K=80 | 95% CI |
+|---|---|---|
+| Population majority | 0.114 | [0.098, 0.128] |
+| Global model, context + behaviour | 0.173 | [0.153, 0.194] |
+| Global + static personal prior | 0.189 | [0.168, 0.210] |
+| Per-person calibrated global (strong personalised baseline) | 0.198 | [0.177, 0.220] |
+| **Proposed twin** | **0.285** | [0.253, 0.315] |
+| **Persistence — carry the last value forward** | **0.332** | [0.294, 0.372] |
+
+The twin beat every model we built **except the simplest one**. Against
+persistence: −0.047 macro-F1, 95% CI [−0.075, −0.020], and **22 of 31 held-out
+participants were harmed**.
+
+### Three findings worth more than the headline
+
+1. **Personal history is the only signal.** Global context+behaviour scores
+   0.158; history alone scores 0.285.
+2. **648 daily sensing features contributed nothing.** Removing the entire
+   behavioural channel *improved* the model (0.2850 vs 0.2757).
+3. **Online adaptation contributed nothing** (0.2737 vs 0.2757 static).
+
+The twin does win on accuracy (0.504 vs 0.464) and MAE (0.598 vs 0.691) — it
+predicts near-misses well but regresses toward the middle of the scale and
+misses the rare extremes that persistence reproduces for free. macro-F1 was
+declared primary before results were seen and was not changed afterwards.
 
 ---
 

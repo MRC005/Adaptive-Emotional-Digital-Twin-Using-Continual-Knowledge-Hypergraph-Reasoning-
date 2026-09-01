@@ -96,3 +96,30 @@ response to a null result.
 ## 10. Deviations
 
 *(none — to be appended with date and reason if any occur)*
+
+## 11. Result — recorded 2026-09-02
+
+**Verdict: NOT SUPPORTED.** Two of five pre-registered criteria met.
+
+| Criterion | Required | Observed | Met |
+|---|---|---|---|
+| 1 Beats persistence (macro-F1) | twin > B1 | twin 0.285 vs B1 0.332 at K=80; twin loses at **every** K | ✗ |
+| 2 Paired CI excludes 0 favourably | CI > 0 | -0.0473, 95% CI [-0.0749, -0.0204] — excludes 0 on the **wrong side** | ✗ |
+| 3 >50% of participants improve | > 50% | 29% improved, 22 of 31 harmed | ✗ |
+| 4 Improves with personal history | monotone in K | twin 0.262 → 0.285; accuracy 0.445 → 0.504; MAE 0.699 → 0.598 | ✓ |
+| 5 Beats the strong personalised baseline B4 | twin > B4 | +0.087, CI [+0.060, +0.112], 84% improved | ✓ |
+
+**What the ablation shows (K=20):** personal history supplies essentially all
+the signal (0.158 global-only → 0.285 history-only). The 648-column behavioural
+channel contributes **nothing** — removing it *improves* the model
+(0.2850 without behaviour vs 0.2757 with). Online adaptation also adds nothing
+(0.2737 vs 0.2757 static).
+
+**Honest nuance, not a reinterpretation.** The twin beats persistence on
+accuracy (0.504 vs 0.464) and MAE (0.598 vs 0.691) at K=80, because it predicts
+near-misses well. It loses on macro-F1 because it regresses toward the middle of
+the scale and under-predicts the rare extremes (classes 1 and 5), which
+persistence reproduces naturally. **macro-F1 was declared primary in §8 before
+any result was seen and is not being changed now.**
+
+No dataset, horizon, threshold or split was altered in response to this result.

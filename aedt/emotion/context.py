@@ -47,8 +47,13 @@ EVENT_LEXICON: dict[str, tuple[str, ...]] = {
                     "midterm", "viva", "assessment"),
     "deadline": ("deadline", "due tomorrow", "submission", "assignment due",
                  "hand in", "hand-in"),
-    "presentation": ("presentation", "present to", "demo", "defence",
-                     "defense", "interview", "viva voce"),
+    # "interview" was listed here and caused the extractor to display
+    # "presentation" while its own evidence span read "interview". Distinct
+    # events must stay distinct; a category whose evidence contradicts it is
+    # worse than no category.
+    "presentation": ("presentation", "present to", "defence", "defense",
+                     "viva voce"),
+    "interview": ("interview", "technical round", "hiring", "recruiter"),
     "work": ("work", "shift", "office", "meeting", "project"),
     "study": ("study", "studying", "revision", "revising", "coursework",
               "lecture", "class"),

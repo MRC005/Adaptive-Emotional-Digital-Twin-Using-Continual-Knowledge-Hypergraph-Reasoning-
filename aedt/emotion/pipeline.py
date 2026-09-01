@@ -25,31 +25,38 @@ def build_event(text: str, *, person_id: str, timestamp: str | None = None,
     pred = det.predict(text)
     ctx = extract_context(text, user_fields=user_fields)
 
-    # Precedence, strongest evidence first:
-    #   1. a field the person filled in            -> USER_REPORTED
-    #   2. an explicit "I am ..." in the text       -> EXTRACTED (a self-report)
-    #   3. the Transformer's inference              -> MODEL
-    # Step 2 exists because GoEmotions has no "stress" label at all, so the
-    # model cannot express the construct even when the sentence states it.
+    # The MODEL is the emotion. An explicit statement is reported BESIDE it,
+    # never instead of it.
+    #
+    # The old precedence let a regex silently overwrite the Transformer, and
+    # its failures were not hypothetical: "I am not sure I am good enough" was
+    # reported as joy, and "...which I am grateful for, but I am anxious" as
+    # gratitude. A keyword cannot outrank a classifier without at minimum
+    # negation, scope and temporal handling -- and even with those it should
+    # inform the reader, not replace the model.
+    #
+    # A field the person filled in explicitly still wins: that is a genuine
+    # self-report through a structured control, not a substring match.
     uf = user_fields or {}
     stated = self_reported_emotion(text)
+
     if uf.get("emotion"):
         emotion = Provenanced(value=uf["emotion"], source=FieldSource.USER_REPORTED,
                               confidence=1.0, evidence="check-in field")
-    elif stated:
-        label, span = stated
-        emotion = Provenanced(value=label, source=FieldSource.EXTRACTED,
-                              confidence=0.95,
-                              evidence=f'stated in the text: "{span}"')
     else:
         emotion = Provenanced(value=pred.label, source=FieldSource.MODEL,
                               confidence=float(pred.score),
                               evidence=f"{pred.backend}:{pred.raw_label}")
 
+    stated_emotion = (
+        Provenanced(value=stated[0], source=FieldSource.EXTRACTED, confidence=0.9,
+                    evidence=f'stated in the text: "{stated[1]}"')
+        if stated else Provenanced.unknown())
+
     return EmotionalEvent(
         event_id=new_event_id(person_id, ts, text),
         person_id=person_id, timestamp=ts, raw_text=text,
-        emotion=emotion,
+        emotion=emotion, stated_emotion=stated_emotion,
         event=ctx.get("event", Provenanced.unknown()),
         time_context=ctx.get("time_context", Provenanced.unknown()),
         sleep=ctx.get("sleep", Provenanced.unknown()),
