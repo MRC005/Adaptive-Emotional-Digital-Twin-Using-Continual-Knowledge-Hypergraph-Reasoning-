@@ -1,0 +1,3350 @@
+{
+  "_provenance": "REAL ANONYMISED LONGITUDINAL DATA \u2014 College Experience Study",
+  "_anonymisation": "participants renumbered; source identifiers dropped; timestamps converted to day offsets from each person's own first report, so no calendar date is published",
+  "_note": "These are HELD-OUT test participants. The model never saw them during training, and every prediction shown is strictly out-of-sample.",
+  "participants": [
+    {
+      "id": "Participant A",
+      "n_observations": 97,
+      "own_autocorrelation": 0.613,
+      "predictability": "well predicted by their own history",
+      "warmup_k": 20,
+      "series": [
+        {
+          "day": 0,
+          "observed": 3,
+          "warmup": true
+        },
+        {
+          "day": 3,
+          "observed": 4,
+          "warmup": true
+        },
+        {
+          "day": 5,
+          "observed": 4,
+          "warmup": true
+        },
+        {
+          "day": 7,
+          "observed": 3,
+          "warmup": true
+        },
+        {
+          "day": 14,
+          "observed": 2,
+          "warmup": true
+        },
+        {
+          "day": 16,
+          "observed": 2,
+          "warmup": true
+        },
+        {
+          "day": 21,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 27,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 28,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 34,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 35,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 45,
+          "observed": 2,
+          "warmup": true
+        },
+        {
+          "day": 49,
+          "observed": 2,
+          "warmup": true
+        },
+        {
+          "day": 52,
+          "observed": 2,
+          "warmup": true
+        },
+        {
+          "day": 56,
+          "observed": 3,
+          "warmup": true
+        },
+        {
+          "day": 70,
+          "observed": 3,
+          "warmup": true
+        },
+        {
+          "day": 84,
+          "observed": 3,
+          "warmup": true
+        },
+        {
+          "day": 88,
+          "observed": 4,
+          "warmup": true
+        },
+        {
+          "day": 90,
+          "observed": 4,
+          "warmup": true
+        },
+        {
+          "day": 93,
+          "observed": 4,
+          "warmup": true
+        },
+        {
+          "day": 102,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 105,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 4,
+          "baseline": 3
+        },
+        {
+          "day": 106,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 4
+        },
+        {
+          "day": 112,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 4,
+          "baseline": 3
+        },
+        {
+          "day": 117,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 4
+        },
+        {
+          "day": 122,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 124,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 127,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 138,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 141,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 147,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 150,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 157,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 161,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 166,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 168,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 175,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 179,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 180,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 183,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 189,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 195,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 199,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 205,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 212,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 228,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 230,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 231,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 243,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 244,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 254,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 255,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 257,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 262,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 269,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 272,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 278,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 281,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 286,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 297,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 314,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 315,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 335,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 4,
+          "baseline": 3
+        },
+        {
+          "day": 338,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 4
+        },
+        {
+          "day": 343,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 344,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 347,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 350,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 4,
+          "baseline": 2
+        },
+        {
+          "day": 356,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 4
+        },
+        {
+          "day": 369,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 1,
+          "baseline": 4
+        },
+        {
+          "day": 371,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 375,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 378,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 385,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 405,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 435,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 4,
+          "baseline": 3
+        },
+        {
+          "day": 442,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 4,
+          "baseline": 4
+        },
+        {
+          "day": 447,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 4,
+          "actual_next": 3,
+          "baseline": 4
+        },
+        {
+          "day": 448,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 4,
+          "baseline": 3
+        },
+        {
+          "day": 477,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 481,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 499,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 506,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 510,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 512,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 513,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 556,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 657,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 692,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 4,
+          "baseline": 4
+        },
+        {
+          "day": 704,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 837,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 840,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 999,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 1000,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 1007,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 1021,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 1082,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 3
+        }
+      ]
+    },
+    {
+      "id": "Participant B",
+      "n_observations": 119,
+      "own_autocorrelation": 0.062,
+      "predictability": "close to unpredictable",
+      "warmup_k": 20,
+      "series": [
+        {
+          "day": 0,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 13,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 19,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 26,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 49,
+          "observed": 2,
+          "warmup": true
+        },
+        {
+          "day": 52,
+          "observed": 2,
+          "warmup": true
+        },
+        {
+          "day": 54,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 56,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 58,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 62,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 77,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 81,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 85,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 90,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 103,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 105,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 106,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 108,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 111,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 118,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 132,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 133,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 136,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 139,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 140,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 144,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 147,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 159,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 162,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 168,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 182,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 187,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 188,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 189,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 194,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 208,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 213,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 217,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 224,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 238,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 250,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 3,
+          "baseline": 1
+        },
+        {
+          "day": 253,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 3
+        },
+        {
+          "day": 260,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 267,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 274,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 280,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 287,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 299,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 311,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 327,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 333,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 336,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 355,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 377,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 384,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 391,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 395,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 402,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 406,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 420,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 422,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 426,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 427,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 433,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 438,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 441,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 445,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 450,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 455,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 457,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 476,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 489,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 495,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 498,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 504,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 516,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 518,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 523,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 525,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 528,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 532,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 539,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 543,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 549,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 553,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 557,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 558,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 567,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 581,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 587,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 598,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 613,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 628,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 644,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 650,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 663,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 679,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 685,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 690,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 706,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 774,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 778,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 787,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 801,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 832,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 837,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 854,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 864,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 889,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 902,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 906,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 912,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 919,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 921,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 928,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 932,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 951,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 966,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 971,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        }
+      ]
+    },
+    {
+      "id": "Participant C",
+      "n_observations": 221,
+      "own_autocorrelation": 0.32,
+      "predictability": "typical",
+      "warmup_k": 20,
+      "series": [
+        {
+          "day": 0,
+          "observed": 2,
+          "warmup": true
+        },
+        {
+          "day": 1,
+          "observed": 2,
+          "warmup": true
+        },
+        {
+          "day": 2,
+          "observed": 2,
+          "warmup": true
+        },
+        {
+          "day": 6,
+          "observed": 2,
+          "warmup": true
+        },
+        {
+          "day": 10,
+          "observed": 3,
+          "warmup": true
+        },
+        {
+          "day": 14,
+          "observed": 2,
+          "warmup": true
+        },
+        {
+          "day": 16,
+          "observed": 3,
+          "warmup": true
+        },
+        {
+          "day": 19,
+          "observed": 2,
+          "warmup": true
+        },
+        {
+          "day": 22,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 23,
+          "observed": 2,
+          "warmup": true
+        },
+        {
+          "day": 28,
+          "observed": 2,
+          "warmup": true
+        },
+        {
+          "day": 31,
+          "observed": 3,
+          "warmup": true
+        },
+        {
+          "day": 34,
+          "observed": 2,
+          "warmup": true
+        },
+        {
+          "day": 36,
+          "observed": 3,
+          "warmup": true
+        },
+        {
+          "day": 38,
+          "observed": 2,
+          "warmup": true
+        },
+        {
+          "day": 42,
+          "observed": 3,
+          "warmup": true
+        },
+        {
+          "day": 44,
+          "observed": 3,
+          "warmup": true
+        },
+        {
+          "day": 48,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 51,
+          "observed": 1,
+          "warmup": true
+        },
+        {
+          "day": 55,
+          "observed": 2,
+          "warmup": true
+        },
+        {
+          "day": 57,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 58,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 60,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 64,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 66,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 70,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 1,
+          "baseline": 3
+        },
+        {
+          "day": 72,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 76,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 79,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 3,
+          "baseline": 1
+        },
+        {
+          "day": 83,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 3
+        },
+        {
+          "day": 85,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 86,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 89,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 92,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 93,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 97,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 100,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 103,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 106,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 107,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 111,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 113,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 115,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 120,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 122,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 124,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 127,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 128,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 132,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 136,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 139,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 142,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 145,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 148,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 150,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 153,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 156,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 157,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 161,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 163,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 167,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 171,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 175,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 177,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 180,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 183,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 184,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 188,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 190,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 191,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 195,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 4,
+          "baseline": 1
+        },
+        {
+          "day": 200,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 4
+        },
+        {
+          "day": 205,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 208,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 211,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 212,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 215,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 218,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 220,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 227,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 4,
+          "baseline": 2
+        },
+        {
+          "day": 231,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 4
+        },
+        {
+          "day": 233,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 240,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 4,
+          "baseline": 2
+        },
+        {
+          "day": 243,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 4
+        },
+        {
+          "day": 248,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 251,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 254,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 259,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 261,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 264,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 280,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 286,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 290,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 293,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 298,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 301,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 314,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 316,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 1
+        },
+        {
+          "day": 321,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 1,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 325,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 329,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 332,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 336,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 339,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 342,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 348,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 352,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 4,
+          "baseline": 3
+        },
+        {
+          "day": 353,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 4,
+          "baseline": 4
+        },
+        {
+          "day": 355,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 4
+        },
+        {
+          "day": 359,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 362,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 1,
+          "baseline": 3
+        },
+        {
+          "day": 365,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 371,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 373,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 379,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 381,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 385,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 4,
+          "baseline": 2
+        },
+        {
+          "day": 388,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 4
+        },
+        {
+          "day": 391,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 393,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 394,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 397,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 400,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 402,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 405,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 407,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 408,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 414,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 416,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 419,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 423,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 427,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 4,
+          "baseline": 3
+        },
+        {
+          "day": 429,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 4
+        },
+        {
+          "day": 432,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 435,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 436,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 1,
+          "baseline": 2
+        },
+        {
+          "day": 439,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 461,
+          "observed": 1,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 1
+        },
+        {
+          "day": 477,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 505,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 516,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 532,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 537,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 554,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 557,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 559,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 4,
+          "baseline": 2
+        },
+        {
+          "day": 563,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 4
+        },
+        {
+          "day": 567,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 579,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 596,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 608,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 4
+        },
+        {
+          "day": 623,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 644,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 4
+        },
+        {
+          "day": 658,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 672,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 685,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 687,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 692,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 714,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 729,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 736,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 4,
+          "baseline": 2
+        },
+        {
+          "day": 763,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 767,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 769,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 781,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 786,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 806,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 812,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 841,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 848,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 850,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 855,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 864,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 871,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 886,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 4,
+          "baseline": 3
+        },
+        {
+          "day": 903,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 910,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 4,
+          "baseline": 3
+        },
+        {
+          "day": 917,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 4
+        },
+        {
+          "day": 921,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 924,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 927,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 943,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 966,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 972,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 994,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 4,
+          "baseline": 3
+        },
+        {
+          "day": 1009,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 1014,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 1030,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 1034,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 1037,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 1044,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 5,
+          "baseline": 3
+        },
+        {
+          "day": 1049,
+          "observed": 5,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 5
+        },
+        {
+          "day": 1064,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 1068,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 1090,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 4
+        },
+        {
+          "day": 1097,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 1102,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 1108,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 1115,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 1134,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 1141,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 1153,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 4
+        },
+        {
+          "day": 1156,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 3
+        },
+        {
+          "day": 1163,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 1191,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 1198,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 1203,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 1232,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 1239,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 1252,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 1268,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 1282,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 4,
+          "baseline": 4
+        },
+        {
+          "day": 1284,
+          "observed": 4,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 4
+        },
+        {
+          "day": 1300,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 3,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 1324,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 1330,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 1337,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 1341,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        },
+        {
+          "day": 1348,
+          "observed": 3,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 3
+        },
+        {
+          "day": 1365,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 2,
+          "baseline": 2
+        },
+        {
+          "day": 1369,
+          "observed": 2,
+          "warmup": false,
+          "predicted": 2,
+          "actual_next": 3,
+          "baseline": 2
+        }
+      ]
+    }
+  ]
+}

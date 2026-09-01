@@ -19,6 +19,10 @@ import { CONTROLS, buildControl, perturb, PERTURBATIONS, PERTURBATION_BY_ID }
 import { parseCsv, suggestColumns, toRecords, validate } from "./lib/dataset.js";
 import { analyze, activeEngine } from "./lib/engine.js";
 import { renderReport, renderPrecomputed } from "./ui/results.js";
+import FIND from "./data/findings.json";
+import { viewDiscovered } from "./ui/discovered.js";
+import { viewEvolution } from "./ui/evolution.js";
+import { viewReadiness } from "./ui/readiness.js";
 import { initTheme, getTheme, setTheme, onThemeChange } from "./lib/theme.js";
 import { PersonalTwin, buildEvent, correctField } from "./lib/twin.js";
 import { classify, ENGINES, ENGINE_INFO, STATE, browserModelReady, getEngine,
@@ -171,105 +175,65 @@ async function execute(extraMessages = "", ctxExtra = {}) {
 
 /* --------------------------------------------------------------------- home */
 function viewHome() {
-  const ce = REAL.datasets.find((d) => d.id === "college_experience");
-  const primary = ce && ce.runs.find((r) => r.primary);
-  const withEstimate = ce ? ce.runs.filter((r) => r.rho_star != null) : [];
-
+  const C = FIND.cohort, H = FIND.headline, CE = FIND.ceiling;
+  const tp = H.twin_vs_persistence;
   $("#work").innerHTML = `
-    <section class="hero">
-      <h1>What AEDT does</h1>
-      <p class="lede">AEDT explores how emotions and personal context change over time.
-        Your <b>Digital Twin</b> builds a history of emotional experiences from what you write,
-        finds similar past situations, and offers evidence-based pattern insights.
-        Separate research tools investigate whether emotional measurements stay
-        <b>comparable</b> over months and years.</p>
-      <p class="lede2">Those are two different questions, and the tool keeps them apart.
-        One asks <i>what has this person's history looked like</i>. The other asks
-        <i>can a long history be read as if the scale meant one fixed thing throughout</i>.</p>
-    </section>
+    <div class="story">
+      <section class="panel hero">
+        <div class="pad">
+          <p class="eyebrow">Longitudinal affect modelling</p>
+          <h2 class="q">Can a system learn from a person's own history to
+            predict how they will feel next?</h2>
+          <div class="scale">
+            <div><b>${C.participants}</b><span>participants</span></div>
+            <div><b>${C.years}</b><span>years</span></div>
+            <div><b>${C.reports.toLocaleString()}</b><span>stress reports</span></div>
+            <div><b>${C.prediction_pairs.toLocaleString()}</b><span>prediction pairs</span></div>
+          </div>
+          <p class="prov">Real longitudinal data · College Experience Study ·
+            held-out participants, strictly future observations</p>
+        </div>
+      </section>
 
-    <h2 class="sech">Four ways to start</h2>
-    <div class="starts">
-      <div class="start">
-        <h3>1. My Digital Twin</h3>
-        <p>Write how you are. The system reads the feeling and the situation, shows you what it
-          understood, and builds a personal history you can inspect. <b>Start here.</b></p>
-        <button class="b run" data-go="twin">Open my Digital Twin</button>
-      </div>
-      <div class="start">
-        <h3>2. Analyse real data</h3>
-        <p>Results from audited longitudinal studies, and the audit explaining which archives
-          can support this analysis at all. You can also open your own CSV.</p>
-        <button class="b" data-go="real">Open real data</button>
-      </div>
-      <div class="start">
-        <h3>3. Guided demonstration</h3>
-        <p>Controlled data where the right answer is known in advance, to check the scientific
-          estimator behaves.</p>
-        <button class="b" data-go="guided">Run a guided example</button>
-      </div>
-      <div class="start">
-        <h3>4. Interactive sandbox</h3>
-        <p>Change the data on purpose and watch what the analysis does. Useful for seeing where
-          the method breaks.</p>
-        <button class="b" data-go="sandbox">Open the sandbox</button>
-      </div>
-    </div>
+      <section class="panel">
+        <header><h3>What this system does</h3>
+          <span class="meta">the loop, not a pipeline diagram</span></header>
+        <div class="pad">
+          <div class="loop">
+            <div><b>1</b><span>Reads a check-in</span><em>emotion, context, evidence</em></div>
+            <div><b>2</b><span>Remembers it</span><em>personal history</em></div>
+            <div><b>3</b><span>Builds a state</span><em>baseline, trajectory, evidence</em></div>
+            <div><b>4</b><span>Predicts</span><em>with uncertainty</em></div>
+            <div><b>5</b><span>Compares</span><em>against what happened</em></div>
+            <div><b>6</b><span>Updates</span><em>and repeats</em></div>
+          </div>
+          <p class="hint">It also decides whether it knows a person well enough
+            to personalise at all — and says so when it does not.</p>
+        </div>
+      </section>
 
-    <h2 class="sech">The two layers, and how they connect</h2>
-    <div class="starts">
-      <div class="start">
-        <h3>Layer 1 — what the twin learns about a person</h3>
-        <p>A Transformer classifies the feeling; rules recover the situation; each episode
-          becomes one higher-order relation in a knowledge hypergraph; retrieval finds
-          comparable past episodes and explains why they matched.</p>
-        <p class="hint">Runs on your device, including the Transformer: the model is
-          downloaded once (about 125 MB) and then classifies in your browser, so your
-          check-ins never leave it.</p>
-      </div>
-      <div class="start">
-        <h3>Layer 2 — when a long history can be trusted</h3>
-        <p>If the relationship between behaviour and self-report drifts over a study, a history
-          spanning that period cannot be read as if the scale meant one fixed thing throughout.
-          Layer 2 tests that on dense cohort data.</p>
-        <p class="hint">Layer 2 never sees your check-ins, and a personal history is far too
-          short to run it on one individual. It qualifies how far a history may be
-          extrapolated; it is not a step in the twin's pipeline.</p>
-      </div>
-    </div>
-
-    <h2 class="sech">Where the real data stands today</h2>
-    <div class="panel"><div class="pad">
-      ${(() => {
-        const ce = REAL.datasets.find((d) => d.id === "college_experience");
-        const primary = ce && ce.runs.find((r) => r.primary);
-        const withEst = ce ? ce.runs.filter((r) => r.rho_star != null) : [];
-        if (!primary) return `<p class="note">Real-dataset results were not generated in this build.</p>`;
-        return `<p style="margin-top:0"><b>College Experience Study</b> (218 students, four years)
-          is the first archive of the four audited with enough repeated measurement to attempt
-          the drift analysis. Under the pre-specified primary configuration it reports
-          <b>${esc(primary.headline.toLowerCase())}</b>: ${primary.eligible} participants passed
-          the screen and at least 10 are needed.</p>
-        <p>${withEst.length} pre-specified secondary configurations produced an estimate, and both
-          report <b>no detectable drift</b> with wide intervals
-          ${withEst.map((r) => `<span class="mono">${r.rho_star.toFixed(3)}
-            [${r.ci_low.toFixed(3)}, ${r.ci_high.toFixed(3)}]</span>`).join(" and ")}.</p>
-        <p class="note">No drift has been demonstrated in real data, and no threshold was changed
-          to obtain a result. The full audit is on the
-          <a href="#" data-tab-link="datasets">Datasets</a> page; the models behind Layer 1 and
-          their measured performance are on <a href="#" data-tab-link="method">Method</a>.</p>`;
-      })()}
-    </div></div>`;
-
-  for (const b of document.querySelectorAll("[data-go]"))
-    b.addEventListener("click", () => {
-      state.mode = b.dataset.go;
-      if (b.dataset.go === "real") state.realSub = "bundled";
-      go("analyze");
-    });
-  for (const a of document.querySelectorAll("[data-tab-link]"))
-    a.addEventListener("click", (e) => { e.preventDefault(); go(a.dataset.tabLink); });
+      <section class="panel next">
+        <header><h3>What we found</h3><span class="meta">the short version</span></header>
+        <div class="pad">
+          <p class="answer">Personal history beat every global model we built.
+            <b>But simply carrying the last value forward beat all of them.</b></p>
+          <p>So we measured why, and found the real result:
+            only about <b>${(CE.variance_explained * 100).toFixed(0)}%</b> of
+            day-to-day variation is predictable from the previous report — and
+            predictability is a property of <b>the person</b>, ranging from
+            ${CE.per_person_r_range[0]} to ${CE.per_person_r_range[1]}.</p>
+          <div class="actions" style="padding-left:0;padding-right:0">
+            <button class="b run" data-go2="discovered">See what we discovered</button>
+            <button class="b" data-go2="evolution">Watch a twin evolve</button>
+            <button class="b" data-go2="twin">Try it yourself</button>
+          </div>
+        </div>
+      </section>
+    </div>`;
+  for (const b of document.querySelectorAll("[data-go2]"))
+    b.addEventListener("click", () => go(b.dataset.go2));
 }
+
 
 
 /* ---------------------------------------------------------- Layer 1: twin */
@@ -456,10 +420,30 @@ async function analyseCheckIn() {
   } finally { setBusy(false); }
 }
 
+/**
+ * How far personalisation is supported, right now, for this person.
+ *
+ * Shown BEFORE any pattern claim, so the interface can never imply personal
+ * knowledge it does not have. The counts come from the stored history; the
+ * thresholds are engineering defaults and are labelled experimental, because
+ * whether an evidence gate beats simply counting observations has NOT been
+ * tested. Saying so is the point of the panel, not a caveat bolted onto it.
+ */
+function renderPersonalisation(ev) {
+  const twin = ensureTwin();
+  const st = twin.personalisationStatus(ev);
+  return `<div class="pstat ${st.level}">
+    <b>${esc(st.headline)}</b>
+    <span class="act">${esc(st.action)}</span>
+    <ul>${st.reasons.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>
+    <div class="xp">Experimental mechanism — not yet validated</div>
+  </div>`;
+}
+
 function renderDraft() {
   const ev = state.draft;
   if (!ev) return;
-  $("#t-understand").innerHTML = renderUnderstanding(ev, {});
+  $("#t-understand").innerHTML = renderPersonalisation(ev) + renderUnderstanding(ev, {});
   for (const sel of document.querySelectorAll("select.fix"))
     sel.addEventListener("change", (e) => {
       const v = e.target.value;
@@ -1230,14 +1214,63 @@ function viewMethod() {
     </div></div>`;
 }
 
+
+/**
+ * Research mode. The rigorous material stays fully inspectable, but it is not
+ * what a first-time visitor is shown -- the panel sees the story first.
+ */
+function viewResearch() {
+  const card = (tab, title, body, note = "") => `
+    <button class="rescard" data-res="${tab}">
+      <b>${title}</b><span>${body}</span>
+      ${note ? `<em>${note}</em>` : ""}</button>`;
+  $("#work").innerHTML = `
+    <div class="panel">
+      <header><h3>Research</h3>
+        <span class="meta">the evidence behind the demonstration</span></header>
+      <div class="pad">
+        <p class="hint" style="margin-top:0">Everything the demonstration claims is
+          derived from these. Protocols were committed to git before the
+          experiments were written.</p>
+        <div class="resgrid">
+          ${card("analyze", "Run the analysis", "Guided controls, your own CSV, and the interactive sandbox.")}
+          ${card("datasets", "Dataset audit", "Every archive we tested, and why three of four were rejected.")}
+          ${card("runs", "Previous runs", "Every analysis run in this session, with its settings.")}
+          ${card("method", "Method and limitations", "The estimator, the assumptions, and what it cannot establish.")}
+          ${card("readiness", "Panel demo readiness", "Verify every dependency before presenting.", "run this before the panel")}
+        </div>
+        <h4 style="margin-top:22px">Exploratory — did not earn a place in the contribution</h4>
+        <p class="hint">Reported because they were tested, not because they worked.</p>
+        <ul class="bul">
+          <li><b>Hypergraph neural network.</b> On synthetic data it scored macro-F1
+            0.512 against a structure-free MLP at 0.815. It lost. In the Layer 2
+            analysis, deleting every context column left the estimate bit-identical.</li>
+          <li><b>Continual learning (EWC).</b> Demonstrated only in simulation. On the
+            real data, online adaptation contributed nothing (0.2737 vs 0.2757).</li>
+        </ul>
+      </div>
+    </div>`;
+  for (const b of document.querySelectorAll("[data-res]"))
+    b.addEventListener("click", () => go(b.dataset.res));
+}
+
 /* ------------------------------------------------------------------ router */
 function go(tab) {
   state.tab = tab;
   for (const b of document.querySelectorAll("#tabs button"))
     b.classList.toggle("on", b.dataset.tab === tab);
   window.scrollTo({ top: 0 });
-  ({ home: viewHome, analyze: viewAnalyze, datasets: viewDatasets,
-     runs: viewRuns, method: viewMethod }[tab])();
+  const routes = {
+    home: viewHome,
+    twin: () => { state.mode = "twin"; viewAnalyze(); },
+    evolution: () => viewEvolution($("#work")),
+    discovered: () => viewDiscovered($("#work")),
+    research: viewResearch,
+    readiness: () => viewReadiness($("#work")),
+    // preserved so existing links and the research index keep working
+    analyze: viewAnalyze, datasets: viewDatasets, runs: viewRuns, method: viewMethod,
+  };
+  (routes[tab] || viewHome)();
 }
 
 function boot() {
