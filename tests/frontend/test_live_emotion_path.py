@@ -150,11 +150,20 @@ const q = (pid) => mk(pid, 40, "I have another deadline tomorrow and I barely sl
 
 
 @node
-def test_two_user_page_exists_and_declares_its_histories_synthetic():
+def test_two_user_page_declares_its_histories_synthetic():
+    """The wording may change; the disclosure may not."""
     src = TWO.read_text()
-    assert "Illustrative synthetic histories" in src
-    assert "not real participants" in src
-    assert "SYNTHETIC_DEMO" in src
+    low = src.lower()
+    assert "illustrative synthetic histor" in low, "no synthetic labelling found"
+    assert "not a real participant" in low or "not real participants" in low
+    assert "SYNTHETIC_DEMO" in src, "events must carry the synthetic data status"
+
+
+@node
+def test_two_user_page_ties_back_to_the_real_null_result():
+    """The demonstration must not be left implying real-world effectiveness."""
+    low = TWO.read_text().lower()
+    assert "did not" in low and "previous value forward" in low
 
 
 @node

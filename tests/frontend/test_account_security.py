@@ -68,19 +68,25 @@ def test_the_definer_function_is_not_executable_anonymously():
 def test_no_supabase_credentials_are_committed():
     tracked = subprocess.run(["git", "ls-files"], cwd=ROOT,
                              capture_output=True, text=True).stdout.split()
-    # a service_role JWT is the dangerous one: it bypasses RLS entirely
-    bad = re.compile(r"service_role|SUPABASE_SERVICE|eyJhbGciOiJIUzI1NiIs")
+    # Match a VALUE, not the word. The first version flagged SETUP.md for
+    # warning against the service_role key, which is the opposite of a leak.
+    #   - a real JWT: three base64 segments, and any Supabase key is one
+    #   - an assignment of a service key to something that looks like a value
+    jwt = re.compile(r"eyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}")
+    assigned = re.compile(
+        r"(?i)(service_role|SUPABASE_SERVICE[A-Z_]*|ANON_KEY)\s*[:=]\s*[\"']?[A-Za-z0-9._-]{20,}")
     for rel in tracked:
         f = ROOT / rel
         if not f.is_file() or f.suffix in {".png", ".jpg", ".onnx", ".csv"}:
             continue
+        if rel.endswith("test_account_security.py"):
+            continue          # this file necessarily contains the patterns
         try:
             text = f.read_text(errors="ignore")
         except Exception:
             continue
-        if rel.endswith("test_account_security.py"):
-            continue
-        assert not bad.search(text), f"possible credential committed in {rel}"
+        assert not jwt.search(text), f"a JWT appears to be committed in {rel}"
+        assert not assigned.search(text), f"a key value appears to be committed in {rel}"
 
 
 def test_env_local_is_gitignored():

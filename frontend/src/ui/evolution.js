@@ -94,7 +94,7 @@ function chart(series, step) {
       .obs{fill:none;stroke:var(--ink-2);stroke-width:2}
       .base{stroke:var(--accent);stroke-width:1.5;stroke-dasharray:4 4;opacity:.8}
       .predline{stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3}
-      .pred{fill:var(--surface);stroke:var(--accent);stroke-width:2.5}
+      .pred{fill:var(--panel);stroke:var(--accent);stroke-width:2.5}
       .actual{fill:var(--ok)}
       .err{stroke:var(--warn);stroke-width:2.5}
       .dot{fill:var(--ink-2)}

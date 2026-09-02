@@ -176,64 +176,99 @@ async function execute(extraMessages = "", ctxExtra = {}) {
 }
 
 /* --------------------------------------------------------------------- home */
+/**
+ * Home -- the front door.
+ *
+ * The hero preview is an ILLUSTRATIVE replay, not live inference: it steps
+ * through a fixed example so the page opens instantly and cannot depend on a
+ * 125 MB model. It says so, because a preview that looks like a running model
+ * and is not would be the exact dishonesty this project avoids everywhere else.
+ */
+const HERO_STEPS = [
+  { k: "check-in", v: "\u201cI have another deadline tomorrow and I barely slept.\u201d" },
+  { k: "feeling", v: "anxiety" },
+  { k: "situation", v: "deadline \u00b7 poor sleep" },
+  { k: "history", v: "5 comparable episodes found" },
+  { k: "reading", v: "anxiety \u2014 in 4 of those 5" },
+];
+
+function heroPreview(step) {
+  const rows = HERO_STEPS.slice(0, step + 1).map((s2, i) => `
+    <div class="hp-row${i === step ? " hp-new" : ""}">
+      <span class="hp-k">${esc(s2.k)}</span>
+      <span class="hp-v">${esc(s2.v)}</span>
+    </div>`).join("");
+  return `<div class="hp">
+    <div class="hp-head"><span>Illustrative replay</span>
+      <button class="hp-btn" id="hp-step">${
+        step >= HERO_STEPS.length - 1 ? "Replay" : "Step \u2192"}</button></div>
+    <div class="hp-body">${rows}</div>
+    <p class="hp-note">A fixed example, not live inference. The real model runs
+      in <b>My Digital Twin</b>.</p>
+  </div>`;
+}
+
 function viewHome() {
-  const C = FIND.cohort, H = FIND.headline, CE = FIND.ceiling;
-  const tp = H.twin_vs_persistence;
+  const C = FIND.cohort, CE = FIND.ceiling;
+  if (state.heroStep == null) state.heroStep = 0;
+
   $("#work").innerHTML = `
-    <div class="story">
-      <section class="panel hero">
-        <div class="pad">
-          <p class="eyebrow">Longitudinal affect modelling</p>
-          <h2 class="q">Can a system learn from a person's own history to
-            predict how they will feel next?</h2>
-          <div class="scale">
-            <div><b>${C.participants}</b><span>participants</span></div>
-            <div><b>${C.years}</b><span>years</span></div>
-            <div><b>${C.reports.toLocaleString()}</b><span>stress reports</span></div>
-            <div><b>${C.prediction_pairs.toLocaleString()}</b><span>prediction pairs</span></div>
+    <div class="lp">
+      <section class="lp-hero">
+        <div class="lp-left">
+          <h1>Can a system learn how you change over time?</h1>
+          <p class="lp-lede">It reads a check-in, remembers it, builds a picture of
+            you, predicts what comes next \u2014 then checks whether it was right.</p>
+          <div class="lp-cta">
+            <button class="cta" data-go2="twin">Try the Twin</button>
+            <button class="linkb2" data-go2="discovered">Explore the evidence</button>
           </div>
-          <p class="prov">Real longitudinal data · College Experience Study ·
-            held-out participants, strictly future observations</p>
         </div>
+        <div class="lp-right">${heroPreview(state.heroStep)}</div>
       </section>
 
-      <section class="panel">
-        <header><h3>What this system does</h3>
-          <span class="meta">the loop, not a pipeline diagram</span></header>
-        <div class="pad">
-          <div class="loop">
-            <div><b>1</b><span>Reads a check-in</span><em>emotion, context, evidence</em></div>
-            <div><b>2</b><span>Remembers it</span><em>personal history</em></div>
-            <div><b>3</b><span>Builds a state</span><em>baseline, trajectory, evidence</em></div>
-            <div><b>4</b><span>Predicts</span><em>with uncertainty</em></div>
-            <div><b>5</b><span>Compares</span><em>against what happened</em></div>
-            <div><b>6</b><span>Updates</span><em>and repeats</em></div>
-          </div>
-          <p class="hint">It also decides whether it knows a person well enough
-            to personalise at all — and says so when it does not.</p>
-        </div>
+      <section class="lp-strip">
+        <div><b>${C.participants}</b><span>participants</span></div>
+        <div><b>${C.years}</b><span>years</span></div>
+        <div><b>${C.reports.toLocaleString()}</b><span>reports</span></div>
+        <div><b>${C.prediction_pairs.toLocaleString()}</b><span>prediction pairs</span></div>
+        <p>Tested on real longitudinal data, on participants the model never saw.</p>
       </section>
 
-      <section class="panel next">
-        <header><h3>What we found</h3><span class="meta">the short version</span></header>
-        <div class="pad">
-          <p class="answer">Personal history beat every global model we built.
-            <b>But simply carrying the last value forward beat all of them.</b></p>
-          <p>So we measured why, and found the real result:
-            only about <b>${(CE.variance_explained * 100).toFixed(0)}%</b> of
-            day-to-day variation is predictable from the previous report — and
-            predictability is a property of <b>the person</b>, ranging from
-            ${CE.per_person_r_range[0]} to ${CE.per_person_r_range[1]}.</p>
-          <div class="actions" style="padding-left:0;padding-right:0">
-            <button class="b run" data-go2="discovered">See what we discovered</button>
-            <button class="b" data-go2="evolution">Watch a twin evolve</button>
-            <button class="b" data-go2="twin">Try it yourself</button>
-          </div>
-        </div>
+      <section class="lp-paths">
+        <button class="lp-card" data-go2="twin">
+          <span class="lp-n">01</span>
+          <b>Build a twin</b>
+          <span>Write a check-in. Watch it work out the feeling and the situation,
+            and correct it where it is wrong.</span>
+        </button>
+        <button class="lp-card" data-go2="twouser">
+          <span class="lp-n">02</span>
+          <b>See history change the answer</b>
+          <span>Run an experiment: one sentence, two people, two different
+            readings.</span>
+        </button>
+        <button class="lp-card" data-go2="evolution">
+          <span class="lp-n">03</span>
+          <b>Watch a prediction meet reality</b>
+          <span>Step through a real participant. The twin predicts, then the
+            actual value arrives.</span>
+        </button>
+        <button class="lp-card" data-go2="discovered">
+          <span class="lp-n">04</span>
+          <b>Find out what happened</b>
+          <span>Only ${(CE.variance_explained * 100).toFixed(0)}% of day-to-day change
+            turned out to be predictable \u2014 and the simplest method won.</span>
+        </button>
       </section>
     </div>`;
+
   for (const b of document.querySelectorAll("[data-go2]"))
     b.addEventListener("click", () => go(b.dataset.go2));
+  $("#hp-step")?.addEventListener("click", () => {
+    state.heroStep = state.heroStep >= HERO_STEPS.length - 1 ? 0 : state.heroStep + 1;
+    viewHome();
+  });
 }
 
 
@@ -277,6 +312,7 @@ async function restoreTwinFromAccount() {
   const twin = new PersonalTwin("You");
   for (const ev of events) twin.addEvent(ev);
   state.twin = twin;
+  state.restored = events.length > 0;   // only claim restoration if there was some
   return twin;
 }
 
@@ -367,60 +403,121 @@ async function reportEngineHealth() {
   }
 }
 
+/** The floor the pattern logic itself enforces. Kept in one place so the
+ *  progress indicator cannot promise what the analysis will then refuse. */
+const TWIN_FLOOR = 3;
+const TWIN_TARGET = 12;
+
+function stageLine(n) {
+  if (!n) return "Write a check-in and it starts building a picture of you.";
+  const stage = n < TWIN_FLOOR ? "Still learning you"
+              : n < TWIN_TARGET ? "A pattern is emerging"
+              : "Your history is supporting personalisation";
+  return `${n} check-in${n === 1 ? "" : "s"} \u00b7 ${stage}`;
+}
+
+function progressBlock(n) {
+  const pct = Math.min(100, Math.round((n / TWIN_TARGET) * 100));
+  const say = n === 0
+    ? "Your Twin does not know you yet, so it will use a population-informed estimate."
+    : n < TWIN_FLOOR
+      ? `${TWIN_FLOOR - n} more comparable check-in${TWIN_FLOOR - n === 1 ? "" : "s"} before it will describe a pattern.`
+      : "Your own history is now being used to read new check-ins.";
+  return `
+    <div class="tw-prog-top">
+      <span class="tw-prog-lab">Personal history</span>
+      <span class="tw-prog-n">${n} of ${TWIN_FLOOR} needed for a pattern</span>
+    </div>
+    <div class="tw-bar"><i style="width:${pct}%"></i></div>
+    <p class="tw-prog-say">${say}</p>`;
+}
+
+/** Refresh the live counters in place, without re-rendering the whole page. */
+function refreshTwinStatus() {
+  const n = ensureTwin().events.length;
+  const prog = $("#t-prog"), stage = $("#t-stage");
+  if (prog) prog.innerHTML = progressBlock(n);
+  if (stage) stage.textContent = stageLine(n);
+}
+
 function viewTwinMode() {
   const twin = ensureTwin();
   const engine = getEngine();
+  const n = twin.events.length;
+  const u = Account.currentUser();
 
+  // Real evidence counts drive every number here. MIN_EPISODES_FOR_PATTERN is
+  // the same floor the pattern logic enforces, so the progress bar cannot
+  // promise something the analysis will then refuse to give.
   $("#work").innerHTML = `
     ${syntheticBanner(twin)}
-    <div class="panel">
-      <header><h3>My Digital Twin</h3>
-        <span class="meta">${twin.events.length} episodes recorded</span></header>
-      <div class="pad">
-        <p class="intro">Write how you are and what is going on, in your own words. The system
-          works out the feeling and the situation, shows you exactly what it understood and
-          where each part came from, and lets you correct it before anything is stored.</p>
-        <textarea id="t-text" rows="3" placeholder="e.g. I am stressed and exhausted. I slept only four hours because I have an important exam tomorrow."></textarea>
-        <div class="actions" style="border:0;background:none;padding:10px 0 0">
-          <button class="b run" id="t-go">Analyse this check-in</button>
-          <button class="b" id="t-demo">Load demonstration user</button>
-          ${twin.events.length ? `<button class="b" id="t-clear">Clear history</button>` : ""}
+    <div class="tw">
+
+      <section class="tw-head">
+        <div>
+          <h2>${u ? "Your Digital Twin" : "My Digital Twin"}</h2>
+          <p class="tw-sub" id="t-stage">${stageLine(n)}</p>
         </div>
-        <details class="adv"${state.showEngine ? " open" : ""}>
-          <summary>Where the feeling is classified</summary>
-          <div class="engines">
-            ${[ENGINES.LEXICON, ENGINES.BROWSER, ENGINES.SERVICE].map((id) => {
-              const info = ENGINE_INFO[id];
-              const disabled = id === ENGINES.SERVICE && !serviceConfigured();
-              return `<label class="radio">
-                <input type="radio" name="eng" value="${id}"
-                  ${engine === id ? "checked" : ""}${disabled ? " disabled" : ""}>
-                <span><b>${esc(info.name)}</b>
-                  <small>${esc(info.detail)}${
-                    disabled ? " No analysis service is configured, so this is unavailable." : ""}</small>
-                </span></label>`;
-            }).join("")}
-          </div>
-          <p id="t-enginestate" style="margin-top:8px"></p>
-          <p class="hint">A 124.7M-parameter Transformer cannot be bundled into a
-            page, so it is either downloaded once into your browser or run in the
-            Python service. The word list is neither, and is labelled a baseline
-            wherever it appears.</p>
-        </details>
-      </div>
-    </div>
-    <div id="t-understand"></div>
-    <div id="t-result"></div>
-    <div id="t-history">${renderHistory(twin)}</div>`;
+        ${state.restored ? `<p class="tw-restored">Twin restored \u00b7
+          ${n} observation${n === 1 ? "" : "s"} loaded</p>` : ""}
+      </section>
+
+      <section class="tw-ask">
+        <label for="t-text" class="tw-q">How are you feeling?</label>
+        <p class="tw-hint2">Write naturally \u2014 what happened, how you feel, and
+          anything else that might matter.</p>
+        <textarea id="t-text" rows="3"
+          placeholder="I have an important deadline tomorrow and I barely slept."></textarea>
+        <div class="tw-actions">
+          <button class="cta" id="t-go">Analyse this check-in</button>
+          <button class="linkb2" id="t-demo">Load a demonstration history</button>
+          ${n ? `<button class="linkb2" id="t-clear">Clear</button>` : ""}
+        </div>
+      </section>
+
+      <section class="tw-prog" id="t-prog">${progressBlock(n)}</section>
+
+      <div id="t-understand"></div>
+      <div id="t-result"></div>
+      <div id="t-history">${renderHistory(twin)}</div>
+
+      ${!u && Account.accountsEnabled() && n > 0 ? `
+        <section class="tw-save">
+          <b>Save your Twin</b>
+          <p>Create an account to keep this history and keep building your
+            personal model.</p>
+          <button class="cta" id="t-signup">Create an account</button>
+        </section>` : ""}
+
+      <details class="adv"${state.showEngine ? " open" : ""}>
+        <summary>Where the feeling is classified</summary>
+        <div class="engines">
+          ${[ENGINES.LEXICON, ENGINES.BROWSER, ENGINES.SERVICE].map((id) => {
+            const info = ENGINE_INFO[id];
+            const disabled = id === ENGINES.SERVICE && !serviceConfigured();
+            return `<label class="radio">
+              <input type="radio" name="eng" value="${id}"
+                ${engine === id ? "checked" : ""}${disabled ? " disabled" : ""}>
+              <span><b>${esc(info.name)}</b>
+                <small>${esc(info.detail)}${
+                  disabled ? " No analysis service is configured, so this is unavailable." : ""}</small>
+              </span></label>`;
+          }).join("")}
+        </div>
+        <p id="t-enginestate" style="margin-top:8px"></p>
+        <p class="hint">A 124.7M-parameter Transformer cannot be bundled into a
+          page, so it is either downloaded once into your browser or run in the
+          Python service. The word list is neither, and is labelled a baseline
+          wherever it appears.</p>
+      </details>
+    </div>`;
 
   const det = document.querySelector("details.adv");
   if (det) det.addEventListener("toggle", () => { state.showEngine = det.open; });
   for (const r of document.querySelectorAll('input[name="eng"]'))
-    r.addEventListener("change", (e) => {
-      setEngine(e.target.value);
-      reportEngineHealth();
-    });
+    r.addEventListener("change", (e) => { setEngine(e.target.value); reportEngineHealth(); });
   reportEngineHealth();
+  $("#t-signup")?.addEventListener("click", () => openAuth("up"));
 
   $("#t-go").addEventListener("click", analyseCheckIn);
   $("#t-demo").addEventListener("click", loadDemoUser);
@@ -513,6 +610,7 @@ function renderDraft() {
     $("#t-understand").innerHTML = "";
     $("#t-result").innerHTML = renderSimilar(similar, insight);
     $("#t-history").innerHTML = renderHistory(twin);
+    refreshTwinStatus();          // count, stage and bar move as history grows
     $("#t-result").scrollIntoView({ block: "start", behavior: "smooth" });
     try {
       await persistEvent(ev);
