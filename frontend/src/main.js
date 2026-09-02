@@ -24,6 +24,7 @@ import { viewDiscovered } from "./ui/discovered.js";
 import { viewEvolution } from "./ui/evolution.js";
 import { viewReadiness } from "./ui/readiness.js";
 import { viewTwoUser } from "./ui/twouser.js";
+import * as Account from "./lib/account.js";
 import { initTheme, getTheme, setTheme, onThemeChange } from "./lib/theme.js";
 import { PersonalTwin, buildEvent, correctField } from "./lib/twin.js";
 import { classify, ENGINES, ENGINE_INFO, STATE, browserModelReady, getEngine,
@@ -238,9 +239,54 @@ function viewHome() {
 
 
 /* ---------------------------------------------------------- Layer 1: twin */
+
+/**
+ * Where a twin's history lives.
+ *
+ * Signed in  -> Supabase, owned by the account, enforced by row-level security.
+ * Otherwise  -> localStorage on this device only, exactly as before.
+ *
+ * The local copy is NOT synced upward on sign-in. Merging an anonymous history
+ * into a named account silently changes what a person's record contains, and
+ * the record here is their own words about how they feel. It is offered
+ * explicitly or not at all.
+ */
+const LOCAL_TWIN_KEY = "aedt.twin.local";
+
 function ensureTwin() {
   if (!state.twin) state.twin = new PersonalTwin("You");
   return state.twin;
+}
+
+function saveTwinLocal() {
+  try {
+    localStorage.setItem(LOCAL_TWIN_KEY, JSON.stringify(ensureTwin().toJSON()));
+  } catch { /* private mode: history stays for this session only */ }
+}
+
+function loadTwinLocal() {
+  try {
+    const raw = localStorage.getItem(LOCAL_TWIN_KEY);
+    if (raw) state.twin = PersonalTwin.fromJSON(JSON.parse(raw));
+  } catch { /* corrupt or blocked: start empty rather than crash */ }
+}
+
+/** Rebuild the signed-in user's twin from the database. */
+async function restoreTwinFromAccount() {
+  const events = await Account.loadEvents();
+  const twin = new PersonalTwin("You");
+  for (const ev of events) twin.addEvent(ev);
+  state.twin = twin;
+  return twin;
+}
+
+/** Persist one event to whichever tier is active. */
+async function persistEvent(ev) {
+  if (Account.signedIn()) {
+    await Account.saveEvent(ev);          // throws; the caller reports it
+  } else {
+    saveTwinLocal();
+  }
 }
 
 async function makeEvent(text, timestamp, fields, dataStatus = "USER",
@@ -457,16 +503,26 @@ function renderDraft() {
     $("#t-understand").innerHTML = "";
     $("#t-result").innerHTML = "";
   });
-  $("#t-save").addEventListener("click", () => {
+  $("#t-save").addEventListener("click", async () => {
     const twin = ensureTwin();
-    const similar = twin.similarEpisodes(state.draft);
-    const insight = twin.patternInsight(state.draft);
-    twin.addEvent(state.draft);
+    const ev = state.draft;
+    const similar = twin.similarEpisodes(ev);
+    const insight = twin.patternInsight(ev);
+    twin.addEvent(ev);
     state.draft = null;
     $("#t-understand").innerHTML = "";
     $("#t-result").innerHTML = renderSimilar(similar, insight);
     $("#t-history").innerHTML = renderHistory(twin);
     $("#t-result").scrollIntoView({ block: "start", behavior: "smooth" });
+    try {
+      await persistEvent(ev);
+    } catch (e) {
+      // The event IS in the twin; only the durable copy failed. Say which,
+      // rather than letting the person believe it was saved.
+      $("#t-result").insertAdjacentHTML("afterbegin",
+        `<div class="msg warn"><b>Saved to this session, but not to your
+         account.</b> ${esc(e.message)}</div>`);
+    }
   });
 }
 
@@ -1255,6 +1311,101 @@ function viewResearch() {
     b.addEventListener("click", () => go(b.dataset.res));
 }
 
+
+/* -------------------------------------------------------------- account */
+
+/**
+ * The account strip. Present only when a backend is configured, so an
+ * unconfigured deployment shows no dead controls and the demo path is
+ * unchanged.
+ */
+function renderAccountBar() {
+  const slot = $("#acctbar");
+  if (!slot) return;
+  if (!Account.accountsEnabled()) { slot.innerHTML = ""; return; }
+
+  const u = Account.currentUser();
+  slot.innerHTML = u
+    ? `<span class="who">Signed in as <b>${esc(u.email || "you")}</b></span>
+       <button class="linkb" id="ac-out">Sign out</button>
+       <button class="linkb danger" id="ac-del">Delete my history</button>`
+    : `<span class="who">Your history is on this device only.</span>
+       <button class="linkb" id="ac-in">Sign in</button>
+       <button class="linkb" id="ac-up">Create account</button>`;
+
+  $("#ac-in")?.addEventListener("click", () => openAuth("in"));
+  $("#ac-up")?.addEventListener("click", () => openAuth("up"));
+  $("#ac-out")?.addEventListener("click", async () => {
+    await Account.signOut();
+    state.twin = null;                 // never leave one person's history on screen
+    loadTwinLocal();
+    renderAccountBar();
+    if (state.tab === "twin") go("twin");
+  });
+  $("#ac-del")?.addEventListener("click", async () => {
+    if (!confirm("Delete every check-in in your account? This cannot be undone.")) return;
+    try {
+      await Account.deleteAllEvents();
+      state.twin = new PersonalTwin("You");
+      if (state.tab === "twin") go("twin");
+    } catch (e) { alert(e.message); }
+  });
+}
+
+function openAuth(mode) {
+  const box = $("#authbox");
+  const isUp = mode === "up";
+  box.hidden = false;
+  box.innerHTML = `
+    <form class="authform" id="ac-form">
+      <h4>${isUp ? "Create your Digital Twin" : "Sign in"}</h4>
+      <p class="hint">${isUp
+        ? "Your twin starts with no history and becomes more personal as your own history accumulates."
+        : "Your history will be restored."}</p>
+      <label>Email<input type="email" id="ac-email" autocomplete="email" required></label>
+      <label>Password<input type="password" id="ac-pass"
+        autocomplete="${isUp ? "new-password" : "current-password"}"
+        minlength="8" required></label>
+      <div class="authactions">
+        <button class="b run" type="submit">${isUp ? "Create account" : "Sign in"}</button>
+        <button class="b" type="button" id="ac-cancel">Cancel</button>
+        <button class="linkb" type="button" id="ac-swap">${
+          isUp ? "I already have an account" : "Create one instead"}</button>
+      </div>
+      <p class="hint" id="ac-msg"></p>
+      <p class="hint">Your check-ins are stored so your twin persists. They are
+        <b>not</b> added to the research dataset, and the research pipeline never
+        reads them.</p>
+    </form>`;
+
+  $("#ac-cancel").addEventListener("click", () => { box.hidden = true; box.innerHTML = ""; });
+  $("#ac-swap").addEventListener("click", () => openAuth(isUp ? "in" : "up"));
+  $("#ac-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const msg = $("#ac-msg");
+    const email = $("#ac-email").value.trim(), pass = $("#ac-pass").value;
+    msg.textContent = isUp ? "Creating your account…" : "Signing in…";
+    try {
+      if (isUp) {
+        const r = await Account.createAccount(email, pass);
+        if (r.confirmationRequired) {
+          msg.innerHTML = "<b>Check your email to confirm the account</b>, then sign in.";
+          return;
+        }
+      } else {
+        await Account.signIn(email, pass);
+      }
+      await restoreTwinFromAccount();
+      box.hidden = true; box.innerHTML = "";
+      renderAccountBar();
+      go("twin");
+    } catch (err) {
+      msg.innerHTML = `<span class="err">${esc(err.message)}</span>`;
+    }
+  });
+  $("#ac-email").focus();
+}
+
 /* ------------------------------------------------------------------ router */
 function go(tab) {
   state.tab = tab;
@@ -1275,6 +1426,14 @@ function go(tab) {
   (routes[tab] || viewHome)();
 }
 
+async function restoreOnBoot() {
+  if (Account.accountsEnabled() && Account.signedIn()) {
+    try { await restoreTwinFromAccount(); return; }
+    catch { /* expired or offline: fall through to the local copy */ }
+  }
+  loadTwinLocal();
+}
+
 function boot() {
   initTheme();
   const sel = $("#theme");
@@ -1287,7 +1446,15 @@ function boot() {
 
   const eng = activeEngine();
   $("#engine").title = `${eng.name}: ${eng.detail}`;
+
+  // Render the page first, then restore history. A slow or unreachable account
+  // backend must never delay the interface -- the demo has to open instantly.
   go("home");
+  renderAccountBar();
+  restoreOnBoot().then(() => {
+    renderAccountBar();
+    if (state.tab === "twin") go("twin");
+  });
 }
 
 boot();
