@@ -51,7 +51,7 @@ def test_writing_an_unstamped_table_is_refused(tmp_path):
 def test_written_table_declares_its_status_in_the_markdown(tmp_path):
     p = write_table(pd.DataFrame({"a": [1]}), tmp_path / "t",
                     status=DataStatus.SYNTHETIC, title="Demo")
-    md = p.with_suffix(".md").read_text()
+    md = p.with_suffix(".md").read_text(encoding="utf-8")
     assert "**DATA STATUS: SYNTHETIC**" in md
     assert p.exists() and p.with_suffix(".md").exists()
 

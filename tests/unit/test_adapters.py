@@ -59,9 +59,9 @@ def test_studentlife_halts_on_an_unknown_label(tmp_path):
     from aedt.io.fixtures import make_studentlife_fixture
     root = make_studentlife_fixture(tmp_path / "bad", n_participants=2, days=20)
     p = root / "EMA" / "EMA_definition.json"
-    d = json.loads(p.read_text())
+    d = json.loads(p.read_text(encoding="utf-8"))
     d["Stress"]["responses"][0] = "Mildly perturbed"      # not in the spec
-    p.write_text(json.dumps(d))
+    p.write_text(json.dumps(d), encoding="utf-8")
     with pytest.raises(DecisionRequired, match="differ from expected mapping"):
         get_adapter("studentlife").audit(root)
 
@@ -206,6 +206,6 @@ def test_a_fixture_directory_is_marked_and_detectable(studentlife_fixture):
 
 
 def test_fixture_marker_says_it_is_not_real(studentlife_fixture):
-    txt = (studentlife_fixture / FIXTURE_MARKER).read_text()
+    txt = (studentlife_fixture / FIXTURE_MARKER).read_text(encoding="utf-8")
     assert "SYNTHETIC FIXTURE" in txt
     assert "NO real participant data" in txt

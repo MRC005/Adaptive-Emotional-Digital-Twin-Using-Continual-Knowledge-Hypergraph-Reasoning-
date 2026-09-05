@@ -57,17 +57,21 @@ def js_results():
         payload.append({"x": x.tolist(), "y": y.tolist(), "K": K})
     with tempfile.TemporaryDirectory() as td:
         inp = Path(td) / "in.json"
-        inp.write_text(json.dumps(payload))
+        inp.write_text(json.dumps(payload), encoding="utf-8")
         script = Path(td) / "run.mjs"
+        # Node's ESM loader takes a URL, not a filesystem path. On Windows a
+        # bare "C:\\..." is read as an unknown URL scheme and the import fails
+        # with ERR_UNSUPPORTED_ESM_URL_SCHEME, which silently cost this test on
+        # every Windows machine. as_uri() is correct on POSIX too.
         script.write_text(f"""
-import {{ ordinalProbitFit }} from {json.dumps(str(ESTIMATOR))};
+import {{ ordinalProbitFit }} from {json.dumps(ESTIMATOR.as_uri())};
 import {{ readFileSync }} from "node:fs";
 const cases = JSON.parse(readFileSync({json.dumps(str(inp))}, "utf8"));
 console.log(JSON.stringify(cases.map(c => {{
   const f = ordinalProbitFit(c.x, c.y, c.K);
   return {{ converged: f.converged, beta: f.beta, cutpoints: f.cutpoints ?? [] }};
 }})));
-""")
+""", encoding="utf-8")
         r = subprocess.run(["node", str(script)], capture_output=True,
                            text=True, timeout=300)
         assert r.returncode == 0, r.stderr[-2000:]

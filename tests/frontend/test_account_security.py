@@ -23,13 +23,13 @@ node = pytest.mark.skipif(shutil.which("node") is None, reason="node not availab
 
 # ------------------------------------------------------- database enforcement
 def test_row_level_security_is_enabled_on_the_table():
-    sql = SCHEMA.read_text()
+    sql = SCHEMA.read_text(encoding="utf-8")
     assert "enable row level security" in sql.lower()
 
 
 def test_every_operation_is_restricted_to_the_authenticated_user():
     """A missing policy for any verb is a hole; check all four explicitly."""
-    sql = SCHEMA.read_text().lower()
+    sql = SCHEMA.read_text(encoding="utf-8").lower()
     for verb in ("select", "insert", "update", "delete"):
         assert f"for {verb}" in sql, f"no policy governs {verb}"
     # and each one is pinned to the verified identity
@@ -37,20 +37,20 @@ def test_every_operation_is_restricted_to_the_authenticated_user():
 
 
 def test_owner_defaults_to_the_verified_token_not_a_client_value():
-    sql = SCHEMA.read_text().lower()
+    sql = SCHEMA.read_text(encoding="utf-8").lower()
     assert "default auth.uid()" in sql
 
 
 def test_the_client_never_sends_a_user_id_when_writing():
     """A client-supplied owner is the classic broken-ownership bug."""
-    src = ACCOUNT.read_text()
+    src = ACCOUNT.read_text(encoding="utf-8")
     save = src[src.index("export async function saveEvent"):]
     save = save[:save.index("\n}")]
     assert "user_id" not in save, "saveEvent must not send user_id"
 
 
 def test_account_deletion_can_only_delete_the_caller():
-    sql = SCHEMA.read_text().lower()
+    sql = SCHEMA.read_text(encoding="utf-8").lower()
     fn = sql[sql.index("delete_own_account"):]
     assert "uid uuid := auth.uid()" in fn
     assert "raise exception 'not authenticated'" in fn
@@ -59,7 +59,7 @@ def test_account_deletion_can_only_delete_the_caller():
 
 
 def test_the_definer_function_is_not_executable_anonymously():
-    sql = SCHEMA.read_text().lower()
+    sql = SCHEMA.read_text(encoding="utf-8").lower()
     assert "revoke all on function public.delete_own_account() from public, anon" in sql
     assert "grant execute on function public.delete_own_account() to authenticated" in sql
 
@@ -90,7 +90,7 @@ def test_no_supabase_credentials_are_committed():
 
 
 def test_env_local_is_gitignored():
-    ig = (ROOT / ".gitignore").read_text()
+    ig = (ROOT / ".gitignore").read_text(encoding="utf-8")
     assert ".env.local" in ig
     tracked = subprocess.run(["git", "ls-files"], cwd=ROOT,
                              capture_output=True, text=True).stdout
@@ -98,7 +98,7 @@ def test_env_local_is_gitignored():
 
 
 def test_setup_warns_against_the_service_role_key():
-    doc = (ROOT / "supabase" / "SETUP.md").read_text()
+    doc = (ROOT / "supabase" / "SETUP.md").read_text(encoding="utf-8")
     assert "service_role" in doc and "bypasses RLS" in doc
 
 
