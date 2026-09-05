@@ -14,14 +14,41 @@ depends on which was used. Each function therefore states its definition, and
 ``scripts/run_ceiling_analysis.py`` reports the primary AND the sensitivity
 variant side by side rather than choosing one silently.
 
-DECLARED CHOICES (fixed here, before the numbers are seen again)
+THE ORIGINAL PROCEDURE, RECOVERED
+The first version of this module declared its own definitions because the
+original ones were not in the repository. Running it on the restored archive
+then made the original recoverable: under the pairing below, with participants
+included on **usable pairs** rather than raw observations, and with the
+headline figure taken as the **mean of the per-person correlations**, eight
+published statistics reproduce simultaneously, to the 2-3 decimal places they
+were transcribed at --
+
+    n = 194 · mean 0.3395 · median 0.3456 · IQR [0.239, 0.466]
+    range [-0.243, 0.687] · frac<0.15 = 0.129 · frac>0.50 = 0.170
+    mean^2 = 0.115
+
+-- against published 194 / 0.339 / 0.346 / [0.239, 0.466] / [-0.243, 0.687] /
+0.13 / 0.17 / 0.115. The participant count and all four IQR/range endpoints
+agree exactly; the mean agrees by truncation rather than rounding (0.33953 was
+written 0.339), which is consistent with hand transcription. Six independent
+order statistics and a participant count do not coincide by accident, so this
+is treated as the recovered original definition rather than a fitted one. Three further statistics (ICC,
+early/late stability, the sensing screen) still differ and are reported as
+differing; no further search was made for definitions that would close them.
+
+DECLARED CHOICES
   * A "consecutive pair" is a report and the participant's NEXT report.
   * PRIMARY restricts pairs to a gap of 1-7 days, matching the prediction task
     that the pre-registration defines. ALL-PAIRS is reported alongside it as a
     sensitivity, because a reader may reasonably mean either.
   * A participant enters the per-person analysis with at least
-    ``MIN_OBS_PER_PERSON`` reports, and each half of the early/late split needs
-    at least ``MIN_PAIRS_PER_HALF`` usable pairs.
+    ``MIN_PAIRS_PER_PERSON`` usable pairs (and at least ``MIN_OBS_PER_PERSON``
+    reports), and each half of the early/late split needs at least
+    ``MIN_PAIRS_PER_HALF`` usable pairs.
+  * ``within_person_autocorrelation`` is the MEAN of the per-person values.
+    The person-centred pooled correlation is also computed and reported as
+    ``pooled_within_person_autocorrelation``; it answers a slightly different
+    question and is kept so the two cannot be confused again.
   * A participant whose stress never varies has no defined autocorrelation and
     is EXCLUDED, never imputed as 0. The exclusion count is reported.
 
@@ -36,7 +63,8 @@ import numpy as np
 import pandas as pd
 
 __all__ = [
-    "MIN_OBS_PER_PERSON", "MIN_PAIRS_PER_HALF", "MAX_GAP_DAYS",
+    "MIN_OBS_PER_PERSON", "MIN_PAIRS_PER_PERSON", "MIN_PAIRS_PER_HALF",
+    "MAX_GAP_DAYS",
     "NEAR_UNPREDICTABLE_BELOW", "WELL_PREDICTABLE_ABOVE",
     "consecutive_pairs", "person_autocorrelation", "pooled_autocorrelation",
     "icc_one_way", "per_person_autocorrelations", "early_late_stability",
@@ -46,6 +74,10 @@ __all__ = [
 #: A participant needs this many reports before a per-person autocorrelation is
 #: estimated at all. Below it the estimate is dominated by sampling noise.
 MIN_OBS_PER_PERSON = 30
+
+#: ...and this many USABLE PAIRS. This is the screen the original analysis
+#: applied: it is what reproduces n = 194 rather than 205.
+MIN_PAIRS_PER_PERSON = 30
 
 #: Each half of the early/late split needs this many usable pairs.
 MIN_PAIRS_PER_HALF = 15
@@ -166,6 +198,7 @@ class PersonR:
 def per_person_autocorrelations(frame: pd.DataFrame, *, value_col: str,
                                 day_col: str, id_col: str = "participant_id",
                                 min_obs: int = MIN_OBS_PER_PERSON,
+                                min_pairs: int = MIN_PAIRS_PER_PERSON,
                                 max_gap_days: int | None = MAX_GAP_DAYS
                                 ) -> tuple[list[PersonR], dict]:
     """One autocorrelation per eligible participant, plus an exclusion ledger.
@@ -175,7 +208,8 @@ def per_person_autocorrelations(frame: pd.DataFrame, *, value_col: str,
     imputed.
     """
     rows: list[PersonR] = []
-    excluded = {"too_few_observations": 0, "no_variance_or_too_few_pairs": 0}
+    excluded = {"too_few_observations": 0, "too_few_pairs": 0,
+                "no_variance_or_too_few_pairs": 0}
     for pid, g in frame.groupby(id_col, sort=True):
         g = g.sort_values(day_col)
         v = g[value_col].to_numpy(dtype=float)
@@ -184,6 +218,9 @@ def per_person_autocorrelations(frame: pd.DataFrame, *, value_col: str,
             excluded["too_few_observations"] += 1
             continue
         x, y = consecutive_pairs(v, d, max_gap_days)
+        if len(x) < min_pairs:
+            excluded["too_few_pairs"] += 1
+            continue
         r = _pearson(x, y)
         if not np.isfinite(r):
             excluded["no_variance_or_too_few_pairs"] += 1
@@ -219,6 +256,7 @@ def early_late_stability(rows: list[PersonR]) -> tuple[float, int]:
 class CeilingStats:
     """Every number the website quotes under "the ceiling", with its inputs."""
     within_person_autocorrelation: float
+    pooled_within_person_autocorrelation: float
     variance_explained: float
     icc_between_person: float
     per_person_r_median: float
@@ -235,6 +273,8 @@ class CeilingStats:
     def to_dict(self) -> dict:
         return {
             "within_person_autocorrelation": self.within_person_autocorrelation,
+            "pooled_within_person_autocorrelation":
+                self.pooled_within_person_autocorrelation,
             "variance_explained": self.variance_explained,
             "icc_between_person": self.icc_between_person,
             "per_person_r_median": self.per_person_r_median,
@@ -253,11 +293,12 @@ class CeilingStats:
 def ceiling_statistics(frame: pd.DataFrame, *, value_col: str, day_col: str,
                        id_col: str = "participant_id",
                        min_obs: int = MIN_OBS_PER_PERSON,
+                       min_pairs: int = MIN_PAIRS_PER_PERSON,
                        max_gap_days: int | None = MAX_GAP_DAYS) -> CeilingStats:
     """Compute the full ceiling block from a long (person, day, value) frame."""
     rows, excluded = per_person_autocorrelations(
         frame, value_col=value_col, day_col=day_col, id_col=id_col,
-        min_obs=min_obs, max_gap_days=max_gap_days)
+        min_obs=min_obs, min_pairs=min_pairs, max_gap_days=max_gap_days)
 
     eligible_ids = {p.participant_id for p in rows}
     series, groups = [], []
@@ -274,9 +315,11 @@ def ceiling_statistics(frame: pd.DataFrame, *, value_col: str, day_col: str,
     rs = np.array([p.r for p in rows], dtype=float)
     el_r, el_n = early_late_stability(rows)
 
+    mean_r = float(np.mean(rs)) if len(rs) else float("nan")
     return CeilingStats(
-        within_person_autocorrelation=float(pooled),
-        variance_explained=float(pooled ** 2) if np.isfinite(pooled) else float("nan"),
+        within_person_autocorrelation=mean_r,
+        pooled_within_person_autocorrelation=float(pooled),
+        variance_explained=float(mean_r ** 2) if np.isfinite(mean_r) else float("nan"),
         icc_between_person=float(icc),
         per_person_r_median=float(np.median(rs)) if len(rs) else float("nan"),
         per_person_r_iqr=[float(np.percentile(rs, 25)),
@@ -295,9 +338,12 @@ def ceiling_statistics(frame: pd.DataFrame, *, value_col: str, day_col: str,
                           + (f", gap 1-{max_gap_days} days"
                              if max_gap_days else ", any gap")),
             "min_obs_per_person": min_obs,
+            "min_pairs_per_person": min_pairs,
             "min_pairs_per_half": MIN_PAIRS_PER_HALF,
             "near_unpredictable_below": NEAR_UNPREDICTABLE_BELOW,
             "well_predictable_above": WELL_PREDICTABLE_ABOVE,
+            "within_person_autocorrelation":
+                "MEAN of the per-person lag-1 correlations (recovered original)",
             "pooled_autocorrelation": "person-mean-centred pairs, pooled",
             "icc": "one-way random effects ANOVA, unequal group sizes",
         },

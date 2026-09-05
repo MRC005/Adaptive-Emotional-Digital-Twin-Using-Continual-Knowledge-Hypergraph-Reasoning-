@@ -1,18 +1,33 @@
 {
   "_generated_by": "scripts/export_findings.py",
   "_provenance": {
-    "status": "PARTIALLY VERIFIED \u2014 see docs/statistic_provenance.md",
+    "cohort": "results/twin/ceiling.json :: cohort",
     "headline": "results/twin/twin_experiment.json :: results[K=80]",
     "learning_curve": "results/twin/twin_experiment.json :: results[*]",
     "ablation": "results/twin/twin_ablation.json :: arms",
+    "ceiling": "results/twin/ceiling.json :: ceiling",
     "splits": "results/twin/twin_experiment.json :: n_train/n_val/n_test",
-    "cohort": "UNVERIFIED \u2014 participants/years/reports/prediction_pairs were hand-entered in the exporter; they are now computed by scripts/run_ceiling_analysis.py and will be regenerated once the archive is restored.",
-    "ceiling": "UNVERIFIED \u2014 every value in this block was a literal in scripts/export_findings.py with no script behind it. The computation now exists in aedt/audit/ceiling.py and scripts/run_ceiling_analysis.py; these values have NOT yet been regenerated because the College Experience archive is not present. They are retained unchanged so the site is not silently emptied, and must be replaced by a generated run.",
-    "regenerate_with": "python3 scripts/run_ceiling_analysis.py && python3 scripts/export_findings.py"
+    "input_digests": {
+      "results/twin/twin_experiment.json": "14323dfab5d6aaa3",
+      "results/twin/twin_ablation.json": "4451ed05879bc86d",
+      "results/twin/ceiling.json": "db63e8e54b244f3b"
+    },
+    "ceiling_definition": {
+      "pair_rule": "report to NEXT report, gap 1-7 days",
+      "min_obs_per_person": 30,
+      "min_pairs_per_person": 30,
+      "min_pairs_per_half": 15,
+      "near_unpredictable_below": 0.15,
+      "well_predictable_above": 0.5,
+      "within_person_autocorrelation": "MEAN of the per-person lag-1 correlations (recovered original)",
+      "pooled_autocorrelation": "person-mean-centred pairs, pooled",
+      "icc": "one-way random effects ANOVA, unequal group sizes"
+    },
+    "ceiling_generated_utc": "2026-09-05T10:20:01.550267+00:00"
   },
   "cohort": {
     "participants": 218,
-    "years": 4.8,
+    "years": 4.82,
     "reports": 35348,
     "prediction_pairs": 25966,
     "train": 130,
@@ -68,107 +83,107 @@
         "mae": 0.7838187734943084
       },
       "T_twin": {
-        "macro_f1": 0.2846994263207557,
+        "macro_f1": 0.2792879259397481,
         "ci": [
-          0.2531417264713038,
-          0.3146168632575276
+          0.24580551193791006,
+          0.31615166517218013
         ],
-        "accuracy": 0.5039204181830447,
-        "mae": 0.5976303196443501
+        "accuracy": 0.5008507279436265,
+        "mae": 0.5977631841310606
       }
     },
     "twin_vs_persistence": {
-      "mean_diff": -0.047299920592280636,
-      "median_diff": -0.04212988939129092,
-      "ci_low": -0.07488329243313477,
-      "ci_high": -0.02036686354729853,
-      "improved": 9,
-      "harmed": 22,
-      "tied": 0,
+      "mean_diff": -0.052711420973288126,
+      "median_diff": -0.051850027367268736,
+      "ci_low": -0.08182675240489105,
+      "ci_high": -0.025293361084397524,
+      "improved": 5,
+      "harmed": 25,
+      "tied": 1,
       "n_participants": 31,
-      "frac_improved": 0.2903225806451613
+      "frac_improved": 0.16129032258064516
     },
     "twin_vs_calibrated": {
-      "mean_diff": 0.08681540752002807,
-      "median_diff": 0.09769141846865229,
-      "ci_low": 0.05969630883387263,
-      "ci_high": 0.11195096433787294,
-      "improved": 26,
-      "harmed": 5,
+      "mean_diff": 0.08140390713902058,
+      "median_diff": 0.07968895875872621,
+      "ci_low": 0.052318400452305146,
+      "ci_high": 0.11207171625411122,
+      "improved": 24,
+      "harmed": 7,
       "tied": 0,
       "n_participants": 31,
-      "frac_improved": 0.8387096774193549
+      "frac_improved": 0.7741935483870968
     }
   },
   "learning_curve": [
     {
       "K": 0,
-      "twin": 0.2623108027379371,
+      "twin": 0.26309412809382543,
       "persistence": 0.29565143388277093,
-      "twin_acc": 0.4453184954167815,
-      "twin_mae": 0.6992970240874299
+      "twin_acc": 0.44529257205279066,
+      "twin_mae": 0.6941236762034282
     },
     {
       "K": 5,
-      "twin": 0.2698806043772332,
+      "twin": 0.26998355928385553,
       "persistence": 0.30401838054444574,
-      "twin_acc": 0.46695226769453935,
-      "twin_mae": 0.6677721842453391
+      "twin_acc": 0.46612367553292255,
+      "twin_mae": 0.6650749280566626
     },
     {
       "K": 10,
-      "twin": 0.2703121701162164,
+      "twin": 0.27045070149527684,
       "persistence": 0.30385165436561223,
-      "twin_acc": 0.4696668921922175,
-      "twin_mae": 0.6658694732367121
+      "twin_acc": 0.4691030273785548,
+      "twin_mae": 0.662352866554606
     },
     {
       "K": 20,
-      "twin": 0.2736922649814521,
+      "twin": 0.27672806774858066,
       "persistence": 0.3108033400269515,
-      "twin_acc": 0.4733795801097226,
-      "twin_mae": 0.6581540929058489
+      "twin_acc": 0.4765458827083679,
+      "twin_mae": 0.6540899060175851
     },
     {
       "K": 40,
-      "twin": 0.2839444094206595,
+      "twin": 0.2856379100587462,
       "persistence": 0.31598614769050454,
-      "twin_acc": 0.4802518866302177,
-      "twin_mae": 0.6430600275799526
+      "twin_acc": 0.48218650860687645,
+      "twin_mae": 0.6397689320066584
     },
     {
       "K": 80,
-      "twin": 0.2846994263207557,
+      "twin": 0.2792879259397481,
       "persistence": 0.3319993469130363,
-      "twin_acc": 0.5039204181830447,
-      "twin_mae": 0.5976303196443501
+      "twin_acc": 0.5008507279436265,
+      "twin_mae": 0.5977631841310606
     }
   ],
   "ablation": {
     "A1_global_only": 0.15822410933185932,
-    "A3_global_plus_history": 0.27573308130798274,
+    "A3_global_plus_history": 0.27617840343841216,
     "A5_no_trajectory": 0.26758348535692006,
-    "A6_no_behaviour": 0.28503885490220565,
-    "A4_full_twin_online": 0.2736922649814521
+    "A6_no_behaviour": 0.2820179375835261,
+    "A4_full_twin_online": 0.27672806774858066
   },
   "ceiling": {
-    "within_person_autocorrelation": 0.339,
-    "variance_explained": 0.115,
-    "icc_between_person": 0.246,
-    "strongest_behaviour_r": 0.0907,
-    "behaviour_variance_explained": 0.008,
-    "per_person_r_median": 0.346,
+    "within_person_autocorrelation": 0.3395326907808691,
+    "variance_explained": 0.11528244810889729,
+    "icc_between_person": 0.23644250224907756,
+    "strongest_behaviour_r": 0.10948532584097397,
+    "behaviour_variance_explained": 0.011987036574504242,
+    "per_person_r_median": 0.34560089621358353,
     "per_person_r_iqr": [
-      0.239,
-      0.466
+      0.23885524330261193,
+      0.4657384411278785
     ],
     "per_person_r_range": [
-      -0.243,
-      0.687
+      -0.24328333349484557,
+      0.6871263814495345
     ],
-    "frac_near_unpredictable": 0.13,
-    "frac_well_predictable": 0.17,
-    "early_late_r": 0.355,
+    "frac_near_unpredictable": 0.12886597938144329,
+    "frac_well_predictable": 0.17010309278350516,
+    "early_late_r": 0.38178543902204154,
     "n_participants_analysed": 194
   }
 }

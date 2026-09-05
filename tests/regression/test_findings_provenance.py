@@ -139,3 +139,62 @@ def test_published_ceiling_matches_the_generated_artefact():
     for key in ("participants", "years", "reports", "prediction_pairs"):
         assert generated["cohort"][key] == published["cohort"][key], (
             f"cohort.{key} disagrees with the generated artefact")
+
+
+# ----------------------------------------------- the recovered original block
+#: The per-person figures as they were published when they were hand-typed, at
+#: the precision they were published to. The recovered definition must
+#: reproduce ALL of them at once; matching one would prove nothing.
+#: value -> (published figure, tolerance). The published block was transcribed
+#: by hand at 2-3 decimal places, and one entry was TRUNCATED rather than
+#: rounded (mean 0.33953 was written 0.339), so these are compared within the
+#: last published digit rather than for exact equality.
+PUBLISHED_PER_PERSON = {
+    "n_participants_analysed": (194, 0),
+    "within_person_autocorrelation": (0.339, 1e-3),
+    "variance_explained": (0.115, 1e-3),
+    "per_person_r_median": (0.346, 1e-3),
+    "frac_near_unpredictable": (0.13, 1e-2),
+    "frac_well_predictable": (0.17, 1e-2),
+}
+PUBLISHED_IQR = (0.239, 0.466)
+PUBLISHED_RANGE = (-0.243, 0.687)
+
+ARCHIVE = ROOT / "data" / "raw" / "college-experience" / "EMA" / "general_ema.csv"
+
+
+@pytest.mark.skipif(not ARCHIVE.exists(),
+                    reason="the College Experience archive is not on disk")
+def test_the_recovered_definition_reproduces_the_published_per_person_block():
+    """Pins the definition that was reverse-engineered from the archive.
+
+    The original procedure was not in the repository. It was recovered by
+    running the restored archive under two candidate rules -- inclusion on
+    usable PAIRS rather than observations, and the MEAN rather than a pooled
+    correlation -- and finding that eight published figures then reproduced
+    together to their published precision (the participant count and both IQR
+    and range endpoints exactly). This test exists so that recovery cannot be quietly lost: if
+    someone changes the screen or the estimator, every one of these breaks at
+    once and the published record stops being reproducible again.
+    """
+    import sys
+    sys.path.insert(0, str(ROOT))
+    from scripts.run_ceiling_analysis import DATA, load_reports
+
+    reports = load_reports(DATA)
+    stats = ceiling_statistics(reports, value_col="stress", day_col="day_ord")
+    d = stats.to_dict()
+
+    for key, (want, tol) in PUBLISHED_PER_PERSON.items():
+        got = d[key]
+        if tol == 0:
+            assert int(got) == want, (
+                f"{key}: recovered definition gives {got!r}, published {want}")
+            continue
+        assert abs(float(got) - want) < tol, (
+            f"{key}: recovered definition gives {got!r}, the published record "
+            f"says {want} (tolerance {tol}). The recovered procedure no longer "
+            "reproduces the published block.")
+
+    assert tuple(round(v, 3) for v in d["per_person_r_iqr"]) == PUBLISHED_IQR
+    assert tuple(round(v, 3) for v in d["per_person_r_range"]) == PUBLISHED_RANGE
