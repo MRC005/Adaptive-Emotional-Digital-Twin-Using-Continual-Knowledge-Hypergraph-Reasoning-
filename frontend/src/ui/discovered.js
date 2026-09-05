@@ -19,6 +19,7 @@
  */
 import F from "../data/findings.json";
 import HIST from "../data/historical_findings.json";
+import { META } from "../lib/participants.js";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g,
   (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -240,7 +241,7 @@ export function viewDiscovered(root) {
           <p>If a simple rule cannot be beaten, either the model is weak or
             <b>the signal is not there.</b> We measured which:</p>
           <div class="facts">
-            <div><b>r = ${CE.within_person_autocorrelation}</b>
+            <div><b>r = ${f3(CE.within_person_autocorrelation)}</b>
               <span>within-person autocorrelation — only
                 ${(CE.variance_explained * 100).toFixed(0)}% of variation is
                 predictable from the previous report</span></div>
@@ -272,14 +273,14 @@ export function viewDiscovered(root) {
         <div class="pad">
           ${spreadSvg()}
           <p>Predictability is <b>not a property of the task — it is a property of
-            the person.</b> It ranges from ${CE.per_person_r_range[0]} to
-            ${CE.per_person_r_range[1]}:
+            the person.</b> It ranges from ${f3(CE.per_person_r_range[0])} to
+            ${f3(CE.per_person_r_range[1])}:
             <b>${(CE.frac_near_unpredictable * 100).toFixed(0)}%</b> are close to
             unpredictable, while <b>${(CE.frac_well_predictable * 100).toFixed(0)}%</b>
             are well predicted by their own history.</p>
           <p>And it is <b>forecastable</b>: a person's predictability in the first
             half of their data correlates at
-            <b>r = ${CE.early_late_r}</b> with the second half.</p>
+            <b>r = ${f3(CE.early_late_r)}</b> with the second half.</p>
         </div>
       </section>
 
@@ -299,6 +300,58 @@ export function viewDiscovered(root) {
         </div>
       </section>
 
+      <section class="panel dq">
+        <header><h3>The discovery, in five steps</h3>
+          <span class="meta">what we expected, and what the data said</span></header>
+        <div class="pad">
+          <ol class="dq-steps">
+            <li>
+              <p class="dq-lab">What we expected</p>
+              <p>That personalisation would improve prediction of how someone
+                feels next. It is the premise of most wellbeing applications,
+                and we pre-registered a protocol to test it properly rather
+                than assume it.</p>
+            </li>
+            <li>
+              <p class="dq-lab">What we found</p>
+              <p>The twin beat every simpler personalised baseline we built —
+                including a per-person calibrated global model, by
+                ${f3(H.models.T_twin.macro_f1 - H.models.B4_calibrated.macro_f1)}
+                macro-F1 — but it <b>did not beat persistence</b>:
+                <b>${f3(H.models.T_twin.macro_f1)}</b> against
+                <b>${f3(H.models.B1_persistence.macro_f1)}</b>. Carrying the
+                last reported value forward won.</p>
+            </li>
+            <li>
+              <p class="dq-lab">What we learned</p>
+              <p>Personalisation is not automatically beneficial. A model can be
+                better than every sophisticated alternative and still lose to a
+                rule with no parameters, and reporting that is more useful than
+                reporting the comparisons it won.</p>
+            </li>
+            <li>
+              <p class="dq-lab">What we observed</p>
+              <p>Predictability varies substantially between people. Across the
+                held-out participants the twin was better than persistence for
+                <b>${META.nTwinBetter} of ${META.nScored}</b> of them, and
+                within-person autocorrelation ranges from near zero to strongly
+                positive. The average hides that spread.</p>
+              <p><button class="linkb2" data-go2="explorer">Explore the
+                participants →</button></p>
+            </li>
+            <li>
+              <p class="dq-lab">What comes next <span class="dq-fw">future work</span></p>
+              <p>Whether predictability — and therefore the usefulness of
+                personalisation — can be identified <i>before</i> deployment.
+                <b>This is a question, not a result.</b> No such mechanism has
+                been built or validated here, and a measurement of the ceiling
+                available to one has already shown it to be small on this
+                cohort.</p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
       <section class="panel">
         <header><h3>How this was evaluated</h3>
           <span class="meta">the parts that make the numbers mean something</span></header>
@@ -315,4 +368,13 @@ export function viewDiscovered(root) {
       </section>
 
     </div>`;
+
+  // This page previously rendered no interactive controls, so it attached no
+  // listeners. It has one now, and a button that does nothing is worse than no
+  // button at all.
+  for (const b of root.querySelectorAll("[data-go2]")) {
+    b.addEventListener("click", () => {
+      document.querySelector(`[data-tab="${b.dataset.go2}"]`)?.click();
+    });
+  }
 }

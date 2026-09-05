@@ -19,6 +19,10 @@
  */
 import { PersonalTwin, buildEvent } from "../lib/twin.js";
 import { classify } from "../lib/emotion_engine.js";
+import { comparisonMarkup } from "./explorer.js";
+import { attachTooltips } from "../lib/longitudinal.js";
+import { byId, fmt, illustrative, isScored, sorted }
+  from "../lib/participants.js";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g,
   (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -51,7 +55,8 @@ const BASE = [
     ] },
 ];
 
-const st = { stage: 0, population: null, engine: null, inverted: false, why: false };
+const st = { stage: 0, population: null, engine: null, inverted: false,
+             why: false, pa: null, pb: null };
 
 function profiles() {
   if (!st.inverted) return BASE;
@@ -91,7 +96,26 @@ function historyList(p, twin) {
     </li>`).join("")}</ol>`;
 }
 
+/** Two contrasting REAL participants, picked by measured r, never by hand. */
+function defaultPair() {
+  // prefer the two published series, so the page opens on two real charts
+  const shown = illustrative().filter((q) => isScored(q))
+    .sort((x, y) => (y.autocorrelation ?? -9) - (x.autocorrelation ?? -9));
+  if (shown.length >= 2) return [shown[0].id, shown[shown.length - 1].id];
+  const scored = sorted("autocorrelation", true).filter((q) => isScored(q));
+  return scored.length >= 2
+    ? [scored[0].id, scored[scored.length - 1].id] : [null, null];
+}
+
+function realOptions(selected) {
+  return sorted("autocorrelation", true).map((q) =>
+    `<option value="${q.id}"${q.id === selected ? " selected" : ""}>` +
+    `${q.id} — r ${fmt.f2(q.autocorrelation)}, ${q.n_observations} obs</option>`
+  ).join("");
+}
+
 export async function viewTwoUser(root) {
+  if (st.pa == null && st.pb == null) [st.pa, st.pb] = defaultPair();
   const ps = profiles();
   const twins = ps.map(twinFor);
   const insights = ps.map((p, i) => twins[i].patternInsight(queryFor(p.name)));
@@ -194,7 +218,33 @@ export async function viewTwoUser(root) {
           previous value forward.</p>
         <button class="linkb2" data-go2="discovered">See the real results →</button>
       </section>` : ""}
+
+      <section class="exp-step exp-real">
+        <p class="exp-lab">And now two REAL people</p>
+        <p class="exp-sub">The histories above are invented, to make the
+          mechanism visible. These two are held-out participants from the study,
+          with their own measured predictability and their own held-out
+          results — nothing here is synthetic.</p>
+        <div class="ex-pick">
+          <label class="ex-sel"><span>Participant A</span>
+            <select id="x-pa">${realOptions(st.pa)}</select></label>
+          <label class="ex-sel"><span>Participant B</span>
+            <select id="x-pb">${realOptions(st.pb)}</select></label>
+        </div>
+        ${st.pa && st.pb && st.pa !== st.pb
+          ? comparisonMarkup(byId(st.pa), byId(st.pb))
+          : `<p class="exp-hint">Choose two different participants to compare
+             them side by side.</p>`}
+        <button class="linkb2" data-go2="explorer">Open the full explorer →</button>
+      </section>
     </div>`;
+
+  attachTooltips(root);
+
+  const onChange = (id, fn) =>
+    root.querySelector(id)?.addEventListener("change", fn);
+  onChange("#x-pa", (e) => { st.pa = e.target.value; viewTwoUser(root); });
+  onChange("#x-pb", (e) => { st.pb = e.target.value; viewTwoUser(root); });
 
   const on = (id, fn) => root.querySelector(id)?.addEventListener("click", fn);
 
@@ -211,9 +261,13 @@ export async function viewTwoUser(root) {
   on("#x-pred", () => { st.stage = 3; viewTwoUser(root); });
   on("#x-why", () => { st.why = !st.why; viewTwoUser(root); });
   on("#x-invert", () => { st.inverted = !st.inverted; viewTwoUser(root); });
-  root.querySelector("[data-go2]")?.addEventListener("click", (e) => {
-    document.querySelector(`[data-tab="${e.target.dataset.go2}"]`)?.click();
-  });
+  // querySelectorAll, not querySelector: this page now carries more than one
+  // cross-page button, and wiring only the first silently kills the rest.
+  for (const b of root.querySelectorAll("[data-go2]")) {
+    b.addEventListener("click", () => {
+      document.querySelector(`[data-tab="${b.dataset.go2}"]`)?.click();
+    });
+  }
 
   // move focus to the newest step so keyboard users are not left behind
   if (S > 0) root.querySelector(".exp-step:last-of-type .exp-lab")

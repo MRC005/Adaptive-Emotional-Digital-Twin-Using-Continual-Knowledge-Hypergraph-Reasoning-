@@ -22,6 +22,7 @@ import { renderReport, renderPrecomputed } from "./ui/results.js";
 import FIND from "./data/findings.json";
 import { viewDiscovered } from "./ui/discovered.js";
 import { viewEvolution } from "./ui/evolution.js";
+import { viewExplorer } from "./ui/explorer.js";
 import { viewReadiness } from "./ui/readiness.js";
 import { viewTwoUser } from "./ui/twouser.js";
 import * as Account from "./lib/account.js";
@@ -34,6 +35,12 @@ import { buildDemoHistory, DEMO_PERSON_ID } from "./lib/demo_history.js";
 import { renderHistory, renderSimilar, renderUnderstanding, syntheticBanner }
   from "./ui/twin_view.js";
 import REAL from "./data/real_datasets.json";
+
+/** Fixed-decimal display for result values. Interpolating a float straight
+ *  into markup prints its full double precision -- 0.15 arrives from JSON as
+ *  0.15000000000000002 and reached the Research page that way. */
+const n4 = (x) => (x == null || !isFinite(x) ? "—" : Number(x).toFixed(4));
+const n2 = (x) => (x == null || !isFinite(x) ? "—" : Number(x).toFixed(2));
 import L1 from "./data/layer1_results.json";
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -1213,9 +1220,9 @@ function viewMethod() {
           <span class="mono">${esc(L1.emotion.model)}</span>, a
           124.7M-parameter RoBERTa fine-tuned on GoEmotions by its author — <b>not by this
           project</b>. Evaluated here on the held-out GoEmotions test split
-          (${L1.emotion.n_test.toLocaleString()} examples, threshold ${L1.emotion.threshold}
-          chosen on validation): <b>macro-F1 ${L1.emotion.macro_f1}</b>,
-          micro-F1 ${L1.emotion.micro_f1}. The word-list baseline scores
+          (${L1.emotion.n_test.toLocaleString()} examples, threshold ${n2(L1.emotion.threshold)}
+          chosen on validation): <b>macro-F1 ${n4(L1.emotion.macro_f1)}</b>,
+          micro-F1 ${n4(L1.emotion.micro_f1)}. The word-list baseline scores
           ${L1.emotion.baseline_macro_f1} on the same split.</li>
         <li><b>Context extraction.</b> Deterministic rules over an explicit lexicon. Every value
           carries the exact phrase that produced it, and anything unstated is left blank rather
@@ -1244,17 +1251,17 @@ function viewMethod() {
       <div class="gridwrap"><table class="grid">
         <thead><tr><th>Model</th><th class="num">Macro-F1</th><th class="num">Accuracy</th></tr></thead>
         <tbody>
-          <tr><th>Majority class</th><td class="num mono">${L1.hgnn.majority.macro_f1}</td>
-            <td class="num mono">${L1.hgnn.majority.accuracy}</td></tr>
-          <tr><th>MLP (no structure)</th><td class="num mono">${L1.hgnn.mlp.macro_f1}</td>
-            <td class="num mono">${L1.hgnn.mlp.accuracy}</td></tr>
-          <tr><th>GCN (pairwise)</th><td class="num mono">${L1.hgnn.gcn.macro_f1}</td>
-            <td class="num mono">${L1.hgnn.gcn.accuracy}</td></tr>
-          <tr><th>HGNN (higher-order)</th><td class="num mono">${L1.hgnn.hgnn.macro_f1}</td>
-            <td class="num mono">${L1.hgnn.hgnn.accuracy}</td></tr>
+          <tr><th>Majority class</th><td class="num mono">${n4(L1.hgnn.majority.macro_f1)}</td>
+            <td class="num mono">${n4(L1.hgnn.majority.accuracy)}</td></tr>
+          <tr><th>MLP (no structure)</th><td class="num mono">${n4(L1.hgnn.mlp.macro_f1)}</td>
+            <td class="num mono">${n4(L1.hgnn.mlp.accuracy)}</td></tr>
+          <tr><th>GCN (pairwise)</th><td class="num mono">${n4(L1.hgnn.gcn.macro_f1)}</td>
+            <td class="num mono">${n4(L1.hgnn.gcn.accuracy)}</td></tr>
+          <tr><th>HGNN (higher-order)</th><td class="num mono">${n4(L1.hgnn.hgnn.macro_f1)}</td>
+            <td class="num mono">${n4(L1.hgnn.hgnn.accuracy)}</td></tr>
         </tbody></table></div>
       <p class="note" style="margin-top:9px"><b>The HGNN lost.</b> The structure-free MLP scores
-        ${L1.hgnn.mlp.macro_f1} against the HGNN's ${L1.hgnn.hgnn.macro_f1}. With a small
+        ${n4(L1.hgnn.mlp.macro_f1)} against the HGNN's ${n4(L1.hgnn.hgnn.macro_f1)}. With a small
         categorical entity set, an episode's own membership already encodes the conjunction, and
         propagating over a near-complete graph only blurs it. This is reported because it is what
         the experiment found; the same conclusion was reached independently by the Layer 2
@@ -1514,6 +1521,7 @@ function go(tab) {
     home: viewHome,
     twin: () => { state.mode = "twin"; viewAnalyze(); },
     evolution: () => viewEvolution($("#work")),
+    explorer: () => viewExplorer($("#work")),
     discovered: () => viewDiscovered($("#work")),
     research: viewResearch,
     readiness: () => viewReadiness($("#work")),
