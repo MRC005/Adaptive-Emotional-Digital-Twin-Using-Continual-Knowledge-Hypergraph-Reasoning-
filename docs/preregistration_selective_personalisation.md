@@ -89,6 +89,10 @@ reproducibility uncertainty that the baselines do not. Any conclusion here that
 would flip under a 0.005 shift in the twin's score must be reported as
 fragile.
 
+> **Study outcome, added 2026-09-05:** this study stopped at the validation
+> feasibility read; see §15. The gate was never built and the test split was
+> never opened.
+
 ## 4. Data, splits and the reuse limitation
 
 **Archive.** College Experience Study, `data/raw/college-experience/`, verified
@@ -326,6 +330,12 @@ because it is part of the frozen record.
 
 ## 14. Deviations
 
+**2026-09-05 — study stopped at the Appendix A stopping rule.** Steps A1 and
+A3–A8 were not executed. The oracle-headroom component of step A2 was run and
+is reported in §15; the readiness-calibration component of A2 was not, because
+it requires a gate score and no gate was built. No protocol element was
+changed in response to the result.
+
 **2026-09-05 — documentation cleanup before step A1, at the owner's direction.**
 `README.md` and the Research page were edited to distinguish the *originally
 reported* results from the *regenerated* ones, and `package_versions()` was
@@ -335,9 +345,102 @@ evidence vector, the routers, the metric, the thresholds, the splits or the
 failure criterion. No number was altered: 0.2847 and 0.2793 are both preserved
 with provenance.
 
-## 15. Result
+## 15. Result — recorded 2026-09-05
 
-*(to be appended after the test set is opened, once, whatever it says)*
+**The study stopped at the validation feasibility read. The test split was
+never opened, and the gate was never built.**
+
+Appendix A made that an explicit stopping rule: *"If oracle headroom on
+validation is ≈ 0, report that and stop: routing has no room, which is itself
+the answer to the research question."* The read-out was run
+(`scripts/run_oracle_headroom.py`), and the rule fired.
+
+### What was measured
+
+The **oracle router** — which knows, per participant, which of the twin or
+persistence actually scored higher, and picks it — against **always
+persistence**, on the 43 validation participants.
+
+**Primary, K = 20** (40 participants scored; 3 lack the five scored
+observations the frozen protocol requires):
+
+| Router | macro-F1 | 95% CI |
+|---|---|---|
+| R0 always persistence | 0.3398 | [0.3113, 0.3666] |
+| R1 always twin | 0.2911 | [0.2707, 0.3118] |
+| R5 oracle routing | 0.3503 | [0.3253, 0.3732] |
+| **Headroom (R5 − R0)** | **0.0104** | **[0.0041, 0.0180]** |
+
+The twin scored higher than persistence for **10 of 40** participants (25%).
+
+**Secondary, K = 80** (33 participants scored):
+
+| Router | macro-F1 | 95% CI |
+|---|---|---|
+| R0 always persistence | 0.3777 | [0.3231, 0.4376] |
+| R1 always twin | 0.3287 | [0.2817, 0.3861] |
+| R5 oracle routing | 0.3963 | [0.3465, 0.4514] |
+| **Headroom** | **0.0185** | **[0.0055, 0.0339]** |
+
+The twin scored higher for **9 of 33** participants (27.3%).
+
+Participant-clustered bootstrap, 2,000 resamples, seed 20260828, macro-F1 —
+all as pre-registered. Nothing was fitted and nothing was selected.
+
+### Why this ends the study
+
+**The headroom is real but small.** Both intervals exclude zero, so a perfect
+per-participant router would gain something. It would gain about one macro-F1
+point.
+
+**The gain is carried by a handful of people.** At K=20 the single largest
+contributor supplies 21% of the total gain, the top three 52%, the top five
+76%. At K=80 the top five supply 92.5%.
+
+**The gain sits at or below the detection floor.** Using the standard deviation
+of per-participant oracle gain, the indicative minimum detectable paired
+difference (α = 0.05, power 0.8) at the test split's cohort size is:
+
+| | Headroom | Indicative MDE | Ratio |
+|---|---|---|---|
+| K=20, test n = 42 | 0.0104 | 0.0098 | 1.07 |
+| K=80, test n = 31 | 0.0185 | 0.0219 | 0.85 |
+
+At K=80 a **perfect** oracle's gain is smaller than the smallest effect the
+test split could detect. At K=20 the entire perfect-router gain is 1.07 times
+that floor, so any real gate — which recovers a fraction of the oracle — would
+be statistically invisible.
+
+Proceeding to fit a gate would therefore produce a null that carries almost no
+information, and §10.4 requires that a null be reported alongside the effect it
+was able to detect. The honest course is to report the bound instead.
+
+### What this result is, stated precisely
+
+- It is a **ceiling on per-participant routing** between the personalised twin
+  and persistence, for next-report stress prediction, on the College
+  Experience cohort, under macro-F1.
+- **The Personalisation Gate was never implemented and was never tested.** No
+  evidence vector was constructed, no model was fitted, no threshold was
+  tuned. The primary hypothesis H1 was **not tested**, and no verdict on it is
+  claimed.
+- It says nothing about whether personalisation can work in general — not for
+  other cohorts, other targets, other horizons, other metrics, or other
+  formulations of the routing problem. It bounds *this* routing problem on
+  *this* data.
+- **It was measured on the validation split.** The test split was not read,
+  not scored and not used; a runtime check confirms every scored participant
+  came from validation. The test split therefore remains naive to this study
+  and is still available.
+- It is not a re-analysis of the frozen twin-vs-persistence experiment, whose
+  protocol, figures and NOT SUPPORTED verdict are unchanged.
+
+### What would be needed to reopen the question
+
+A cohort large enough that the detectable effect is smaller than the available
+headroom — on these variances, several hundred participants rather than
+forty — or a routing formulation with materially more headroom than this one.
+Either would require its own pre-registration.
 
 ---
 
