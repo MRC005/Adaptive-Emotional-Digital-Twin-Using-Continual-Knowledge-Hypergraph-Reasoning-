@@ -483,6 +483,152 @@ td.dim { color: var(--ink-3); }
 .tw-save p { font-size: 13.5px; color: var(--ink-2); margin: 0 0 14px; max-width: 52ch; }
 @media (max-width: 720px) { .tw-actions .cta { width: 100%; } }
 
+/* ============================================================ explorer ==
+   Evidence & Predictability Explorer, participant comparison, and the
+   longitudinal chart. Built on the existing tokens so both themes follow
+   the rest of the application; the data is the visual focus, so there are
+   no gradients, no glass, and no decoration that does not encode a value. */
+
+.ex .hero .q { max-width: 34ch }
+.ex .prov { font-size: 12.5px; color: var(--ink-3); margin-top: 14px }
+.ex .dim { color: var(--ink-3) }
+
+/* --- selection row */
+.ex-pick { display: flex; flex-wrap: wrap; gap: 14px 20px; align-items: flex-end }
+.ex-sel { display: flex; flex-direction: column; gap: 4px; min-width: 220px }
+.ex-sel > span { font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink-3) }
+.ex-sel select { font: inherit; font-size: 14px; padding: 7px 9px;
+  background: var(--panel); color: var(--ink); border: 1px solid var(--rule);
+  border-radius: 3px; max-width: 380px }
+.ex-sel select:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px }
+.ex-count { font-size: 12.5px; color: var(--ink-3); margin-left: auto;
+  align-self: center }
+
+/* --- predictability band: colour encodes the published rule, nothing else */
+.ex-band { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px;
+  padding: 11px 14px; border-radius: 3px; border: 1px solid var(--rule);
+  background: var(--stripe); margin-bottom: 10px }
+.ex-band b { font-size: 16px; text-transform: capitalize }
+.ex-band span { font-size: 13px; color: var(--ink-2);
+  font-variant-numeric: tabular-nums }
+.ex-band-well-predictable { border-left: 4px solid var(--ok) }
+.ex-band-typical { border-left: 4px solid var(--accent) }
+.ex-band-near-unpredictable { border-left: 4px solid var(--warn) }
+.ex-rule { font-size: 12.5px; color: var(--ink-2); margin: 0 0 14px }
+.ex-rule code { font-size: 12px }
+
+/* --- definition tooltips: a real disclosure, not a decorative icon */
+.ex-i { width: 15px; height: 15px; border-radius: 50%; border: 1px solid var(--rule);
+  background: var(--panel); color: var(--ink-3); font-size: 10px; line-height: 1;
+  cursor: help; padding: 0; vertical-align: 1px; position: relative }
+.ex-i:hover, .ex-i:focus-visible { color: var(--ink); border-color: var(--accent) }
+.ex-i::after { content: attr(data-tip); position: absolute; left: 50%;
+  transform: translateX(-50%); bottom: 140%; width: 280px; padding: 9px 11px;
+  background: var(--panel); color: var(--ink-2); border: 1px solid var(--rule);
+  border-radius: 3px; font-size: 12.5px; line-height: 1.5; text-align: left;
+  text-transform: none; letter-spacing: 0; font-weight: 400;
+  opacity: 0; visibility: hidden; transition: opacity .12s; z-index: 20;
+  box-shadow: 0 4px 14px rgba(0,0,0,.16) }
+.ex-i:hover::after, .ex-i:focus-visible::after,
+.ex-i[aria-expanded="true"]::after { opacity: 1; visibility: visible }
+.ex-tbl th { font-weight: 500 }
+
+/* --- twin vs persistence bars */
+.ex-vs { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 12px }
+.ex-vs-row { display: grid; grid-template-columns: 130px 1fr 74px;
+  align-items: center; gap: 12px; font-size: 14px }
+.ex-vs-row .num { font-variant-numeric: tabular-nums; text-align: right }
+.ex-vs-row.win .ex-vs-lab, .ex-vs-row.win .num { font-weight: 700 }
+.ex-bar { display: block; height: 15px; background: var(--stripe);
+  border-radius: 2px; overflow: hidden }
+.ex-bar i { display: block; height: 100%; border-radius: 2px }
+.b-twin { background: var(--accent) }
+.b-pers { background: var(--ok) }
+.ex-delta { font-size: 14px; margin: 0 0 14px }
+.ex-delta.up { color: var(--ok-2) }
+.ex-delta.down { color: var(--ink-2) }
+.ex-agg { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--rule) }
+.ex-agg h4 { margin: 0 0 10px; font-size: 13px; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--ink-3) }
+
+/* --- comparison */
+.ex-cmp th:first-child { font-weight: 500 }
+.ex-cmp thead th { font-variant-numeric: tabular-nums }
+.ex-sync { display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  margin-top: 16px }
+@media (max-width: 900px) { .ex-sync { grid-template-columns: 1fr } }
+
+/* --- view switcher */
+.ex-views { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px }
+.ex-view { font: inherit; font-size: 12.5px; padding: 5px 11px;
+  background: var(--panel); color: var(--ink-2); border: 1px solid var(--rule);
+  border-radius: 3px; cursor: pointer }
+.ex-view:hover { color: var(--ink); border-color: var(--accent) }
+.ex-view.on { background: var(--accent); color: var(--on-accent);
+  border-color: var(--accent) }
+.ex-reset { margin-left: auto }
+
+/* ======================================================== longitudinal == */
+.lg-fig { margin: 0; position: relative }
+.lg-title { font-size: 12.5px; color: var(--ink-3); margin-bottom: 4px }
+.lg-svg { width: 100%; height: auto; display: block; overflow: visible }
+.lg-grid { stroke: var(--rule-2); stroke-width: 1 }
+.lg-ax { fill: var(--ink-3); font-size: 10px; font-family: ui-monospace, monospace }
+.lg-ylab { font-size: 10px }
+.lg-warm { fill: var(--stripe) }
+.lg-warmlab { fill: var(--ink-3); font-size: 9.5px }
+.lg-obs { fill: none; stroke: var(--ink-2); stroke-width: 1.4;
+  stroke-linejoin: round }
+.lg-dot { fill: var(--ink-2) }
+.lg-dot-warm { fill: var(--ink-3); opacity: .55 }
+.lg-actual { fill: none; stroke: var(--ink); stroke-width: 1.6 }
+.lg-twin { fill: var(--accent) }
+.lg-pers { fill: var(--ok) }
+.lg-hit { fill: transparent; cursor: crosshair }
+.lg-hit:hover, .lg-hit:focus-visible { fill: var(--ink); fill-opacity: .05;
+  outline: none }
+.lg-empty { font-size: 13px; color: var(--ink-3); padding: 22px 0;
+  text-align: center }
+.lg-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px;
+  color: var(--ink-2); margin: 8px 0 0 }
+.lg-key { display: inline-flex; align-items: center; gap: 6px }
+.lg-key i { width: 10px; height: 10px; border-radius: 2px; display: inline-block }
+.k-obs { background: var(--ink-2) }
+.k-warm { background: var(--ink-3); opacity: .55 }
+.k-actual { border: 1.6px solid var(--ink); border-radius: 50%; background: none }
+.k-twin { background: var(--accent); transform: rotate(45deg) }
+.k-pers { background: var(--ok) }
+.lg-tip { position: absolute; top: 4px; pointer-events: none; z-index: 15;
+  background: var(--panel); border: 1px solid var(--rule); border-radius: 3px;
+  padding: 7px 10px; font-size: 12px; line-height: 1.5; color: var(--ink-2);
+  box-shadow: 0 4px 14px rgba(0,0,0,.16); min-width: 118px }
+.lg-tip b { color: var(--ink); font-variant-numeric: tabular-nums }
+
+.ex-chart.compact .lg-legend { font-size: 11px }
+.exp-real .ex-pick { margin-bottom: 14px }
+
+@media (prefers-reduced-motion: reduce) {
+  .ex-i::after { transition: none }
+}
+
+/* --- the discovery, in five steps */
+.dq-steps { list-style: none; counter-reset: dq; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 18px }
+.dq-steps > li { counter-increment: dq; padding-left: 38px; position: relative }
+.dq-steps > li::before { content: counter(dq); position: absolute; left: 0;
+  top: 1px; width: 24px; height: 24px; border-radius: 50%;
+  border: 1px solid var(--rule); background: var(--stripe);
+  color: var(--ink-3); font-size: 12px; font-family: ui-monospace, monospace;
+  display: grid; place-items: center }
+.dq-lab { font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-3); margin: 0 0 4px; font-weight: 600 }
+.dq-steps p { margin: 0 0 6px }
+.dq-fw { text-transform: none; letter-spacing: 0; margin-left: 8px;
+  padding: 1px 7px; border-radius: 2px; background: var(--warn-2);
+  color: var(--warn); font-weight: 700; font-size: 10px }
+.lg-dense { fill: var(--ink-3); font-size: 9.5px }
+
 /* ------------------------------------------------ synthetic-data label */
 .syn-banner{border:2px solid var(--warn);border-left-width:6px;margin:0 0 14px}
 .syn-tag{display:inline-block;margin-right:8px;padding:2px 8px;border-radius:3px;

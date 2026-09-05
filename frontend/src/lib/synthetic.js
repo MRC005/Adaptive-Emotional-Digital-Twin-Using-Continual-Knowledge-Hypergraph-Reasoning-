@@ -2,7 +2,8 @@
  * The label every page must show when it draws simulated people.
  *
  * No participant-level research record is distributed with this application.
- * The people on the Twin Evolution page are written by
+ * The people on the Explorer, the two-person comparison and Twin Evolution are
+ * written by
  * scripts/make_synthetic_demo_data.py from fixed constants and a seed.
  */
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g,
