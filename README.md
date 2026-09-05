@@ -93,6 +93,32 @@ declared primary before results were seen and was not changed afterwards.
 
 ---
 
+## What we asked next, and why we stopped
+
+The null was not uniform: at K=20, 12 of 42 held-out participants were better
+served by the twin than by persistence. That raised an obvious follow-up — could
+a system tell in advance *which* people those are, and personalise only for
+them? The protocol was pre-registered first, as before
+([`docs/preregistration_selective_personalisation.md`](docs/preregistration_selective_personalisation.md)),
+with a stopping rule written into it: measure how much a **perfect** router
+could gain before building anything.
+
+On the validation participants, a perfect per-participant router gains
+**0.0104 macro-F1** at K=20 (95% CI [0.0041, 0.0180]) and **0.0185** at K=80
+([0.0055, 0.0339]). Both intervals exclude zero, so the gain is real — and it is
+about one macro-F1 point, carried by a handful of people (the top three
+participants supply 52% of it at K=20), and at or below the smallest effect the
+held-out cohort could detect. At K=80 a perfect router's gain is *smaller* than
+the minimum detectable effect.
+
+So the stopping rule fired and **the gate was never built**. What is reported is
+a ceiling on routing, not a test of any gate: no evidence model was fitted, no
+threshold was tuned, and the hypothesis was not tested. **The test split was
+never opened** and remains naive. This bounds *this* routing problem on *this*
+cohort under *this* metric; it is not a claim that personalisation cannot work.
+
+---
+
 ## The two layers
 
 The system receives a person's interactions over time, identifies emotional and

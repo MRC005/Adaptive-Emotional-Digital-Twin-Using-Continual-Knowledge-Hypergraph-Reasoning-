@@ -323,7 +323,33 @@ itself:
 - `requirements-experiment.txt` pins exact versions. `requirements.txt` is
   **not** changed; its lower bounds are part of the historical record.
 
-## 8. How to regenerate everything
+## 8. The oracle-headroom read-out (validation split)
+
+| Statistic | Value | Status |
+|---|---|---|
+| Headroom, K=20 primary | 0.0104 [0.0041, 0.0180] | VERIFIED |
+| Headroom, K=80 secondary | 0.0185 [0.0055, 0.0339] | VERIFIED |
+| Oracle macro-F1, K=20 / K=80 | 0.3503 / 0.3963 | VERIFIED |
+| Persistence macro-F1, K=20 / K=80 | 0.3398 / 0.3777 | VERIFIED |
+| Participants scored | 40 of 43 (K=20), 33 of 43 (K=80) | VERIFIED |
+
+Produced by `scripts/run_oracle_headroom.py` → `results/gate/oracle_headroom.json`,
+with `run_metadata.json` beside it recording the commit, interpreter, package
+versions, thread configuration, dataset digests, configuration and seed — the
+first result in this project able to explain its own environment. Seven
+property tests in `tests/unit/test_oracle_headroom.py` pin the arithmetic,
+including that the reported headroom equals oracle minus persistence exactly.
+
+**Split.** Validation only. A runtime check confirms all 40 and 33 scored
+participants came from the validation split and none from train or test. The
+**test split was not read**, and remains naive.
+
+**Scope.** This bounds per-participant routing between the twin and
+persistence on this cohort under macro-F1. The Personalisation Gate was never
+implemented or tested. Nothing here concerns personalisation in general.
+Full account: `docs/preregistration_selective_personalisation.md` §15.
+
+## 9. How to regenerate everything
 
 ```
 python3 scripts/restore_dataset.py          # verify the archive first
@@ -332,5 +358,6 @@ python3 scripts/run_twin_ablation.py
 python3 scripts/run_ceiling_analysis.py
 python3 scripts/export_findings.py          # refuses if any input is missing
 python3 scripts/export_historical_baseline.py   # the reported record, from git
+python3 scripts/run_oracle_headroom.py         # validation-only headroom read
 python3 -m pytest tests/regression/test_findings_provenance.py                  tests/regression/test_historical_baseline.py -rs
 ```
