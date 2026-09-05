@@ -8,8 +8,17 @@
  * The page leads with the NULL, because that is the honest headline and
  * because a project that reports the baseline which beat it reads as more
  * credible, not less.
+ *
+ * TWO RECORDS, DELIBERATELY KEPT APART.
+ * `findings.json` holds the REGENERATED results: what the committed pipeline
+ * produces today on the digest-verified archive. `historical_findings.json`
+ * holds what the study ORIGINALLY REPORTED, transcribed from the git object
+ * that published it. They agree on every baseline and disagree on the twin.
+ * Neither is allowed to overwrite the other, and the page shows both rather
+ * than quietly picking one -- see the "Reproducibility" panel below.
  */
 import F from "../data/findings.json";
+import HIST from "../data/historical_findings.json";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g,
   (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -106,6 +115,21 @@ export function viewDiscovered(root) {
       <td class="num dim">${f3(m.mae)}</td></tr>`;
   }).join("");
 
+  const f4 = (x) => (x == null || !isFinite(x) ? "--" : x.toFixed(4));
+  const histTwin = HIST.headline.models.T_twin.macro_f1;
+  const newTwin = H.models.T_twin.macro_f1;
+  const reproRows = ORDER.filter((k) => H.models[k] && HIST.headline.models[k])
+    .map((k) => {
+      const a = HIST.headline.models[k].macro_f1, b = H.models[k].macro_f1;
+      const d = b - a;
+      const same = Math.abs(d) < 5e-5;
+      return `<tr${same ? "" : ' class="hi"'}>
+        <th>${esc(MODEL_LABEL[k])}</th>
+        <td class="num">${f4(a)}</td>
+        <td class="num">${f4(b)}</td>
+        <td class="num ${same ? "dim" : ""}">${same ? "exact" : (d >= 0 ? "+" : "") + f4(d)}</td></tr>`;
+    }).join("");
+
   const abl = [
     ["A6_no_behaviour", "Personal history only, no behaviour"],
     ["A3_global_plus_history", "History + behaviour"],
@@ -137,7 +161,9 @@ export function viewDiscovered(root) {
 
       <section class="panel">
         <header><h3>The answer we found</h3>
-          <span class="meta">pre-registered before any model was fitted</span></header>
+          <span class="meta">pre-registered before any model was fitted &middot;
+            regenerated ${new Date(F._provenance?.ceiling_generated_utc || Date.now())
+              .toISOString().slice(0, 10)}</span></header>
         <div class="pad">
           <p class="answer">Not the way we expected. <b>Simply carrying the last
             reported value forward beat every personalised model we built.</b></p>
@@ -147,7 +173,9 @@ export function viewDiscovered(root) {
             <tbody>${rows}</tbody>
           </table></div>
           <p class="hint">At K = ${H.K} prior observations. Participant-clustered
-            bootstrap, 2,000 resamples.</p>
+            bootstrap, 2,000 resamples. <b>These are the regenerated figures</b> —
+            what the committed pipeline produces today on the verified archive.
+            What the study originally reported is below.</p>
           <div class="msg warn">
             <b>Twin versus persistence: ${tp.mean_diff >= 0 ? "+" : ""}${f3(tp.mean_diff)} macro-F1</b>,
             95% CI [${f3(tp.ci_low)}, ${f3(tp.ci_high)}] — the interval excludes zero
@@ -157,6 +185,38 @@ export function viewDiscovered(root) {
           <p>We did not remove the baseline that beat us, and we did not change the
             metric afterwards. <b>macro-F1 was declared primary before any result
             was seen.</b></p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <header><h3>Reproducibility: two records, both kept</h3>
+          <span class="meta">what was reported &middot; what reproduces</span></header>
+        <div class="pad">
+          <p>The archive was restored and digest-verified, and the frozen
+            experiment was rerun without modification. <b>Every baseline
+            reproduced exactly.</b> One number did not, and we show both rather
+            than quietly replacing one with the other.</p>
+          <div class="gridwrap"><table class="grid">
+            <thead><tr><th>K = 80 macro-F1</th>
+              <th class="num">Originally reported</th>
+              <th class="num">Regenerated</th>
+              <th class="num">Difference</th></tr></thead>
+            <tbody>${reproRows}</tbody>
+          </table></div>
+          <p class="hint"><b>Originally reported</b> = the figures the study
+            published, transcribed from git commit
+            ${esc(HIST._provenance.commit)}. <b>Regenerated</b> = what the
+            committed pipeline produces today. The historical figures are not
+            reproducible and are never presented as if they were.</p>
+          <div class="msg warn">
+            <b>The twin&rsquo;s ${f4(histTwin)} could not be reproduced; the code
+            gives ${f4(newTwin)}.</b> Ruled out: library versions, interpreter,
+            data, committed code, run-to-run variation, thread count and the
+            online-adaptation strength. No search was made for a code variant
+            that returns the historical number. The verdict is unchanged either
+            way &mdash; persistence wins by more, not less.
+          </div>
+          <p>Full account: <code>docs/statistic_provenance.md</code>.</p>
         </div>
       </section>
 

@@ -1,0 +1,30 @@
+# EXACT versions for reproducing the selective-personalisation experiments.
+#
+# The frozen requirements.txt is NOT changed: it is part of the historical
+# record and pins only lower bounds, which is precisely why the first study's
+# environment could not be reconstructed from its own files.
+#
+# This file pins exact versions instead. It is the environment every experiment
+# written under docs/preregistration_selective_personalisation.md must run in,
+# and every run also records its own resolved versions in run_metadata.json, so
+# a mismatch is detectable from the artefact rather than assumed away.
+#
+# Interpreter: Python 3.12.10 (Windows-11-10.0.26200-SP0). Pin the interpreter
+# too -- a different minor version is a different environment.
+
+numpy==1.26.4
+scipy==1.17.1
+pandas==2.2.2
+scikit-learn==1.5.1
+joblib==1.5.3
+threadpoolctl==3.6.0
+matplotlib==3.10.7
+pyyaml==6.0.3
+pytest==8.3.2
+
+# Present in the environment but NOT imported by these experiments. Recorded
+# because they share native libraries with the stack above, and because
+# "installed but unused" is itself a fact a future investigation may need.
+#   onnxruntime==1.20.1      (Layer 1 inference only)
+#   torch==2.11.0+cpu        (installed; does not load under pytest on Windows)
+#   tokenizers==0.22.2       (Layer 1 inference only)
