@@ -326,7 +326,14 @@ because it is part of the frozen record.
 
 ## 14. Deviations
 
-*(none — to be appended with date and reason if any occur)*
+**2026-09-05 — documentation cleanup before step A1, at the owner's direction.**
+`README.md` and the Research page were edited to distinguish the *originally
+reported* results from the *regenerated* ones, and `package_versions()` was
+extended. Appendix B previously listed `README.md` as untouched; that line is
+corrected below. **No protocol element changed** — not the question, the
+evidence vector, the routers, the metric, the thresholds, the splits or the
+failure criterion. No number was altered: 0.2847 and 0.2793 are both preserved
+with provenance.
 
 ## 15. Result
 
@@ -371,11 +378,20 @@ Ordered so that the most informative and most falsifying steps come first.
 
 | Path | Change |
 |---|---|
-| `aedt/reporting/metadata.py` | `package_versions()` extended with scikit-learn, joblib, threadpoolctl and the OpenMP thread count |
+| `aedt/reporting/metadata.py` | `package_versions()` extended with scikit-learn, joblib and threadpoolctl; `thread_environment()` added; optional `seed` override on `make_run_metadata()` — **done, step A0** |
+| `aedt/reporting/experiment_record.py` | new: one `run_metadata.json` per experiment run — **done, step A0** |
+| `requirements-experiment.txt` | new: exact pins — **done, step A0** |
+| `README.md` | **labelling only** — reported vs regenerated results separated; no figure changed |
+| `frontend/src/ui/discovered.js` | a Reproducibility panel showing both records |
+| `frontend/src/data/historical_findings.json` | new: the originally reported figures, transcribed from git `38f8785` |
+| `scripts/export_historical_baseline.py` | new: generates that file from git, so it is not hand-typed |
 | `docs/statistic_provenance.md` | a section for the new study's artefacts |
 
 **Frozen — not touched**
 
 `scripts/run_twin_experiment.py` · `scripts/run_twin_ablation.py` ·
 `aedt/twin/prediction_data.py` · `docs/preregistration_twin_prediction.md` ·
-`README.md` · `docs/scientific_upgrade_blueprint.md` · `requirements.txt`
+`docs/scientific_upgrade_blueprint.md` · `requirements.txt`
+
+(`README.md` received a labelling-only edit; see §14. Its reported figures are
+unchanged.)

@@ -148,6 +148,13 @@ def test_unavailable_model_returns_503_and_never_a_disguised_fallback(monkeypatc
             return None
 
     monkeypatch.setattr(onnx_detect, "get_detector", lambda: Dead())
+    # Pin the branch under test. The endpoint has two honest 503s -- "still
+    # loading" while the background warm task runs, "not loaded" once it has
+    # finished or failed -- and which one applies is wall-clock timing, because
+    # the lifespan starts the load and this test does not wait for it. The
+    # sibling test above pins model_loading=True to exercise the other branch;
+    # this pins it False for the same reason, rather than racing the loader.
+    monkeypatch.setattr(app.state, "model_loading", False, raising=False)
     r = client.post("/api/emotion", json={"text": "hello"})
     assert r.status_code == 503
     assert "not loaded" in r.json()["detail"].lower()

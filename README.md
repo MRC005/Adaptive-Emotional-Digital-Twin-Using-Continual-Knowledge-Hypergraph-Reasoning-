@@ -17,6 +17,10 @@ and committed it before writing any model, then tested:
 
 **Answer: no.** Two of five pre-registered criteria were met.
 
+### As originally reported
+
+These are the figures this study published. They are preserved unchanged.
+
 | Model | macro-F1 @ K=80 | 95% CI |
 |---|---|---|
 | Population majority | 0.114 | [0.098, 0.128] |
@@ -30,13 +34,57 @@ The twin beat every model we built **except the simplest one**. Against
 persistence: −0.047 macro-F1, 95% CI [−0.075, −0.020], and **22 of 31 held-out
 participants were harmed**.
 
+### As regenerated — the reproducible record
+
+On 2026-09-05 the archive was restored, verified against its recorded SHA-256
+digests, and the frozen experiment rerun **without modification**. The dataset
+structure reproduced exactly (25,966 prediction pairs, split 130/43/44, the
+same scored cohort at every K) and **all five baselines reproduced to four
+decimal places**. One number did not.
+
+| K=80 macro-F1 | Originally reported | Regenerated | |
+|---|---|---|---|
+| Population majority | 0.1141 | 0.1141 | exact |
+| Global model | 0.1731 | 0.1731 | exact |
+| Global + static prior | 0.1886 | 0.1886 | exact |
+| Per-person calibrated global | 0.1979 | 0.1979 | exact |
+| **Persistence** | **0.3320** | **0.3320** | exact |
+| **Proposed twin** | **0.2847** | **0.2793** | **−0.0054** |
+
+**Both values stand. Neither replaces the other.** 0.2847 is what this study
+reported; 0.2793 is what the committed code reproduces today and is the only
+figure new work may be compared against.
+
+Every environmental explanation for the difference has been eliminated —
+library versions (all installed before the original run and unchanged), the
+interpreter, virtualenvs, the data, the committed code, run-to-run variation,
+the OpenMP thread count (1, 4 and 18 all give 0.279288) and the
+online-adaptation strength (swept 0→100, unchanged throughout). No search was
+made for a code variant that returns 0.2847. The full account, including what
+this implies, is in
+[`docs/statistic_provenance.md`](docs/statistic_provenance.md).
+
+**The verdict is unchanged either way:** persistence wins by a slightly larger
+margin under the regenerated figures (−0.053 rather than −0.047), and 25 of 31
+participants were harmed rather than 22.
+
 ### Three findings worth more than the headline
 
+*Figures below are as originally reported; the regenerated values are in
+brackets where they differ.*
+
 1. **Personal history is the only signal.** Global context+behaviour scores
-   0.158; history alone scores 0.285.
-2. **648 daily sensing features contributed nothing.** Removing the entire
-   behavioural channel *improved* the model (0.2850 vs 0.2757).
-3. **Online adaptation contributed nothing** (0.2737 vs 0.2757 static).
+   0.158; history alone scores 0.285 (regenerated: 0.158 and 0.279).
+2. **The behavioural channel contributed nothing.** Removing it *improved* the
+   model, 0.2850 vs 0.2757 (regenerated: 0.2820 vs 0.2762). The channel the
+   model actually received is **twelve columns** — six daily sensing features
+   and their trailing 7-day means. The archive offers 648 sensing columns and
+   the strongest of them correlates with next-day stress at r ≈ 0.11; that is a
+   separate measurement, and earlier wording conflated the two. See
+   [`docs/statistic_provenance.md`](docs/statistic_provenance.md) §4.
+3. **Online adaptation contributed nothing** (0.2737 vs 0.2757 static;
+   regenerated 0.2767 vs 0.2762 — the difference changes sign but stays far
+   inside the confidence intervals, so "nothing" remains the right word).
 
 The twin does win on accuracy (0.504 vs 0.464) and MAE (0.598 vs 0.691) — it
 predicts near-misses well but regresses toward the middle of the scale and
