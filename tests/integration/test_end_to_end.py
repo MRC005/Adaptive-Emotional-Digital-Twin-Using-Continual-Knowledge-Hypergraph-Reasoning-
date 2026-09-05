@@ -161,8 +161,8 @@ def test_demo_script_runs_end_to_end_and_writes_artefacts(tmp_path):
     assert (out / "figures" / "fig01_two_curve_epoch1_vs_epoch2.png").exists()
     assert (out / "run_metadata.json").exists()
     assert (out / "resolved_config.json").exists()
-    meta = json.loads((out / "run_metadata.json").read_text())
+    meta = json.loads((out / "run_metadata.json").read_text(encoding="utf-8"))
     assert meta["seed"] == 20260828
     assert meta["data_status"] == "SYNTHETIC"
     for t in tabs:
-        assert "data_status" in t.read_text().splitlines()[0], t.name
+        assert "data_status" in t.read_text(encoding="utf-8").splitlines()[0], t.name

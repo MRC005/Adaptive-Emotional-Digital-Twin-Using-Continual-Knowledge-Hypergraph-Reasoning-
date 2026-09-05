@@ -1,6 +1,15 @@
 {
-  "_source": "results/twin/twin_experiment.json + twin_ablation.json",
   "_generated_by": "scripts/export_findings.py",
+  "_provenance": {
+    "status": "PARTIALLY VERIFIED \u2014 see docs/statistic_provenance.md",
+    "headline": "results/twin/twin_experiment.json :: results[K=80]",
+    "learning_curve": "results/twin/twin_experiment.json :: results[*]",
+    "ablation": "results/twin/twin_ablation.json :: arms",
+    "splits": "results/twin/twin_experiment.json :: n_train/n_val/n_test",
+    "cohort": "UNVERIFIED \u2014 participants/years/reports/prediction_pairs were hand-entered in the exporter; they are now computed by scripts/run_ceiling_analysis.py and will be regenerated once the archive is restored.",
+    "ceiling": "UNVERIFIED \u2014 every value in this block was a literal in scripts/export_findings.py with no script behind it. The computation now exists in aedt/audit/ceiling.py and scripts/run_ceiling_analysis.py; these values have NOT yet been regenerated because the College Experience archive is not present. They are retained unchanged so the site is not silently emptied, and must be replaced by a generated run.",
+    "regenerate_with": "python3 scripts/run_ceiling_analysis.py && python3 scripts/export_findings.py"
+  },
   "cohort": {
     "participants": 218,
     "years": 4.8,
