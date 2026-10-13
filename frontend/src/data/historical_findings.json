@@ -2,8 +2,8 @@
   "_what_this_is": "The results EXACTLY AS ORIGINALLY REPORTED by the first study. These are the published historical figures. They are NOT reproducible from the current committed pipeline and must never be presented as if they were, nor overwritten with the regenerated values.",
   "_generated_by": "scripts/export_historical_baseline.py",
   "_provenance": {
-    "source": "git object 38f8785:frontend/src/data/findings.json",
-    "commit": "38f8785",
+    "source": "git object bccfb1d:frontend/src/data/findings.json",
+    "commit": "bccfb1d",
     "verified_by": "tests/regression/test_historical_baseline.py",
     "status": "HISTORICAL REPORTED - not reproducible",
     "see": "docs/statistic_provenance.md"
