@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[2]
 HISTORICAL = ROOT / "frontend" / "src" / "data" / "historical_findings.json"
 REGENERATED = ROOT / "frontend" / "src" / "data" / "findings.json"
 
-HISTORICAL_COMMIT = "38f8785"
+HISTORICAL_COMMIT = "bccfb1d"
 HISTORICAL_PATH = "frontend/src/data/findings.json"
 
 #: The two values that must never be conflated, at the precision they are cited.

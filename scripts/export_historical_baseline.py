@@ -8,7 +8,7 @@ are real and neither replaces the other: 0.2847 is what the study reported,
 show both, and neither may be typed by hand.
 
 This script reads the historical block straight out of the git object that
-published it -- ``38f8785:frontend/src/data/findings.json`` -- and writes
+published it -- ``bccfb1d:frontend/src/data/findings.json`` -- and writes
 ``frontend/src/data/historical_findings.json``. Its provenance is therefore a
 commit hash, and ``tests/regression/test_historical_baseline.py`` verifies the
 file still matches that object byte for byte.
@@ -31,7 +31,7 @@ ROOT = Path(__file__).resolve().parent.parent
 #: The commit that published the original results to the site. Chosen because
 #: it is the LAST commit in which findings.json carried hand-entered values;
 #: everything after it is generated.
-HISTORICAL_COMMIT = "38f8785"
+HISTORICAL_COMMIT = "bccfb1d"
 HISTORICAL_PATH = "frontend/src/data/findings.json"
 
 OUT = ROOT / "frontend" / "src" / "data" / "historical_findings.json"
