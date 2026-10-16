@@ -251,8 +251,8 @@ function viewHome() {
         <button class="lp-card" data-go2="evolution">
           <span class="lp-n">03</span>
           <b>Watch a prediction meet reality</b>
-          <span>Step through a real participant. The twin predicts, then the
-            actual value arrives.</span>
+          <span>Step through a simulated person: a forecast is made, then the
+            actual value arrives. Synthetic demonstration data.</span>
         </button>
         <button class="lp-card" data-go2="discovered">
           <span class="lp-n">04</span>

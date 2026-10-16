@@ -482,3 +482,9 @@ td.dim { color: var(--ink-3); }
 .tw-save b { display: block; font-size: 16px; margin-bottom: 4px; }
 .tw-save p { font-size: 13.5px; color: var(--ink-2); margin: 0 0 14px; max-width: 52ch; }
 @media (max-width: 720px) { .tw-actions .cta { width: 100%; } }
+
+/* ------------------------------------------------ synthetic-data label */
+.syn-banner{border:2px solid var(--warn);border-left-width:6px;margin:0 0 14px}
+.syn-tag{display:inline-block;margin-right:8px;padding:2px 8px;border-radius:3px;
+  background:var(--warn);color:#fff;font-weight:700;font-size:12px;
+  letter-spacing:.06em;text-transform:uppercase}

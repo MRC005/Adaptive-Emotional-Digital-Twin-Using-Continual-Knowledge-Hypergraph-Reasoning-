@@ -57,9 +57,9 @@ export async function viewReadiness(root) {
        F?.headline ? `${F.cohort.participants} participants, ${F.cohort.prediction_pairs.toLocaleString()} pairs`
                    : "findings.json missing");
 
-  push("Real trajectories loaded",
+  push("Demonstration trajectories loaded (synthetic)",
        Array.isArray(T?.participants) && T.participants.length >= 2,
-       T?.participants ? `${T.participants.length} held-out participants`
+       T?.participants ? `${T.participants.length} simulated people — not real participants`
                        : "trajectories.json missing");
 
   // 2. which engine would actually run right now
