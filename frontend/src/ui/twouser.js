@@ -21,6 +21,7 @@ import { PersonalTwin, buildEvent } from "../lib/twin.js";
 import { classify } from "../lib/emotion_engine.js";
 import { comparisonMarkup } from "./explorer.js";
 import { attachTooltips } from "../lib/longitudinal.js";
+import { syntheticDataBanner } from "../lib/synthetic.js";
 import { byId, fmt, illustrative, isScored, sorted }
   from "../lib/participants.js";
 
@@ -96,9 +97,9 @@ function historyList(p, twin) {
     </li>`).join("")}</ol>`;
 }
 
-/** Two contrasting REAL participants, picked by measured r, never by hand. */
+/** Two contrasting SIMULATED people, picked by their r, never by hand. */
 function defaultPair() {
-  // prefer the two published series, so the page opens on two real charts
+  // prefer the illustrative pair, so the page opens on two contrasting charts
   const shown = illustrative().filter((q) => isScored(q))
     .sort((x, y) => (y.autocorrelation ?? -9) - (x.autocorrelation ?? -9));
   if (shown.length >= 2) return [shown[0].id, shown[shown.length - 1].id];
@@ -220,11 +221,11 @@ export async function viewTwoUser(root) {
       </section>` : ""}
 
       <section class="exp-step exp-real">
-        <p class="exp-lab">And now two REAL people</p>
+        <p class="exp-lab">And now two simulated people with longer histories</p>
         <p class="exp-sub">The histories above are invented, to make the
-          mechanism visible. These two are held-out participants from the study,
-          with their own measured predictability and their own held-out
-          results — nothing here is synthetic.</p>
+          mechanism visible. The two below are also simulated — longer
+          series with their own autocorrelation, compared side by side.</p>
+        ${syntheticDataBanner("Both people in this comparison")}
         <div class="ex-pick">
           <label class="ex-sel"><span>Participant A</span>
             <select id="x-pa">${realOptions(st.pa)}</select></label>

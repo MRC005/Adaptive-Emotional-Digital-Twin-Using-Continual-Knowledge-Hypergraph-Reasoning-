@@ -1,185 +1,156 @@
-"""The Explorer must show the study, not a flattering version of it.
+"""The participant pages must ship SYNTHETIC demonstration data, and say so.
 
-The pages it feeds are the ones a panel will look at, so the risks are not
-cosmetic: a participant record that disagrees with the aggregate, an invented
-threshold, a fabricated confidence interval, or a source identifier leaking out
-of an "anonymised" file. Each of those is asserted against here.
+No participant-level research record is distributed with this application.
+The Explorer, the two-person comparison and Twin Evolution all draw simulated
+people written by
+``scripts/make_synthetic_demo_data.py``. These tests check that the shipped
+files are exactly what that script produces, that every one of them declares
+itself synthetic, that the script can read nothing but its own constants, and
+that every page drawing them shows the synthetic-data label.
 
-The strongest guard is the first one: averaging the per-participant records has
-to reproduce the frozen experiment's published aggregate exactly. If it ever
-does not, the Explorer is showing something the study did not find.
+Nothing here runs a research model or reads a result file.
 """
 from __future__ import annotations
 
+import importlib.util
 import json
+import random
 import re
 from pathlib import Path
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-DATA = ROOT / "frontend" / "src" / "data" / "participants.json"
-FINDINGS = ROOT / "frontend" / "src" / "data" / "findings.json"
-EXPORTER = ROOT / "scripts" / "export_participant_explorer.py"
+DATA_DIR = ROOT / "frontend" / "src" / "data"
+DATA = DATA_DIR / "participants.json"
+TRAJECTORIES = DATA_DIR / "trajectories.json"
+COHORT = DATA_DIR / "cohort_summary.json"
+GENERATOR = ROOT / "scripts" / "make_synthetic_demo_data.py"
 EXPLORER = ROOT / "frontend" / "src" / "ui" / "explorer.js"
 LONGITUDINAL = ROOT / "frontend" / "src" / "lib" / "longitudinal.js"
 PARTICIPANTS_LIB = ROOT / "frontend" / "src" / "lib" / "participants.js"
+UI = ROOT / "frontend" / "src" / "ui"
 
-pytestmark = pytest.mark.skipif(
-    not DATA.exists(),
-    reason="participants.json absent; run scripts/export_participant_explorer.py")
+
+def _load(path):
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 @pytest.fixture(scope="module")
 def data():
-    return json.loads(DATA.read_text(encoding="utf-8"))
+    return _load(DATA)
 
 
 @pytest.fixture(scope="module")
-def findings():
-    return json.loads(FINDINGS.read_text(encoding="utf-8"))
+def generator():
+    spec = importlib.util.spec_from_file_location("make_synthetic_demo_data", GENERATOR)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
 
-# ------------------------------------------------------- agreement with study
-@pytest.mark.parametrize("K", ["20", "80"])
-def test_the_participant_records_average_to_the_published_aggregate(data, K):
-    """The whole basis for showing per-participant numbers at all."""
-    scored = [p for p in data["participants"] if p["by_K"][K].get("scored")]
-    assert scored, f"no participants scored at K={K}"
-    twin = sum(p["by_K"][K]["twin"]["macro_f1"] for p in scored) / len(scored)
-    pers = sum(p["by_K"][K]["persistence"]["macro_f1"] for p in scored) / len(scored)
-
-    exp = ROOT / "results" / "twin" / "twin_experiment.json"
-    if not exp.exists():
-        pytest.skip("results/twin/twin_experiment.json absent — the aggregate "
-                    "CANNOT be cross-checked. Re-run the frozen experiment.")
-    agg = {str(x["K"]): x for x in json.loads(
-        exp.read_text(encoding="utf-8"))["results"]}[K]["models"]
-    assert twin == pytest.approx(agg["T_twin"]["macro_f1_mean"], abs=1e-6), (
-        "the per-participant twin scores no longer average to the published "
-        "figure; the Explorer would be showing a different experiment")
-    assert pers == pytest.approx(agg["B1_persistence"]["macro_f1_mean"], abs=1e-6)
+# ------------------------------------------------------------ it is synthetic
+@pytest.mark.parametrize("path", [DATA, TRAJECTORIES])
+def test_every_participant_file_declares_itself_synthetic(path):
+    doc = _load(path)
+    assert doc["_synthetic"] is True
+    assert doc["_provenance"].startswith("SYNTHETIC DEMONSTRATION DATA")
+    assert "REAL" not in doc["_provenance"]
 
 
-def test_persistence_still_wins_overall(findings):
-    """The conclusion the interface must never quietly reverse."""
-    m = findings["headline"]["models"]
-    assert m["B1_persistence"]["macro_f1"] > m["T_twin"]["macro_f1"]
-    assert round(m["T_twin"]["macro_f1"], 4) == 0.2793
-    assert round(m["B1_persistence"]["macro_f1"], 4) == 0.3320
+def test_the_shipped_files_are_exactly_what_the_generator_writes(generator):
+    """Same seed, same order of draws as ``main``: the files must match."""
+    rng = random.Random(generator.SEED)
+    assert _load(TRAJECTORIES) == generator.make_trajectories(rng)
+    assert _load(DATA) == generator.make_participants(rng)
 
 
-def test_the_individual_picture_differs_from_the_aggregate(data):
-    """A real finding, and the reason the Explorer exists."""
-    K = str(data["K_primary"])
-    scored = [p for p in data["participants"] if p["by_K"][K].get("scored")]
-    better = [p for p in scored if p["by_K"][K]["twin_better"]]
-    assert 0 < len(better) < len(scored), (
-        "either nobody or everybody was better served by the twin; the "
-        "per-participant view would have nothing to show")
-    assert data["n_twin_better_primary"] == len(better)
-
-
-# ----------------------------------------------------------------- integrity
-def test_the_full_observation_series_are_not_redistributed(data):
-    """The archive says NOT redistributed; anonymisation does not override that.
-
-    All participants keep their summary statistics -- derived values of the kind
-    a paper prints in a table. Only a small, stated illustrative subset ships
-    its raw observation series, and the complete set stays under results/,
-    which is gitignored.
-    """
-    withs = [p for p in data["participants"] if p.get("series")]
-    total = len(data["participants"])
-    assert data["series_mode"] == "illustrative", (
-        f"series_mode is {data['series_mode']!r}; 'all' would redistribute "
-        "every participant's observations")
-    assert 0 < len(withs) <= 5, (
-        f"{len(withs)} of {total} participants ship observation series; the "
-        "shipped subset must stay small and illustrative")
-    assert len(withs) == data["n_series_published"]
-    assert {p["id"] for p in withs} == set(data["illustrative_ids"])
-    assert "not redistributed" in data["_redistribution"].lower()
-    assert data["illustrative_rule"], "the subset rule must be stated in the file"
-
-    # every participant keeps the statistics the Explorer needs
-    for p in data["participants"]:
-        assert "autocorrelation" in p and "n_observations" in p
-        assert "by_K" in p
-        if not p.get("series"):
-            assert p.get("series_published") is False
-
-
-def test_the_illustrative_subset_is_chosen_by_predictability_not_performance(data):
-    """A subset picked by how well the twin did would flatter the result."""
-    rule = data["illustrative_rule"].lower()
-    assert "autocorrelation" in rule
-    for word in ("macro", "f1", "twin", "persistence", "advantage"):
-        assert word not in rule, (
-            f"the subset rule mentions {word!r}; it must not depend on outcome")
-
-
-def test_the_local_full_record_is_gitignored_and_not_shipped():
-    full = ROOT / "results" / "explorer" / "participants_full.json"
-    if not full.exists():
-        pytest.skip("results/explorer/participants_full.json absent; run the "
-                    "exporter to regenerate the local record")
-    import subprocess
-    r = subprocess.run(["git", "check-ignore", str(full)], cwd=ROOT,
-                       capture_output=True, text=True)
-    assert r.returncode == 0, (
-        "the full observation record is NOT gitignored; it would be committed")
-    assert full.stat().st_size > DATA.stat().st_size, (
-        "the local record should be larger than the shipped one")
+def test_the_generator_can_read_nothing_but_its_own_constants():
+    src = GENERATOR.read_text(encoding="utf-8")
+    imports = set(re.findall(r"^import\s+([\w.]+)", src, flags=re.M)) | set(
+        re.findall(r"^from\s+([\w.]+)\s+import", src, flags=re.M))
+    assert imports <= {"json", "math", "random", "pathlib"}, imports
+    code = src.replace("research_results", "")
+    for banned in ("data/raw", "read_csv", "pandas", "numpy", "import aedt", "from aedt",
+                   "general_ema", ".npz", "pickle", "predictions_", '"results"'):
+        assert banned not in code, banned
+    # the one file it opens is the page's own data file, to replace one section
+    assert src.count("read_text") == 1 and "results.read_text" in src
 
 
 def test_no_source_identifier_or_calendar_date_is_published():
-    blob = DATA.read_text(encoding="utf-8")
-    assert not re.search(r"\b[0-9a-f]{32}\b", blob), "a source id leaked"
-    assert not re.search(r"\b20\d\d-\d\d-\d\d\b", blob), "a calendar date leaked"
-    ids = {p["id"] for p in json.loads(blob)["participants"]}
-    assert all(re.fullmatch(r"P\d+", i) for i in ids), f"unexpected labels: {ids}"
+    for path in (DATA, TRAJECTORIES):
+        blob = path.read_text(encoding="utf-8")
+        assert not re.search(r"\b[0-9a-f]{32}\b", blob), "an identifier-like token"
+        assert not re.search(r"\b20\d\d-\d\d-\d\d\b", blob), "a calendar date"
+    ids = {p["id"] for p in _load(DATA)["participants"]}
+    assert all(re.fullmatch(r"S\d\d", i) for i in ids), ids
 
 
-def test_the_only_categorical_rule_comes_from_existing_methodology(data):
-    """No invented HIGH/MEDIUM/LOW. The thresholds must be the published ones."""
-    from aedt.audit.ceiling import (NEAR_UNPREDICTABLE_BELOW,
-                                    WELL_PREDICTABLE_ABOVE)
-    rule = data["_definitions"]["predictability_band"]
-    assert str(NEAR_UNPREDICTABLE_BELOW) in rule
-    assert str(WELL_PREDICTABLE_ABOVE) in rule
+# ------------------------------------------------------------------- schema
+def test_the_records_have_the_shape_the_pages_read(data):
+    assert data["split"] == "synthetic" and data["K_primary"] in data["K_grid"]
+    assert data["n_test_participants"] == len(data["participants"])
+    kp = str(data["K_primary"])
+    scored = [p for p in data["participants"] if p["by_K"][kp]["scored"]]
+    assert data["n_scored_primary"] == len(scored) > 0
+    assert data["n_twin_better_primary"] == sum(p["by_K"][kp]["twin_better"] for p in scored)
+    assert set(data["illustrative_ids"]) <= {p["id"] for p in data["participants"]}
     for p in data["participants"]:
-        r, b = p["autocorrelation"], p["predictability_band"]
-        if r is None:
-            assert b is None
-        elif r < NEAR_UNPREDICTABLE_BELOW:
-            assert b == "near-unpredictable", p["id"]
-        elif r > WELL_PREDICTABLE_ABOVE:
-            assert b == "well-predictable", p["id"]
-        else:
-            assert b == "typical", p["id"]
+        assert p["predictability_band"] in ("well-predictable", "typical", "near-unpredictable")
+        assert len(p["series"]) == p["n_observations"] and p["series"][0]["day"] == 0
+        for r in p["series"]:
+            assert 1 <= r["observed"] <= 5 and isinstance(r["warmup"], bool)
+        for blk in p["by_K"].values():
+            if blk["scored"]:
+                for model in ("twin", "persistence"):
+                    assert 0 <= blk[model]["macro_f1"] <= 1 and blk[model]["qwk"] is None
+            else:
+                assert blk["reason"]
 
 
-def test_no_per_participant_uncertainty_is_fabricated(data):
-    """The bootstrap is over the cohort; a single person has no interval."""
+def test_the_walkthrough_rows_carry_every_field_the_page_prints():
+    """evolution.js prints each row's persistence forecast beside the stand-in
+    forecast. A row without the field is rendered as the word "undefined"."""
+    doc = _load(TRAJECTORIES)
+    needed = {"day", "observed", "warmup", "predicted", "baseline", "actual_next"}
+    for person in doc["participants"]:
+        rows = person["series"]
+        assert rows, "a simulated person has no rows"
+        for i, row in enumerate(rows):
+            assert needed <= set(row), sorted(needed - set(row))
+            assert row["baseline"] == row["observed"]
+            assert row["actual_next"] == (rows[i + 1]["observed"] if i + 1 < len(rows) else None)
+
+
+def test_no_interval_is_invented_for_a_simulated_person(data):
     blob = json.dumps(data).lower()
     for word in ("ci_low", "ci_high", "confidence_interval", '"ci"'):
-        assert word not in blob, f"{word} appears in a per-participant record"
-    assert "no per-participant confidence intervals" in data["_uncertainty"].lower()
+        assert word not in blob
 
 
-def test_undefined_metrics_are_null_never_zero(data):
-    """qwk is undefined for single-class predictions; null says so, 0.0 lies."""
-    seen_null = False
-    for p in data["participants"]:
-        for K, blk in p["by_K"].items():
-            if not blk.get("scored"):
-                continue
-            for model in ("twin", "persistence"):
-                if blk[model].get("qwk") is None:
-                    seen_null = True
-    assert seen_null, ("no undefined kappa found at all — either the data "
-                       "changed or NaN is being written as a number again")
+def test_the_real_aggregate_counts_live_in_their_own_file():
+    c = _load(COHORT)
+    assert set(c) >= {"K", "n_test_participants", "n_scored", "n_twin_better", "_sources"}
+    assert "participants" not in c
+    assert all(isinstance(c[k], int) for k in ("K", "n_test_participants", "n_scored",
+                                                "n_twin_better"))
+
+
+# ------------------------------------------------------------------- labels
+@pytest.mark.parametrize("page", ["explorer.js", "twouser.js", "evolution.js"])
+def test_every_page_drawing_simulated_people_shows_the_label(page):
+    src = (UI / page).read_text(encoding="utf-8")
+    assert "syntheticDataBanner(" in src, f"{page} draws demo people without the label"
+
+
+def test_no_page_calls_the_simulated_people_real():
+    for path in sorted(UI.glob("*.js")):
+        src = path.read_text(encoding="utf-8")
+        for phrase in ("Real anonymised longitudinal data", "two REAL people",
+                       "nothing here is synthetic", "REAL held-out participant",
+                       "opened once"):
+            assert phrase not in src, f"{path.name}: {phrase!r}"
 
 
 # -------------------------------------------------------------- the frontend
@@ -199,16 +170,6 @@ def test_the_chart_refuses_to_interpolate_across_gaps():
     low = src.lower()
     assert "confidence band" in low or "no confidence bands" in low, (
         "the file should state that no uncertainty band is drawn")
-
-
-def test_the_exporter_fits_nothing_and_defines_no_new_metric():
-    src = EXPORTER.read_text(encoding="utf-8")
-    for banned in ("LogisticRegression", "StandardScaler", "GridSearch",
-                   "predict_proba", "cross_val"):
-        assert banned not in src, f"{banned} appears in the exporter"
-    assert "run_twin_experiment import" in src, (
-        "the exporter must reuse the frozen experiment rather than reimplement it")
-    assert "write_experiment_record" in src, "no reproducibility record written"
 
 
 # ------------------------------------------------------- cross-page buttons

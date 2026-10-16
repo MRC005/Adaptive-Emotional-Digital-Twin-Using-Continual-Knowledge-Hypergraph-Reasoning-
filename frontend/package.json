@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prebuild": "node scripts/check-no-participant-data.mjs",
+    "check:data": "node scripts/check-no-participant-data.mjs",
     "build": "vite build",
     "dev": "vite",
     "preview": "vite preview"

@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Generate the participant-level record the Explorer reads. No hand-typed data.
+"""DISABLED ON THIS BRANCH: running this script reads and writes nothing (exit 7).
+The application ships simulated people written by make_synthetic_demo_data.py;
+the files under frontend/src/data/ are NOT produced by this script and are not
+research results. What follows describes what the script did when it was enabled.
+
+Generate the participant-level record the Explorer reads. No hand-typed data.
 
 WHAT THIS IS FOR
 The website could show the study's aggregate result but not the people behind
@@ -199,6 +204,17 @@ def participant_record(g, models, features, ctx_features, k_grid) -> dict:
 
 
 def main() -> int:
+    # PUBLIC SNAPSHOT: this exporter writes participant-level research records
+    # into frontend/src/data/. No such record is distributed with this
+    # application, so the exporter is disabled here. The application ships
+    # synthetic demonstration data instead (scripts/make_synthetic_demo_data.py).
+    print("Disabled in the public snapshot: this script writes participant-level "
+          "research records into the web application. Nothing was read or written. "
+          "See DATA_PROVENANCE.md.", file=sys.stderr)
+    return 7
+
+
+def _disabled_original_main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--series", choices=("illustrative", "all", "none"),
                     default="illustrative",

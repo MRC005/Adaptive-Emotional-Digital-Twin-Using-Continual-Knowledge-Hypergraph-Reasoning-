@@ -628,3 +628,9 @@ td.dim { color: var(--ink-3); }
   padding: 1px 7px; border-radius: 2px; background: var(--warn-2);
   color: var(--warn); font-weight: 700; font-size: 10px }
 .lg-dense { fill: var(--ink-3); font-size: 9.5px }
+
+/* ------------------------------------------------ synthetic-data label */
+.syn-banner{border:2px solid var(--warn);border-left-width:6px;margin:0 0 14px}
+.syn-tag{display:inline-block;margin-right:8px;padding:2px 8px;border-radius:3px;
+  background:var(--warn);color:#fff;font-weight:700;font-size:12px;
+  letter-spacing:.06em;text-transform:uppercase}

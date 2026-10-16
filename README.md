@@ -6,6 +6,14 @@
 
 ---
 
+> **Data in this repository.** The current files of this branch and the web
+> application built from them contain no participant-level research record. Every person shown in the
+> application is **simulated** and labelled "Synthetic demonstration data".
+> The research findings are aggregate results; their source and the open
+> questions about reuse are in [`DATA_PROVENANCE.md`](DATA_PROVENANCE.md).
+
+---
+
 ## The headline result
 
 We pre-registered a protocol ([`docs/preregistration_twin_prediction.md`](docs/preregistration_twin_prediction.md))
@@ -378,9 +386,13 @@ case, max |Δ| **0.045**. Chained, the browser result is the RoBERTa result.
 | bundled study results | offline Python, displayed not recomputed |
 | HGNN and EWC experiments | offline Python only |
 
-Personal history stays on your device. The archives are gigabytes and licensed
-for research use rather than redistribution, so nothing participant-level is
-shipped to the browser or served by the API.
+Personal history stays on your device. The research archives are not
+redistributed, and no participant-level research record is shipped to the
+browser or served by the API: the people on the Explorer, two-person comparison and Twin Evolution pages are simulated by
+`scripts/make_synthetic_demo_data.py` and labelled as synthetic.
+(Earlier versions of the application did include derived participant-level
+records; they remain in the repository's history. See
+[`DATA_PROVENANCE.md`](DATA_PROVENANCE.md).)
 
 To run the backend that serves the Transformer:
 
