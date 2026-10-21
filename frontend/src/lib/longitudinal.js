@@ -145,7 +145,7 @@ export function longitudinalSvg(series, opts = {}) {
       ${p.predicted != null ? `data-predicted="${p.predicted}" data-actual="${p.actual_next}" data-baseline="${p.baseline}"` : ""}
       tabindex="0" role="img"
       aria-label="Day ${p.day}, reported stress ${p.observed}${p.predicted != null
-        ? `, twin predicted ${p.predicted}, persistence predicted ${p.baseline}, actual next ${p.actual_next}` : ", warm-up"}"/>`;
+        ? `, stand-in forecast ${p.predicted}, persistence predicted ${p.baseline}, actual next ${p.actual_next}` : ", warm-up"}"/>`;
   }).join("");
 
   return `
@@ -173,7 +173,7 @@ export function legend({ hasPredictions }, marksDrawn = true) {
   if (hasPredictions && marksDrawn) {
     items.push(
       `<span class="lg-key"><i class="k-actual"></i>actual next value</span>`,
-      `<span class="lg-key"><i class="k-twin"></i>twin prediction</span>`,
+      `<span class="lg-key"><i class="k-twin"></i>stand-in forecast</span>`,
       `<span class="lg-key"><i class="k-pers"></i>persistence prediction</span>`);
   }
   return `<p class="lg-legend">${items.join("")}</p>`;
@@ -196,7 +196,7 @@ export function attachTooltips(root) {
                      `reported <b>${d.observed}</b>`];
       if (d.predicted != null) {
         lines.push(`actual next <b>${d.actual}</b>`,
-                   `twin <b>${d.predicted}</b>`,
+                   `stand-in forecast <b>${d.predicted}</b>`,
                    `persistence <b>${d.baseline}</b>`);
       } else if (d.warmup === "1") {
         lines.push(`<span class="dim">warm-up — not scored</span>`);

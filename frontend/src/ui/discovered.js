@@ -19,7 +19,7 @@
  */
 import F from "../data/findings.json";
 import HIST from "../data/historical_findings.json";
-import { META } from "../lib/participants.js";
+import { COHORT } from "../lib/participants.js";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g,
   (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -332,12 +332,17 @@ export function viewDiscovered(root) {
             <li>
               <p class="dq-lab">What we observed</p>
               <p>Predictability varies substantially between people. Across the
-                held-out participants the twin was better than persistence for
-                <b>${META.nTwinBetter} of ${META.nScored}</b> of them, and
+                test participants scored after ${COHORT.K} warm-up reports, the
+                twin was better than persistence for
+                <b>${COHORT.nTwinBetter} of ${COHORT.nScored}</b> of them, and
                 within-person autocorrelation ranges from near zero to strongly
                 positive. The average hides that spread.</p>
-              <p><button class="linkb2" data-go2="explorer">Explore the
-                participants →</button></p>
+              <p><button class="linkb2" data-go2="explorer">Open the
+                explorer →</button>
+                <span class="syn-tag">Synthetic demonstration data</span>
+                The explorer shows simulated people, not study participants:
+                no participant-level research record is distributed with this
+                application.</p>
             </li>
             <li>
               <p class="dq-lab">What comes next <span class="dq-fw">future work</span></p>

@@ -1,0 +1,14 @@
+{
+ "_what_this_is": "Aggregate counts from the first pre-registered study in this project (personalised twin versus persistence). Counts only; no participant-level record.",
+ "_sources": [
+  "docs/statistic_provenance.md section 1 (test participants surviving warm-up: 44 at K=0, 42 at K=20)",
+  "docs/preregistration_selective_personalisation.md sections 1 and 4 (12 of 42 at K=20)",
+  "README.md"
+ ],
+ "_data_source": "College Experience Study (Nepal et al. 2024, doi:10.1145/3643501). See DATA_PROVENANCE.md.",
+ "_definition": "K is the number of warm-up reports. n_scored is the number of test participants with reports left to score after K. n_twin_better is how many of them had a higher per-participant macro-F1 with the twin than with persistence.",
+ "K": 20,
+ "n_test_participants": 44,
+ "n_scored": 42,
+ "n_twin_better": 12
+}

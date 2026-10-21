@@ -1,13 +1,25 @@
 /**
  * Review demo — one rehearsed surface for the project review.
  *
- * Nothing here is recomputed. Every figure is read from the frozen artefacts:
- * per-point predictions come from src/data/participants.json, which
- * scripts/export_participant_explorer.py disaggregated from the frozen
- * experiment, and the cohort and aggregate figures are the published values
- * from results/final/apples_to_apples_42.json.
+ * Two kinds of panel, and the difference matters:
+ *
+ *  - The result card and the cohort toggle carry the REAL published findings,
+ *    hardcoded from results/final/apples_to_apples_42.json. They are
+ *    participant-level nothing: aggregate statistics over the matched
+ *    42-participant test cohort.
+ *
+ *  - The timeline and the guess panel draw SYNTHETIC people from
+ *    src/data/participants.json, written by scripts/make_synthetic_demo_data.py.
+ *    No participant-level research record is distributed with this application.
+ *    Their `predicted` column is the illustrative stand-in that generator
+ *    writes, NOT the research model, so those two panels illustrate the
+ *    mechanism behind the finding; they do not evidence it. Both are labelled
+ *    as synthetic on screen.
+ *
+ * Nothing on this page is recomputed in the browser.
  */
 import PARTS from "../data/participants.json";
+import { syntheticDataBanner } from "../lib/synthetic.js";
 
 const esc = (s) => String(s).replace(/[&<>"']/g,
   (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -74,6 +86,7 @@ function resultCard() {
   <section class="dm-card">
     <h3>The result, in one screen</h3>
     <p class="dm-sub">Matched 42-participant test cohort · 5,285 scored observations · 95% participant-clustered bootstrap</p>
+    <p class="dm-prov">Published result. Aggregate statistics only — read from <code>results/final/apples_to_apples_42.json</code>.</p>
     <div class="dm-split">
       <div>
         <h4>Primary metric (macro-F1)</h4>
@@ -124,9 +137,10 @@ function timeline() {
   const opts = ps.map((x) => `<option value="${x.id}"${x.id === p.id ? " selected" : ""}>${x.id} — ${x.n_observations} observations, r = ${x.autocorrelation}</option>`).join("");
   return `
   <section class="dm-card">
-    <h3>One participant, every decision</h3>
-    <p class="dm-sub">Each scored instant: what they reported, what the model predicted next, and what actually happened.</p>
-    <label class="dm-pick">Participant <select id="dm-pid">${opts}</select></label>
+    <h3>How the metric hides a trade — one person, instant by instant</h3>
+    <p class="dm-sub">Each scored instant: what they reported, what a forecaster predicted next, and what actually happened.</p>
+    ${syntheticDataBanner("The people in this panel and the one below")}
+    <label class="dm-pick">Simulated person <select id="dm-pid">${opts}</select></label>
     <svg class="dm-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Reported stress over time">
       ${[1, 2, 3, 4, 5].map((v) => `<line x1="${L}" y1="${Y(v)}" x2="${W - R}" y2="${Y(v)}" class="dm-grid"/><text x="${L - 8}" y="${Y(v) + 4}" class="dm-ax" text-anchor="end">${v}</text>`).join("")}
       <path d="${path}" class="dm-line"/>${dots}
@@ -134,7 +148,7 @@ function timeline() {
     <div class="dm-rails">
       <div><span class="dm-rlab">the label actually changed</span>
         <svg viewBox="0 0 ${W} 14" preserveAspectRatio="none">${rail}</svg></div>
-      <div><span class="dm-rlab">the model moved away from the last value</span>
+      <div><span class="dm-rlab">the forecaster moved away from the last value</span>
         <svg viewBox="0 0 ${W} 14" preserveAspectRatio="none">${prail}</svg></div>
       <div><span class="dm-rlab">persistence moved</span>
         <svg viewBox="0 0 ${W} 14" preserveAspectRatio="none"></svg>
@@ -145,9 +159,11 @@ function timeline() {
       <span class="t-stop">● false alarm</span><span class="t-mut">● stayed put</span>
     </div>
     <p class="dm-note">${p.id}: ${n} scored instants, the label changed on <b>${ch}</b> of them.
-      The model caught <b>${hit}</b> and raised <b>${fa}</b> false alarms on stable instants.
-      Persistence caught none and raised none — its rail is empty because it predicts no change by definition.
-      That is the trade the aggregate metric averages away.</p>
+      The forecaster caught <b>${hit}</b> and raised <b>${fa}</b> false alarms on stable instants.
+      Persistence caught none and raised none — its rail is empty because it predicts no change by definition,
+      and that is true of persistence on any data at all. The trade this picture makes visible is what the
+      aggregate metric averages away; the measured size of that trade is the published result in the first card,
+      not anything counted here.</p>
   </section>`;
 }
 
@@ -168,17 +184,18 @@ function guessGame() {
     <div class="dm-reveal">
       <div class="dm-rcell"><span>your guess</span><b>${state.guess ?? "—"}</b></div>
       <div class="dm-rcell"><span>persistence</span><b>${s.baseline}</b></div>
-      <div class="dm-rcell"><span>the model</span><b>${s.predicted}</b></div>
+      <div class="dm-rcell"><span>forecaster</span><b>${s.predicted}</b></div>
       <div class="dm-rcell t-ok"><span>what happened</span><b>${s.actual_next}</b></div>
     </div>
     <p class="dm-note">This instant: <b class="t-${TONE[c]}">${LABEL[c]}</b>.
       ${s.actual_next === s.observed
-        ? "The label did not change, so persistence was right for free — and any movement by the model is a false alarm."
-        : "The label changed, so persistence was wrong by construction; only a model that moves can be right here."}</p>`;
+        ? "The label did not change, so persistence was right for free — and any movement by the forecaster is a false alarm."
+        : "The label changed, so persistence was wrong by construction; only a forecaster that moves can be right here."}</p>`;
   return `
   <section class="dm-card">
-    <h3>Can you beat the model?</h3>
-    <p class="dm-sub">${p.id}'s last reports are below. Day ${s.day}, they reported <b>${s.observed}</b>. What do they report next?</p>
+    <h3>Can you beat persistence?</h3>
+    <p class="dm-sub">${p.id} is simulated. Their last reports are below. Day ${s.day}, they reported
+      <b>${s.observed}</b>. What do they report next?</p>
     <div class="dm-spark">${spark}</div>
     <div class="dm-guess">${btns}
       <button class="dm-act" id="dm-reveal" ${state.guess == null || state.revealed ? "disabled" : ""}>Reveal</button>
@@ -208,6 +225,7 @@ function cohortToggle() {
     <p class="dm-sub">Two eligibility rules exist in the codebase. They disagree about a single participant,
       who contributes exactly one scored observation. The baseline below is always scored on 42.
       Switch the rule used for the learned model and watch the comparison move.</p>
+    <p class="dm-prov">Published result. Aggregate statistics only — read from <code>results/final/apples_to_apples_42.json</code>.</p>
     <div class="dm-toggle">
       <span class="dm-rule">score the learned model on</span>
       <button class="${!on43 ? "on" : ""}" data-c="42">42 participants</button>
@@ -236,8 +254,10 @@ export function viewDemo(root) {
   root.innerHTML = `<div class="dm">
     <header class="dm-head">
       <h2>Review demonstration</h2>
-      <p>Five beats: the question, the protocol, the result, what the result hides, and what we built.
-         Every number below is read from a frozen artefact; nothing on this page is recomputed.</p>
+      <p>Four panels. The first and last carry the published findings, read from the frozen result
+         artefact and marked as such. The two in between illustrate the mechanism behind those findings
+         on <b>simulated</b> people — no participant-level research record ships with this application.
+         Nothing on this page is recomputed in the browser.</p>
     </header>
     ${resultCard()}${timeline()}${guessGame()}${cohortToggle()}
   </div>`;

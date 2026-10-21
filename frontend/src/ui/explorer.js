@@ -1,3 +1,7 @@
+/* PUBLIC SNAPSHOT NOTE: the people this page draws are SYNTHETIC DEMONSTRATION
+ * DATA (scripts/make_synthetic_demo_data.py). Where the comments below speak
+ * of "held-out participants", they describe the study the page was first
+ * built for; no participant-level research record ships with the app. */
 /**
  * Evidence & Predictability Explorer -- the study, one person at a time.
  *
@@ -22,6 +26,8 @@
  */
 import F from "../data/findings.json";
 import HIST from "../data/historical_findings.json";
+import { syntheticDataBanner } from "../lib/synthetic.js";
+import { COHORT } from "../lib/participants.js";
 import { META, all, byId, fmt, hasSeries, illustrative, isScored, phases,
          rankByAutocorrelation, scoreAt, sorted, SORTS, unscoredReason }
   from "../lib/participants.js";
@@ -55,11 +61,8 @@ function defaultParticipant() {
 /** Stated absence, never an empty chart. */
 function seriesUnavailable() {
   return `<div class="msg">
-    <b>This participant's observation series is not published.</b>
-    The source archive is not redistributed, so the site ships the full
-    observations for only ${META.nSeriesPublished} illustrative participants —
-    ${ILLUSTRATIVE_NOTE}. Every participant's summary statistics and held-out
-    results are shown in full, above and below.</div>`;
+    <b>No series is included for this simulated person.</b>
+    Their summary statistics are shown above and below.</div>`;
 }
 
 const ILLUSTRATIVE_NOTE = `chosen by a fixed rule: ${META.illustrativeRule}`;
@@ -130,27 +133,27 @@ function strategyPanel(p) {
   return `
   <section class="panel">
     <header><h3>Twin versus persistence</h3>
-      <span class="meta">this participant, held out, K=${k.n_warmup} warm-up ·
+      <span class="meta">simulated person, K=${k.n_warmup} warm-up ·
         ${k.n_eval} scored</span></header>
     <div class="pad">
       <div class="ex-vs">
         <div class="ex-vs-row ${k.twin_better ? "win" : ""}">
-          <span class="ex-vs-lab">Digital twin</span>
+          <span class="ex-vs-lab">Stand-in forecast</span>
           ${bar(t, max, "b-twin")}<span class="num">${fmt.f4(t)}</span></div>
         <div class="ex-vs-row ${k.twin_better ? "" : "win"}">
           <span class="ex-vs-lab">Persistence</span>
           ${bar(q, max, "b-pers")}<span class="num">${fmt.f4(q)}</span></div>
       </div>
       <p class="ex-delta ${d > 0 ? "up" : d < 0 ? "down" : ""}">
-        Twin − persistence: <b>${fmt.signed(d)}</b> macro-F1 —
-        ${d > 0 ? "the twin did better for this person."
-                : d < 0 ? "persistence did better for this person."
-                        : "the two tied for this person."}</p>
+        Stand-in − persistence: <b>${fmt.signed(d)}</b> macro-F1 —
+        ${d > 0 ? "the stand-in forecast did better for this simulated person."
+                : d < 0 ? "persistence did better for this simulated person."
+                        : "the two tied for this simulated person."}</p>
       <div class="gridwrap"><table class="grid">
         <thead><tr><th></th><th class="num">macro-F1</th>
           <th class="num">Accuracy</th><th class="num">MAE</th></tr></thead>
         <tbody>
-          <tr><th>Digital twin</th><td class="num">${fmt.f4(t)}</td>
+          <tr><th>Stand-in forecast</th><td class="num">${fmt.f4(t)}</td>
             <td class="num">${fmt.f3(k.twin.accuracy)}</td>
             <td class="num">${fmt.f3(k.twin.mae)}</td></tr>
           <tr><th>Persistence</th><td class="num">${fmt.f4(q)}</td>
@@ -159,7 +162,7 @@ function strategyPanel(p) {
         </tbody></table></div>
 
       <div class="ex-agg">
-        <h4>Across the whole held-out cohort</h4>
+        <h4>The study's real aggregate result (not simulated)</h4>
         <div class="ex-vs">
           <div class="ex-vs-row"><span class="ex-vs-lab">Digital twin</span>
             ${bar(aggT, aggMax, "b-twin")}<span class="num">${fmt.f4(aggT)}</span></div>
@@ -176,8 +179,10 @@ function strategyPanel(p) {
           ${fmt.f4(HIST.headline.models.T_twin.macro_f1)}; both are preserved,
           and neither replaces the other.
           Twin better than persistence for
-          <b>${META.nTwinBetter} of ${META.nScored}</b> participants at
-          K=${META.kPrimary} — aggregate and individual behaviour differ.</p>
+          <b>${COHORT.nTwinBetter} of ${COHORT.nScored}</b> test participants at
+          K=${COHORT.K} — aggregate and individual behaviour differ. These are
+          the study's aggregate counts; the individual records on this page are
+          simulated.</p>
       </div>
     </div>
   </section>`;
@@ -206,30 +211,29 @@ export function comparisonMarkup(a, b) {
         ${row("Variability (SD)", fmt.f2(a.variability_sd), fmt.f2(b.variability_sd))}
         ${row("Scored observations", ka ? fmt.int(ka.n_eval) : "—",
               kb ? fmt.int(kb.n_eval) : "—")}
-        ${row("Twin macro-F1", ka ? fmt.f4(ka.twin.macro_f1) : "not scored",
+        ${row("Stand-in macro-F1", ka ? fmt.f4(ka.twin.macro_f1) : "not scored",
               kb ? fmt.f4(kb.twin.macro_f1) : "not scored")}
         ${row("Persistence macro-F1", ka ? fmt.f4(ka.persistence.macro_f1) : "not scored",
               kb ? fmt.f4(kb.persistence.macro_f1) : "not scored")}
-        ${row("Twin − persistence",
+        ${row("Stand-in − persistence",
               ka ? fmt.signed(ka.twin_minus_persistence_macro_f1) : "—",
               kb ? fmt.signed(kb.twin_minus_persistence_macro_f1) : "—")}
       </tbody></table></div>
 
     <div class="msg">
-      <b>What the observed data shows.</b>
+      <b>What the simulated data shows.</b>
       ${sameR ? `Both participants show the same lag-1 autocorrelation.`
               : `${esc(strongerR.id)} shows stronger temporal dependence in the
                  observed data (r = ${fmt.f3(strongerR.autocorrelation)} against
                  ${fmt.f3((strongerR === a ? b : a).autocorrelation)}).`}
-      ${ka && kb ? `On their own held-out observations, the twin did better than
+      ${ka && kb ? `On their own scored simulated reports, the stand-in forecast did better than
          persistence for ${ka.twin_minus_persistence_macro_f1 > 0 ? esc(a.id) : ""}
          ${ka.twin_minus_persistence_macro_f1 > 0 && kb.twin_minus_persistence_macro_f1 > 0 ? " and " : ""}
          ${kb.twin_minus_persistence_macro_f1 > 0 ? esc(b.id) : ""}
          ${ka.twin_minus_persistence_macro_f1 <= 0 && kb.twin_minus_persistence_macro_f1 <= 0
            ? "neither participant" : ""}.` : ""}
-      This is a description of what was measured on two people. It is not
-      evidence that personalisation would help either of them in future, and
-      nothing here establishes a cause.
+      These are two simulated people. Nothing here is a research finding,
+      and nothing here establishes a cause.
     </div>
 
     <div class="ex-sync">
@@ -256,8 +260,8 @@ function chartBlock(p, title, view, compact = false) {
     ${longitudinalSvg(p.series, { view, title: `${p.id} — ${title}`,
                                   height: compact ? 200 : 260 })}
     ${legend(ph, marksVisible(p.series, view))}
-    ${!ph.hasPredictions ? `<p class="hint">No predictions are drawn: the frozen
-      protocol did not score this participant, so none exist.</p>` : ""}
+    ${!ph.hasPredictions ? `<p class="hint">No forecasts are drawn: this simulated
+      person has too few reports to score.</p>` : ""}
   </div>`;
 }
 
@@ -313,12 +317,14 @@ export function viewExplorer(root) {
         <p class="eyebrow">Evidence &amp; predictability explorer</p>
         <h2 class="q">How predictable is one person's stress, and did
           personalisation help them?</h2>
-        <p>The headline is an average over ${META.nScored} held-out
-          participants. Underneath it, people differ enormously — and the twin
-          was better than persistence for
-          <b>${META.nTwinBetter}</b> of them. Pick someone and look.</p>
-        <p class="prov">${esc(META.provenance)}<br>
-          <span class="dim">${esc(META.anonymisation)}</span></p>
+        <p>The study's headline is an average over ${COHORT.nScored} test
+          participants. Underneath an average, people differ — in the study the
+          twin was better than persistence for
+          <b>${COHORT.nTwinBetter}</b> of them. This page shows what such
+          differences look like, using <b>simulated people</b>. Pick someone
+          and look.</p>
+        ${syntheticDataBanner("The people on this page")}
+        <p class="prov">${esc(META.provenance)}</p>
       </div>
     </section>
 
@@ -331,7 +337,7 @@ export function viewExplorer(root) {
             `<option value="${k}"${state.sort === k ? " selected" : ""}>${esc(v.label)}</option>`).join("")}</select></label>
         <button type="button" class="linkb2" id="ex-dir">
           ${state.desc ? "High → low" : "Low → high"}</button>
-        <span class="ex-count">${META.nTest} held-out participants ·
+        <span class="ex-count">${META.nTest} simulated people ·
           ${META.nScored} scored at K=${META.kPrimary}</span>
       </div>
     </section>
