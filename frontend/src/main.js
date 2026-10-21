@@ -23,6 +23,7 @@ import FIND from "./data/findings.json";
 import { viewDiscovered } from "./ui/discovered.js";
 import { viewEvolution } from "./ui/evolution.js";
 import { viewExplorer } from "./ui/explorer.js";
+import { viewDemo } from "./ui/demo.js";
 import { viewReadiness } from "./ui/readiness.js";
 import { viewTwoUser } from "./ui/twouser.js";
 import * as Account from "./lib/account.js";
@@ -1521,6 +1522,7 @@ function go(tab) {
     home: viewHome,
     twin: () => { state.mode = "twin"; viewAnalyze(); },
     evolution: () => viewEvolution($("#work")),
+    demo: () => viewDemo($("#work")),
     explorer: () => viewExplorer($("#work")),
     discovered: () => viewDiscovered($("#work")),
     research: viewResearch,
